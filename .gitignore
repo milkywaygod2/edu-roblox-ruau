@@ -191,6 +191,14 @@
 !scripts/**/*.sh
 !scripts/**/*.md
 
+!lessons/
+!lessons/**/
+!lessons/**/*.lua
+!lessons/**/*.luau
+!lessons/**/*.md
+!lessons/**/*.txt
+!lessons/**/*.json
+
 !modules/
 !modules/**/
 !modules/**/*.lua
