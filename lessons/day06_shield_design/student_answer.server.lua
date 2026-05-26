@@ -1,15 +1,15 @@
--- Roblox Studio Lesson Script Guide
--- Lesson: day06_shield_design - 방패와 방어 규칙
--- Role: student_answer.server.lua, 학생용 완성 모범답안 코드
--- Editor: Roblox Studio with Explorer, Properties, Output panels visible
--- Paste path: StarterPack > PracticeShield > Script named Day06StudentAnswer
--- Precondition: run the matching teacher_setup.server.lua first so required Workspace/StarterPack/Teams objects exist.
--- Required objects: StarterPack/PracticeShield
--- Completion policy: this file is a fully implemented answer sheet. Keep class copies complete and runnable.
--- Verification: press Play, use the lesson Tool/button/system, then check visible behavior and Output for errors.
--- Troubleshooting: Tool lessons must be placed inside the Tool, while map/button/round lessons go in ServerScriptService.
--- Safety: damage, projectile, and round logic run on the server so students can test multiplayer behavior consistently.
--- Reference: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+-- Roblox Studio 수업 스크립트 안내
+-- 수업: day06_shield_design - 방패와 방어 규칙
+-- 문서 매핑: 커리큘럼 6회차의 체력 증가 방패, 투사체 방어벽, 데미지 반사를 Tool 코드로 구성했습니다.
+-- 미션 단계: 빌더=장착 시 체력 증가, 스크립터=방패 충돌 영역, 크리에이터=받은 피해 일부를 반사하는 규칙입니다.
+-- 강의가이드 연결: 서버에서 데미지와 소유자를 판정해야 멀티플레이 방어 규칙이 공정하게 유지됩니다.
+-- 역할: student_answer.server.lua, 학생용 완성 모범답안 코드입니다.
+-- 편집 위치: Roblox Studio에서 Explorer, Properties, Output 창을 켜고 작업합니다.
+-- 붙여넣기 위치: StarterPack > PracticeShield > Script 이름 Day06StudentAnswer
+-- 선행 조건: 선생님이 PracticeShield Tool을 먼저 만들어야 합니다.
+-- 학생 목표: Equipped/Unequipped, 충돌 판정, 방어 상태 변수가 캐릭터 능력치를 바꾸는 방식을 이해합니다.
+-- 검증 기준: 방패 장착 시 체력이 늘고, 방어 판정이 켜지며, 해제 시 원래 상태로 돌아오면 성공입니다.
+-- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
 local tool = script.Parent
 
 local BONUS_HEALTH = 60

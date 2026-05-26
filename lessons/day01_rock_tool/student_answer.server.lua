@@ -1,15 +1,15 @@
--- Roblox Studio Lesson Script Guide
--- Lesson: day01_rock_tool - 돌멩이 기초 무기
--- Role: student_answer.server.lua, 학생용 완성 모범답안 코드
--- Editor: Roblox Studio with Explorer, Properties, Output panels visible
--- Paste path: StarterPack > PracticeRock > Script named Day01StudentAnswer
--- Precondition: run the matching teacher_setup.server.lua first so required Workspace/StarterPack/Teams objects exist.
--- Required objects: Workspace/Day01_Arena, StarterPack/PracticeRock
--- Completion policy: this file is a fully implemented answer sheet. Keep class copies complete and runnable.
--- Verification: press Play, use the lesson Tool/button/system, then check visible behavior and Output for errors.
--- Troubleshooting: Tool lessons must be placed inside the Tool, while map/button/round lessons go in ServerScriptService.
--- Safety: damage, projectile, and round logic run on the server so students can test multiplayer behavior consistently.
--- Reference: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+-- Roblox Studio 수업 스크립트 안내
+-- 수업: day01_rock_tool - 돌멩이 디자인과 기초 무기
+-- 문서 매핑: 커리큘럼 1회차의 빌더/스크립터/크리에이터 단계를 도구 장착, 데미지, 넉백으로 나눴습니다.
+-- 미션 단계: 빌더=PracticeRock 장착, 스크립터=Touched 데미지, 크리에이터=AssemblyLinearVelocity 넉백입니다.
+-- 강의가이드 연결: "돌멩이 툴 만들기" 예제를 수업용 완성 답안으로 정리한 파일입니다.
+-- 역할: student_answer.server.lua, 학생용 완성 모범답안 코드입니다.
+-- 편집 위치: Roblox Studio에서 Explorer, Properties, Output 창을 켜고 작업합니다.
+-- 붙여넣기 위치: StarterPack > PracticeRock > Script 이름 Day01StudentAnswer
+-- 선행 조건: 선생님이 teacher_setup.server.lua를 먼저 실행해 Workspace/Day01_Arena와 StarterPack/PracticeRock을 만들어야 합니다.
+-- 학생 목표: Tool.Activated와 Touched 이벤트가 서버에서 실제 전투 규칙으로 이어지는 흐름을 이해합니다.
+-- 검증 기준: Play 후 돌멩이를 사용하면 투사체가 날아가고, 더미에게 피해와 넉백이 적용되면 성공입니다.
+-- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
 local Debris = game:GetService("Debris")
 local tool = script.Parent
 

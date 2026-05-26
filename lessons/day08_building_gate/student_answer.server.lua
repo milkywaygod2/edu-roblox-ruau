@@ -1,15 +1,15 @@
--- Roblox Studio Lesson Script Guide
--- Lesson: day08_building_gate - 건물과 파괴되는 성문
--- Role: student_answer.server.lua, 학생용 완성 모범답안 코드
--- Editor: Roblox Studio with Explorer, Properties, Output panels visible
--- Paste path: ServerScriptService > Script named Day08StudentAnswer
--- Precondition: run the matching teacher_setup.server.lua first so required Workspace/StarterPack/Teams objects exist.
--- Required objects: Workspace/Day08_Castle/Gate
--- Completion policy: this file is a fully implemented answer sheet. Keep class copies complete and runnable.
--- Verification: press Play, use the lesson Tool/button/system, then check visible behavior and Output for errors.
--- Troubleshooting: Tool lessons must be placed inside the Tool, while map/button/round lessons go in ServerScriptService.
--- Safety: damage, projectile, and round logic run on the server so students can test multiplayer behavior consistently.
--- Reference: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+-- Roblox Studio 수업 스크립트 안내
+-- 수업: day08_building_gate - 건물과 파괴되는 성문
+-- 문서 매핑: 커리큘럼 8회차의 기지 뼈대, 계단/지붕, 파괴되는 문을 성문 체력 코드로 구성했습니다.
+-- 미션 단계: 빌더=성문 구조 확인, 스크립터=체력 값 감소, 크리에이터=0이 되면 Anchored를 풀고 무너지는 문입니다.
+-- 강의가이드 연결: "파괴되는 성문 만들기" 장면처럼 한 번에 사라지지 않고 맞을수록 무너지는 건물을 만듭니다.
+-- 역할: student_answer.server.lua, 학생용 완성 모범답안 코드입니다.
+-- 편집 위치: Roblox Studio에서 Explorer, Properties, Output 창을 켜고 작업합니다.
+-- 붙여넣기 위치: ServerScriptService > Script 이름 Day08StudentAnswer
+-- 선행 조건: 선생님이 Workspace/Day08_Castle/Gate를 먼저 만들어야 합니다.
+-- 학생 목표: Model 내부 Part 순회, 체력 변수, 파괴 시 물리 해제가 건물 규칙을 만드는 방식을 이해합니다.
+-- 검증 기준: 대포알 또는 데미지 이벤트 후 성문 체력이 줄고, 0 이하에서 파트가 흩어지면 성공입니다.
+-- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
 local castle = workspace:WaitForChild("Day08_Castle")
 local gate = castle:WaitForChild("Gate")
 local health = 120
