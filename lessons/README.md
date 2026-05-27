@@ -9,6 +9,10 @@ lessons/
   day01_rock_tool/
     teacher_setup.server.lua
     student_answer.server.lua
+  day11_magic_skill/
+    teacher_setup.server.lua
+    student_answer.server.lua
+    student_answer.client.lua
   ...
   day12_final_battle/
     teacher_setup.server.lua
@@ -17,6 +21,7 @@ lessons/
 
 - `teacher_setup.server.lua`: 선생님이 Roblox Studio에서 수업 맵, Tool, 버튼, 팀, 연습용 더미를 자동 생성하는 준비 코드입니다.
 - `student_answer.server.lua`: 학생용 완성 모범답안입니다. 빈칸 채우기나 임시 스캐폴드가 아니라 완성된 정답 코드입니다.
+- `student_answer.client.lua`: 클라이언트 입력이 필요한 RemoteEvent 수업에서 Tool 안 LocalScript로 붙여넣는 코드입니다.
 - 파일명에 `.server.lua`를 붙인 이유는 대부분 서버 권한에서 오브젝트 생성, 데미지, 점수, 라운드 상태를 처리하기 때문입니다.
 
 ## 2. 공통 실행 환경
@@ -34,7 +39,7 @@ lessons/
 3. Play를 눌러 setup 코드가 Workspace/StarterPack/Teams 등에 필요한 오브젝트를 생성하는지 확인합니다.
 4. Stop을 누른 뒤 setup Script는 비활성화하거나 삭제합니다. 반복 실행하면 기존 오브젝트를 지우고 다시 만들 수 있습니다.
 5. 학생 답안 파일 상단의 `Paste path`를 확인합니다.
-6. `ServerScriptService` 또는 `StarterPack > Tool > Script`에 학생 답안 코드를 붙여넣습니다.
+6. 학생 답안 파일 상단의 붙여넣기 위치에 맞춰 `ServerScriptService`, `StarterPack > Tool > Script`, `StarterPack > Tool > LocalScript`에 코드를 붙여넣습니다.
 7. Play로 기능을 테스트하고 Output 창의 오류를 확인합니다.
 
 ## 4. Paste path 규칙
@@ -42,10 +47,12 @@ lessons/
 | 유형 | 붙여넣기 위치 | 대상 일차 |
 | --- | --- | --- |
 | 맵/버튼/라운드 서버 코드 | `ServerScriptService > Script` | 02, 03, 08, 09, 10, 12 |
-| Tool 동작 코드 | `StarterPack > Tool > Script` | 01, 04, 05, 06, 07, 11 |
+| Tool 동작 코드 | `StarterPack > Tool > Script` | 01, 04, 05, 06, 07 |
+| RemoteEvent 서버 판정 코드 | `ServerScriptService > Script` | 11 |
+| RemoteEvent 입력 코드 | `StarterPack > Tool > LocalScript` | 11 |
 | 준비 코드 | `ServerScriptService > Script` | 모든 teacher_setup |
 
-Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Backpack으로 복제된 Tool에 이벤트가 연결되지 않을 수 있습니다. Tool 계열 답안은 반드시 해당 Tool 내부 Script에 넣습니다.
+Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Backpack으로 복제된 Tool에 이벤트가 연결되지 않을 수 있습니다. Tool 계열 답안은 반드시 해당 Tool 내부 Script에 넣습니다. 11일차는 예외로 Tool의 LocalScript가 입력을 보내고, ServerScriptService의 Script가 서버 판정을 처리합니다.
 
 ## 5. 일차별 생성/실행 대상
 
@@ -61,7 +68,7 @@ Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Bac
 | 08 | 파괴되는 성문 | `Workspace/Day08_Castle/Gate` | `ServerScriptService > Script` |
 | 09 | 부분 파괴 성벽 | `Workspace/Day09_StoneWall` | `ServerScriptService > Script` |
 | 10 | 공성 병기 | `Workspace/Day10_SiegeEngine` | `ServerScriptService > Script` |
-| 11 | 마법 스킬 | `StarterPack/MagicStaff`, `Workspace/Day11_MagicArena` | `StarterPack > MagicStaff > Script` |
+| 11 | 마법 스킬 | `StarterPack/MagicStaff`, `Workspace/Day11_MagicArena`, `ReplicatedStorage/CastMagic` | `ServerScriptService > Script`, `StarterPack > MagicStaff > LocalScript` |
 | 12 | 최종 대전 | `Workspace/Day12_FinalBattle`, `Teams/Blue`, `Teams/Red` | `ServerScriptService > Script` |
 
 ## 6. 검증 체크리스트
@@ -75,7 +82,7 @@ Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Bac
 
 ## 7. 문제 해결
 
-- Tool 클릭이 반응하지 않음: 학생 답안 Script가 `StarterPack > Tool` 내부에 있는지 확인합니다.
+- Tool 클릭이 반응하지 않음: 학생 답안 Script가 `StarterPack > Tool` 내부에 있는지 확인합니다. 11일차는 `MagicStaff` 안 LocalScript와 `ServerScriptService`의 서버 Script가 둘 다 있어야 합니다.
 - `WaitForChild`에서 멈춤: teacher setup을 먼저 실행했는지, 오브젝트 이름이 주석의 경로와 같은지 확인합니다.
 - 데미지가 안 들어감: 대상에 Humanoid가 있어야 하며, 자기 캐릭터는 데미지 대상에서 제외됩니다.
 - 버튼이 안 눌림: ClickDetector가 버튼 Part 안에 있는지, Play 모드에서 거리가 충분히 가까운지 확인합니다.

@@ -36,4 +36,4 @@ for index = 1, 5 do
     marker.Parent = field
 end
 
-print("Day 02 setup complete")
+print("2일차 준비 완료")

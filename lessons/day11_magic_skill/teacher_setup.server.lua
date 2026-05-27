@@ -6,19 +6,27 @@
 -- 편집 위치: Roblox Studio에서 Explorer, Properties, Output 창을 켜고 작업합니다.
 -- 붙여넣기 위치: ServerScriptService > Script 이름 day11_magic_skill_TeacherSetup
 -- 실행 순서: 붙여넣기 > Play 실행 > 생성물 확인 > Stop > 수업 플레이테스트 전 setup Script 비활성화 또는 삭제
--- 생성/초기화 대상: StarterPack/MagicStaff, Workspace/Day11_MagicArena
+-- 생성/초기화 대상: StarterPack/MagicStaff, Workspace/Day11_MagicArena, ReplicatedStorage/CastMagic
 -- 안전 운영: 기존 Day11 Tool과 아레나를 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
--- 검증 기준: MagicStaff와 마법 아레나가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
+-- 검증 기준: MagicStaff, 마법 아레나, CastMagic RemoteEvent가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
 local StarterPack = game:GetService("StarterPack")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+
+local oldRemote = ReplicatedStorage:FindFirstChild("CastMagic")
+if oldRemote then oldRemote:Destroy() end
+
+local remote = Instance.new("RemoteEvent")
+remote.Name = "CastMagic"
+remote.Parent = ReplicatedStorage
 
 local oldTool = StarterPack:FindFirstChild("MagicStaff")
 if oldTool then oldTool:Destroy() end
 
 local staff = Instance.new("Tool")
 staff.Name = "MagicStaff"
-staff.ToolTip = "Cast server magic"
+staff.ToolTip = "서버 판정 마법을 시전합니다"
 staff.Parent = StarterPack
 
 local handle = Instance.new("Part")
@@ -51,4 +59,4 @@ for index = 1, 6 do
     humanoid.Parent = dummy
 end
 
-print("Day 11 setup complete")
+print("11일차 준비 완료")

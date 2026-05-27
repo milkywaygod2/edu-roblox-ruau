@@ -33,4 +33,4 @@ for index = 1, 5 do
     plank.Parent = gate
 end
 
-print("Day 08 setup complete")
+print("8일차 준비 완료")

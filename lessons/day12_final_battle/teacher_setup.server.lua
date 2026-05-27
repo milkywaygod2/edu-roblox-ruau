@@ -50,4 +50,4 @@ for index, x in ipairs({-28, 28}) do
     spawn.Parent = folder
 end
 
-print("Day 12 setup complete")
+print("12일차 준비 완료")

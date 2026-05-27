@@ -39,4 +39,4 @@ marker.Transparency = 0.35
 marker.BrickColor = BrickColor.new("Bright yellow")
 marker.Parent = folder
 
-print("Day 03 setup complete")
+print("3일차 준비 완료")

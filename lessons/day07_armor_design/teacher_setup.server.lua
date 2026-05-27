@@ -17,7 +17,7 @@ if oldTool then oldTool:Destroy() end
 local armor = Instance.new("Tool")
 armor.Name = "HeavyArmor"
 armor.RequiresHandle = true
-armor.ToolTip = "Equip for armor stats"
+armor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"
 armor.Parent = StarterPack
 
 local handle = Instance.new("Part")
@@ -27,4 +27,4 @@ handle.Material = Enum.Material.Metal
 handle.BrickColor = BrickColor.new("Really black")
 handle.Parent = armor
 
-print("Day 07 setup complete")
+print("7일차 준비 완료")

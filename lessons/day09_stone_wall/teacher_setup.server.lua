@@ -34,4 +34,4 @@ for section = 1, 5 do
     end
 end
 
-print("Day 09 setup complete")
+print("9일차 준비 완료")

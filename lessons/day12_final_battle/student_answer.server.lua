@@ -38,10 +38,11 @@ local function move_players_to_spawns()
     end
 end
 
-local function start_round()
+local function start_round(player)
     if roundRunning then return end
 
     roundRunning = true
+    workspace:SetAttribute("RoundStarter", player.Name)
     workspace:SetAttribute("RoundState", "Preparing")
     move_players_to_spawns()
 

@@ -18,7 +18,7 @@ if oldTool then oldTool:Destroy() end
 
 local tool = Instance.new("Tool")
 tool.Name = "BalanceSword"
-tool.ToolTip = "Cooldown sword"
+tool.ToolTip = "쿨타임이 있는 연습용 검"
 tool.Parent = StarterPack
 
 local handle = Instance.new("Part")
@@ -51,4 +51,4 @@ for index = 1, 5 do
     humanoid.Parent = dummy
 end
 
-print("Day 04 setup complete")
+print("4일차 준비 완료")

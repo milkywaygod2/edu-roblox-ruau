@@ -35,7 +35,7 @@ if oldTool then oldTool:Destroy() end
 
 local tool = Instance.new("Tool")
 tool.Name = "TrainingBow"
-tool.ToolTip = "Server projectile bow"
+tool.ToolTip = "서버에서 투사체를 만드는 연습용 활"
 tool.Parent = StarterPack
 
 local handle = Instance.new("Part")
@@ -44,4 +44,4 @@ handle.Size = Vector3.new(1, 4, 1)
 handle.Material = Enum.Material.Wood
 handle.Parent = tool
 
-print("Day 05 setup complete")
+print("5일차 준비 완료")

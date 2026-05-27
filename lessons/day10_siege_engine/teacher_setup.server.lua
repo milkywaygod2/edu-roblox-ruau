@@ -47,4 +47,4 @@ target.Transparency = 0.4
 target.BrickColor = BrickColor.new("Bright red")
 target.Parent = folder
 
-print("Day 10 setup complete")
+print("10일차 준비 완료")

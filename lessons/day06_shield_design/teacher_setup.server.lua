@@ -16,7 +16,7 @@ if oldTool then oldTool:Destroy() end
 
 local shield = Instance.new("Tool")
 shield.Name = "PracticeShield"
-shield.ToolTip = "Equip to block and gain health"
+shield.ToolTip = "장착하면 방어하고 체력이 늘어납니다"
 shield.Parent = StarterPack
 
 local handle = Instance.new("Part")
@@ -26,4 +26,4 @@ handle.Material = Enum.Material.Metal
 handle.BrickColor = BrickColor.new("Dark stone grey")
 handle.Parent = shield
 
-print("Day 06 setup complete")
+print("6일차 준비 완료")
