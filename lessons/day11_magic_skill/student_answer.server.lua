@@ -11,51 +11,52 @@
 -- 학생 목표: 마법 이펙트, 범위 피해, 서버 권한 검사가 하나의 스킬 시스템으로 묶이는 흐름을 이해합니다.
 -- 검증 기준: 지팡이 사용 시 화염구/폭발 효과가 보이고, 범위 안 더미에게만 피해가 들어가면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local remote = ReplicatedStorage:WaitForChild("CastMagic")
+local servicePlayers = game:GetService("Players")
+local serviceReplicatedStorage = game:GetService("ReplicatedStorage")
+local remoteeventCastMagic = serviceReplicatedStorage:WaitForChild("CastMagic")
 
 local MAX_DISTANCE = 80
 local RADIUS = 12
 local DAMAGE = 25
 local COOLDOWN = 1.8
-local lastCastByPlayer = {}
+local tableLastCastByPlayer = {}
 
 local function cast_magic(player, targetPosition)
     if typeof(targetPosition) ~= "Vector3" then return end
 
     local now = os.clock()
-    local lastCast = lastCastByPlayer[player] or -COOLDOWN
+    local lastCast = tableLastCastByPlayer[player] or -COOLDOWN
     if now - lastCast < COOLDOWN then return end
 
-    local character = player.Character
-    local root = character and character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    local modelCharacter = player.Character
+    local partHumanoidRoot = modelCharacter and modelCharacter:FindFirstChild("HumanoidRootPart")
+    if not partHumanoidRoot then return end
 
-    if (targetPosition - root.Position).Magnitude > MAX_DISTANCE then return end
+    if (targetPosition - partHumanoidRoot.Position).Magnitude > MAX_DISTANCE then return end
 
-    lastCastByPlayer[player] = now
+    tableLastCastByPlayer[player] = now
 
-    local explosion = Instance.new("Explosion")
-    explosion.Position = targetPosition
-    explosion.BlastRadius = RADIUS
-    explosion.BlastPressure = 0
-    explosion.DestroyJointRadiusPercent = 0
-    explosion.Parent = workspace
+    local explosionMagic = Instance.new("Explosion")
+    explosionMagic.Position = targetPosition
+    explosionMagic.BlastRadius = RADIUS
+    explosionMagic.BlastPressure = 0
+    explosionMagic.DestroyJointRadiusPercent = 0
+    explosionMagic.Parent = workspace
 
     for _, object in ipairs(workspace:GetDescendants()) do
         if object:IsA("Humanoid") then
-            local targetModel = object.Parent
-            local targetRoot = targetModel and targetModel:FindFirstChild("HumanoidRootPart")
-            if targetRoot and (targetRoot.Position - targetPosition).Magnitude <= RADIUS and targetModel ~= character then
-                object:TakeDamage(DAMAGE)
+            local humanoidTarget = object
+            local modelTarget = humanoidTarget.Parent
+            local partTargetRoot = modelTarget and modelTarget:FindFirstChild("HumanoidRootPart")
+            if partTargetRoot and (partTargetRoot.Position - targetPosition).Magnitude <= RADIUS and modelTarget ~= modelCharacter then
+                humanoidTarget:TakeDamage(DAMAGE)
             end
         end
     end
 end
 
-remote.OnServerEvent:Connect(cast_magic)
+remoteeventCastMagic.OnServerEvent:Connect(cast_magic)
 
-Players.PlayerRemoving:Connect(function(player)
-    lastCastByPlayer[player] = nil
+servicePlayers.PlayerRemoving:Connect(function(player)
+    tableLastCastByPlayer[player] = nil
 end)

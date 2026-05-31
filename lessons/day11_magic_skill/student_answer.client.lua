@@ -10,23 +10,23 @@
 -- 학생 목표: Tool.Activated 입력은 클라이언트가 받고, 실제 피해 판정은 서버가 처리하는 구조를 이해합니다.
 -- 검증 기준: 지팡이를 장착하고 클릭하면 마우스 위치가 서버로 전달되어 폭발 마법이 실행되면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local servicePlayers = game:GetService("Players")
+local serviceReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local player = Players.LocalPlayer
-local tool = script.Parent
-local remote = ReplicatedStorage:WaitForChild("CastMagic")
-local mouse = nil
+local playerLocal = servicePlayers.LocalPlayer
+local toolMagicStaff = script.Parent
+local remoteeventCastMagic = serviceReplicatedStorage:WaitForChild("CastMagic")
+local mousePlayer = nil
 
-tool.Equipped:Connect(function()
-    mouse = player:GetMouse()
+toolMagicStaff.Equipped:Connect(function()
+    mousePlayer = playerLocal:GetMouse()
 end)
 
-tool.Unequipped:Connect(function()
-    mouse = nil
+toolMagicStaff.Unequipped:Connect(function()
+    mousePlayer = nil
 end)
 
-tool.Activated:Connect(function()
-    if not mouse then return end
-    remote:FireServer(mouse.Hit.Position)
+toolMagicStaff.Activated:Connect(function()
+    if not mousePlayer then return end
+    remoteeventCastMagic:FireServer(mousePlayer.Hit.Position)
 end)

@@ -10,46 +10,46 @@
 -- 학생 목표: Humanoid 속성 변경과 장비 해제 시 원상복구가 게임 밸런스에 왜 필요한지 이해합니다.
 -- 검증 기준: 갑옷 장착 시 체력은 늘고 속도/점프는 줄며, 해제 시 원래 능력치로 돌아오면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local tool = script.Parent
-local equippedCharacter = nil
-local saved = nil
+local toolHeavyArmor = script.Parent
+local modelEquippedCharacter = nil
+local tableSavedStats = nil
 
-tool.Equipped:Connect(function()
-    equippedCharacter = tool.Parent
-    local humanoid = equippedCharacter:FindFirstChildOfClass("Humanoid")
-    local root = equippedCharacter:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root then return end
+toolHeavyArmor.Equipped:Connect(function()
+    modelEquippedCharacter = toolHeavyArmor.Parent
+    local humanoidPlayer = modelEquippedCharacter:FindFirstChildOfClass("Humanoid")
+    local partHumanoidRoot = modelEquippedCharacter:FindFirstChild("HumanoidRootPart")
+    if not humanoidPlayer or not partHumanoidRoot then return end
 
-    saved = {MaxHealth = humanoid.MaxHealth, WalkSpeed = humanoid.WalkSpeed, JumpPower = humanoid.JumpPower}
-    humanoid.MaxHealth = 180
-    humanoid.Health = math.min(humanoid.Health + 80, humanoid.MaxHealth)
-    humanoid.WalkSpeed = 10
-    humanoid.JumpPower = 32
+    tableSavedStats = {MaxHealth = humanoidPlayer.MaxHealth, WalkSpeed = humanoidPlayer.WalkSpeed, JumpPower = humanoidPlayer.JumpPower}
+    humanoidPlayer.MaxHealth = 180
+    humanoidPlayer.Health = math.min(humanoidPlayer.Health + 80, humanoidPlayer.MaxHealth)
+    humanoidPlayer.WalkSpeed = 10
+    humanoidPlayer.JumpPower = 32
 
-    local aura = Instance.new("ParticleEmitter")
-    aura.Name = "ArmorAura"
-    aura.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-    aura.Rate = 20
-    aura.Lifetime = NumberRange.new(0.5, 1.2)
-    aura.Speed = NumberRange.new(1, 3)
-    aura.Parent = root
+    local particleemitterArmorAura = Instance.new("ParticleEmitter")
+    particleemitterArmorAura.Name = "ArmorAura"
+    particleemitterArmorAura.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+    particleemitterArmorAura.Rate = 20
+    particleemitterArmorAura.Lifetime = NumberRange.new(0.5, 1.2)
+    particleemitterArmorAura.Speed = NumberRange.new(1, 3)
+    particleemitterArmorAura.Parent = partHumanoidRoot
 end)
 
-tool.Unequipped:Connect(function()
-    if not equippedCharacter or not saved then return end
+toolHeavyArmor.Unequipped:Connect(function()
+    if not modelEquippedCharacter or not tableSavedStats then return end
 
-    local humanoid = equippedCharacter:FindFirstChildOfClass("Humanoid")
-    local root = equippedCharacter:FindFirstChild("HumanoidRootPart")
-    if humanoid then
-        humanoid.MaxHealth = saved.MaxHealth
-        humanoid.Health = math.min(humanoid.Health, saved.MaxHealth)
-        humanoid.WalkSpeed = saved.WalkSpeed
-        humanoid.JumpPower = saved.JumpPower
+    local humanoidPlayer = modelEquippedCharacter:FindFirstChildOfClass("Humanoid")
+    local partHumanoidRoot = modelEquippedCharacter:FindFirstChild("HumanoidRootPart")
+    if humanoidPlayer then
+        humanoidPlayer.MaxHealth = tableSavedStats.MaxHealth
+        humanoidPlayer.Health = math.min(humanoidPlayer.Health, tableSavedStats.MaxHealth)
+        humanoidPlayer.WalkSpeed = tableSavedStats.WalkSpeed
+        humanoidPlayer.JumpPower = tableSavedStats.JumpPower
     end
 
-    local aura = root and root:FindFirstChild("ArmorAura")
-    if aura then aura:Destroy() end
+    local particleemitterArmorAura = partHumanoidRoot and partHumanoidRoot:FindFirstChild("ArmorAura")
+    if particleemitterArmorAura then particleemitterArmorAura:Destroy() end
 
-    equippedCharacter = nil
-    saved = nil
+    modelEquippedCharacter = nil
+    tableSavedStats = nil
 end)

@@ -10,34 +10,34 @@
 -- 학생 목표: 여러 Part를 순회하며 Attribute/체력 값을 이용해 성벽 상태를 관리하는 방식을 이해합니다.
 -- 검증 기준: 특정 성벽 구역만 피해를 받고, 체력이 0이 된 구역만 무너지면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local wall = workspace:WaitForChild("Day09_StoneWall")
+local folderDay09StoneWall = workspace:WaitForChild("Day09_StoneWall")
 local SECTION_HEALTH = 90
-local sectionHealth = {}
+local tableSectionHealth = {}
 
-local function collapse_section(section)
-    for _, part in ipairs(section:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Anchored = false
-            part.AssemblyLinearVelocity = Vector3.new(math.random(-15, 15), 25, math.random(-10, 10))
+local function collapse_section(modelSection)
+    for _, partStoneBlock in ipairs(modelSection:GetDescendants()) do
+        if partStoneBlock:IsA("BasePart") then
+            partStoneBlock.Anchored = false
+            partStoneBlock.AssemblyLinearVelocity = Vector3.new(math.random(-15, 15), 25, math.random(-10, 10))
         end
     end
 end
 
-local function register_section(section)
-    sectionHealth[section] = SECTION_HEALTH
-    for _, part in ipairs(section:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Touched:Connect(function(hit)
-                if hit.Name ~= "SiegeStone" and hit.Name ~= "TrainingArrow" then return end
-                hit:Destroy()
-                sectionHealth[section] -= 30
-                part.BrickColor = BrickColor.new("Dark stone grey")
-                if sectionHealth[section] <= 0 then collapse_section(section) end
+local function register_section(modelSection)
+    tableSectionHealth[modelSection] = SECTION_HEALTH
+    for _, partStoneBlock in ipairs(modelSection:GetDescendants()) do
+        if partStoneBlock:IsA("BasePart") then
+            partStoneBlock.Touched:Connect(function(partHit)
+                if partHit.Name ~= "SiegeStone" and partHit.Name ~= "TrainingArrow" then return end
+                partHit:Destroy()
+                tableSectionHealth[modelSection] -= 30
+                partStoneBlock.BrickColor = BrickColor.new("Dark stone grey")
+                if tableSectionHealth[modelSection] <= 0 then collapse_section(modelSection) end
             end)
         end
     end
 end
 
-for _, section in ipairs(wall:GetChildren()) do
-    if section:IsA("Model") then register_section(section) end
+for _, modelSection in ipairs(folderDay09StoneWall:GetChildren()) do
+    if modelSection:IsA("Model") then register_section(modelSection) end
 end

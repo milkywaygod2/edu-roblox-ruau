@@ -10,39 +10,39 @@
 -- 학생 목표: Model 내부 Part 순회, 체력 변수, 파괴 시 물리 해제가 건물 규칙을 만드는 방식을 이해합니다.
 -- 검증 기준: 대포알 또는 데미지 이벤트 후 성문 체력이 줄고, 0 이하에서 파트가 흩어지면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local castle = workspace:WaitForChild("Day08_Castle")
-local gate = castle:WaitForChild("Gate")
+local folderDay08Castle = workspace:WaitForChild("Day08_Castle")
+local modelGate = folderDay08Castle:WaitForChild("Gate")
 local health = 120
-local broken = false
+local boolBroken = false
 
 local function set_gate_color(color)
-    for _, part in ipairs(gate:GetDescendants()) do
-        if part:IsA("BasePart") then part.BrickColor = BrickColor.new(color) end
+    for _, partGatePlank in ipairs(modelGate:GetDescendants()) do
+        if partGatePlank:IsA("BasePart") then partGatePlank.BrickColor = BrickColor.new(color) end
     end
 end
 
 local function break_gate()
-    broken = true
-    for _, part in ipairs(gate:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Anchored = false
-            part.AssemblyLinearVelocity = Vector3.new(math.random(-25, 25), 35, math.random(-20, 20))
+    boolBroken = true
+    for _, partGatePlank in ipairs(modelGate:GetDescendants()) do
+        if partGatePlank:IsA("BasePart") then
+            partGatePlank.Anchored = false
+            partGatePlank.AssemblyLinearVelocity = Vector3.new(math.random(-25, 25), 35, math.random(-20, 20))
         end
     end
 end
 
 local function damage_gate(amount)
-    if broken then return end
+    if boolBroken then return end
     health -= amount
     if health <= 60 then set_gate_color("Bright orange") end
     if health <= 0 then break_gate() end
 end
 
-for _, part in ipairs(gate:GetDescendants()) do
-    if part:IsA("BasePart") then
-        part.Touched:Connect(function(hit)
-            if hit.Name == "TrainingArrow" or hit.Name == "SiegeStone" then
-                hit:Destroy()
+for _, partGatePlank in ipairs(modelGate:GetDescendants()) do
+    if partGatePlank:IsA("BasePart") then
+        partGatePlank.Touched:Connect(function(partHit)
+            if partHit.Name == "TrainingArrow" or partHit.Name == "SiegeStone" then
+                partHit:Destroy()
                 damage_gate(30)
             end
         end)

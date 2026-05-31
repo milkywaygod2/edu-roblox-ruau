@@ -27,10 +27,13 @@ lessons/
 ## 2. 공통 실행 환경
 
 - 프로그램: Roblox Studio
-- 기본 화면: View > Explorer, Properties, Output을 켜 둡니다.
+- 기본 화면: 로블록스 스튜디오의 버전이나 언어 설정에 따라 상단 메뉴의 **보기(View)** 또는 **창(Window)** 메뉴에서 아래 3가지 필수 창을 항상 활성화해 둡니다.
+  1. **탐색기 (Explorer) [단축키: `Ctrl + Shift + X` 또는 `Ctrl + Alt + I`]**: 게임 내 존재하는 모든 오브젝트(폴더, 파트, 스크립트, 팀 등)의 계층 구조를 트리 형태로 나열하고 관리하는 창입니다.
+  2. **속성 (Properties) [단축키: `Ctrl + Shift + P`]**: 선택한 오브젝트의 이름, 색상, 재질, 크기, 활성화 상태 등 세부적인 속성을 확인하고 편집하는 창입니다.
+  3. **출력 (Output)**: 스크립트의 `print()` 출력값이나 시스템 작동 로그, 그리고 실행 도중 발생한 에러 메시지(빨간색 코드 에러)를 실시간으로 띄워 디버깅을 돕는 창입니다.
 - 권장 테스트: Home > Play 또는 Test 탭의 Play
 - 권장 저장: 수업 전 `.rbxl` 또는 Team Create publish 백업
-- 보안 원칙: Toolbox 무료 모델은 최소화하고, 가져온 모델에 숨어 있는 Script가 있는지 Explorer에서 확인합니다.
+- 보안 원칙: Toolbox 무료 모델은 최소화하고, 가져온 모델에 숨어 있는 Script가 있는지 탐색기(Explorer)에서 확인합니다.
 
 ## 3. 공통 실행 순서
 
@@ -40,7 +43,7 @@ lessons/
 4. Stop을 누른 뒤 setup Script는 비활성화하거나 삭제합니다. 반복 실행하면 기존 오브젝트를 지우고 다시 만들 수 있습니다.
 5. 학생 답안 파일 상단의 `Paste path`를 확인합니다.
 6. 학생 답안 파일 상단의 붙여넣기 위치에 맞춰 `ServerScriptService`, `StarterPack > Tool > Script`, `StarterPack > Tool > LocalScript`에 코드를 붙여넣습니다.
-7. Play로 기능을 테스트하고 Output 창의 오류를 확인합니다.
+7. Play로 기능을 테스트하고 Output(출력) 창의 오류를 확인합니다.
 
 ## 4. Paste path 규칙
 
@@ -52,7 +55,7 @@ lessons/
 | RemoteEvent 입력 코드 | `StarterPack > Tool > LocalScript` | 11 |
 | 준비 코드 | `ServerScriptService > Script` | 모든 teacher_setup |
 
-Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Backpack으로 복제된 Tool에 이벤트가 연결되지 않을 수 있습니다. Tool 계열 답안은 반드시 해당 Tool 내부 Script에 넣습니다. 11일차는 예외로 Tool의 LocalScript가 입력을 보내고, ServerScriptService의 Script가 서버 판정을 처리합니다.
+Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Backpack으로 복제된 Tool에 이벤트가 연결되지 않을 수 있습니다. Tool 계열 답안은 반드시 해당 Tool 내부 Script에 넣습니다. 11일차는 예외로 Tool of LocalScript가 입력을 보내고, ServerScriptService의 Script가 서버 판정을 처리합니다.
 
 ## 5. 일차별 생성/실행 대상
 
@@ -76,7 +79,7 @@ Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Bac
 - teacher setup 실행 후 Explorer에 위 표의 생성물이 보이는가?
 - Tool 계열 수업은 Play 후 플레이어 Backpack/캐릭터에 Tool이 들어왔는가?
 - Output 창에 빨간 오류가 없는가?
-- 버튼 수업은 ClickDetector의 MaxActivationDistance 안에서 클릭했는가?
+- 버튼 수업은 ClickDetector of MaxActivationDistance 안에서 클릭했는가?
 - 데미지 수업은 대상 Model 안에 Humanoid와 HumanoidRootPart가 있는가?
 - 라운드 수업은 Workspace Attribute `RoundState`, `TimeLeft`가 바뀌는가?
 
@@ -92,3 +95,23 @@ Tool 동작 코드를 `ServerScriptService`에 넣으면 실제 플레이어 Bac
 ## 8. 원본 문서 보존
 
 `docs/curriculum_12_weeks.md`는 원본 12주 계획 문서입니다. 이 파일은 기준 문서로 고정하고, 실제 실행 코드와 보완 운영 설명은 `lessons/`와 강의 가이드 문서에서 관리합니다.
+
+## 9. 교육용 네이밍 컨벤션
+
+어린 학생들과 초보자들이 변수의 타입과 역할을 직관적으로 이해하고 오타를 최소화할 수 있도록 아래의 **타입 소문자 + 대문자 시작** 네이밍 컨벤션을 스크립트 작성 시 강제 적용합니다.
+
+### 1) 기본 규칙
+*   **접두사(타입명)**: 로블록스의 클래스명 전체를 **약어와 언더바(_) 없이 100% 소문자**로 붙여 씁니다. (`localscript`, `remoteevent` 등 하나의 단어로 취급)
+*   **고유이름**: 타입명 바로 뒤에 붙이며, **첫 글자를 대문자**로 시작하여 이어 씁니다.
+
+### 2) 세부 타입별 예시
+*   **서비스**: `service` + 서비스명 (예: `servicePlayers`, `serviceStarterPack`, `serviceDebris`)
+*   **폴더**: `folder` + 폴더명 (예: `folderDay01Arena`, `folder수업맵`)
+*   **파트**: `part` + 파트명 (예: `partPracticeBase`, `partStartButton`)
+*   **모델**: `model` + 모델명 (예: `modelPracticeDummy`)
+*   **도구(Tool)**: `tool` + 도구명 (예: `toolPracticeRock`)
+*   **서버 스크립트**: `script` + 스크립트명 (예: `scriptDay01StudentAnswer`)
+*   **로컬 스크립트**: `localscript` + 스크립트명 (예: `localscriptInput`)
+*   **리모트 이벤트**: `remoteevent` + 이벤트명 (예: `remoteeventCastMagic`)
+*   **클릭 감지기**: `clickdetector` + 감지기명 (예: `clickdetectorButton`)
+*   **값(Value) 객체**: `intvalueWood`, `stringvalueRoundState`, `boolvalueReady`

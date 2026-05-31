@@ -10,25 +10,25 @@
 -- 학생 목표: 눈에 보이는 Part 속성이 게임 플레이의 엄폐/충돌 규칙으로 바뀌는 과정을 이해합니다.
 -- 검증 기준: Play 후 나무/돌 느낌의 엄폐물이 정해진 위치에 생성되고 Output 오류가 없으면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local field = workspace:WaitForChild("Day02_CoverField")
+local folderDay02CoverField = workspace:WaitForChild("Day02_CoverField")
 local materials = {Enum.Material.WoodPlanks, Enum.Material.Slate, Enum.Material.Metal}
 local colors = {"Reddish brown", "Dark stone grey", "Medium blue"}
 
-local function create_cover(name, origin, material, colorName)
-    local model = Instance.new("Model")
-    model.Name = name
-    model.Parent = field
+local function create_cover(name, vectorOrigin, material, colorName)
+    local modelCover = Instance.new("Model")
+    modelCover.Name = name
+    modelCover.Parent = folderDay02CoverField
 
     for level = 1, 3 do
-        local block = Instance.new("Part")
-        block.Name = "CoverBlock_" .. level
-        block.Size = Vector3.new(8 - level, 2, 2)
-        block.Position = origin + Vector3.new(0, level, 0)
-        block.Anchored = true
-        block.CanCollide = true
-        block.Material = material
-        block.BrickColor = BrickColor.new(colorName)
-        block.Parent = model
+        local partCoverBlock = Instance.new("Part")
+        partCoverBlock.Name = "CoverBlock_" .. level
+        partCoverBlock.Size = Vector3.new(8 - level, 2, 2)
+        partCoverBlock.Position = vectorOrigin + Vector3.new(0, level, 0)
+        partCoverBlock.Anchored = true
+        partCoverBlock.CanCollide = true
+        partCoverBlock.Material = material
+        partCoverBlock.BrickColor = BrickColor.new(colorName)
+        partCoverBlock.Parent = modelCover
     end
 end
 

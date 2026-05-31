@@ -10,41 +10,41 @@
 -- 학생 목표: CFrame.LookVector, AssemblyLinearVelocity, Debris 자동 삭제가 투사체 규칙을 만드는 방식을 이해합니다.
 -- 검증 기준: 활 사용 시 화살이 앞으로 포물선으로 날아가고, 목표에 닿으면 피해/폭발 효과가 보이면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local Debris = game:GetService("Debris")
-local tool = script.Parent
+local serviceDebris = game:GetService("Debris")
+local toolTrainingBow = script.Parent
 
 local SPEED = 110
 local ARC = 28
 local DAMAGE = 18
 local COOLDOWN = 0.9
-local ready = true
+local boolReady = true
 
-tool.Activated:Connect(function()
-    if not ready then return end
+toolTrainingBow.Activated:Connect(function()
+    if not boolReady then return end
 
-    local character = tool.Parent
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    local modelCharacter = toolTrainingBow.Parent
+    local partHumanoidRoot = modelCharacter:FindFirstChild("HumanoidRootPart")
+    if not partHumanoidRoot then return end
 
-    ready = false
+    boolReady = false
 
-    local arrow = Instance.new("Part")
-    arrow.Name = "TrainingArrow"
-    arrow.Size = Vector3.new(0.4, 0.4, 3)
-    arrow.Material = Enum.Material.Wood
-    arrow.CFrame = root.CFrame * CFrame.new(0, 1.5, -4)
-    arrow.Parent = workspace
-    arrow.AssemblyLinearVelocity = root.CFrame.LookVector * SPEED + Vector3.new(0, ARC, 0)
-    Debris:AddItem(arrow, 6)
+    local partArrow = Instance.new("Part")
+    partArrow.Name = "TrainingArrow"
+    partArrow.Size = Vector3.new(0.4, 0.4, 3)
+    partArrow.Material = Enum.Material.Wood
+    partArrow.CFrame = partHumanoidRoot.CFrame * CFrame.new(0, 1.5, -4)
+    partArrow.Parent = workspace
+    partArrow.AssemblyLinearVelocity = partHumanoidRoot.CFrame.LookVector * SPEED + Vector3.new(0, ARC, 0)
+    serviceDebris:AddItem(partArrow, 6)
 
-    arrow.Touched:Connect(function(hit)
-        if hit:IsDescendantOf(character) then return end
-        local humanoid = hit.Parent:FindFirstChildOfClass("Humanoid")
-        if humanoid then humanoid:TakeDamage(DAMAGE) end
-        if hit.Name:match("Target") then hit.BrickColor = BrickColor.new("Lime green") end
-        arrow:Destroy()
+    partArrow.Touched:Connect(function(partHit)
+        if partHit:IsDescendantOf(modelCharacter) then return end
+        local humanoidTarget = partHit.Parent:FindFirstChildOfClass("Humanoid")
+        if humanoidTarget then humanoidTarget:TakeDamage(DAMAGE) end
+        if partHit.Name:match("Target") then partHit.BrickColor = BrickColor.new("Lime green") end
+        partArrow:Destroy()
     end)
 
     task.wait(COOLDOWN)
-    ready = true
+    boolReady = true
 end)

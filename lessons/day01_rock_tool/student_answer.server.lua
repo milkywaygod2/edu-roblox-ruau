@@ -10,50 +10,50 @@
 -- 학생 목표: Tool.Activated와 Touched 이벤트가 서버에서 실제 전투 규칙으로 이어지는 흐름을 이해합니다.
 -- 검증 기준: Play 후 돌멩이를 사용하면 투사체가 날아가고, 더미에게 피해와 넉백이 적용되면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local Debris = game:GetService("Debris")
-local tool = script.Parent
+local serviceDebris = game:GetService("Debris")
+local toolPracticeRock = script.Parent
 
 local DAMAGE = 15
 local COOLDOWN = 0.8
 local SPEED = 90
-local ready = true
+local boolReady = true
 
-tool.Activated:Connect(function()
-    if not ready then return end
+toolPracticeRock.Activated:Connect(function()
+    if not boolReady then return end
 
-    local character = tool.Parent
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    local modelCharacter = toolPracticeRock.Parent
+    local partHumanoidRoot = modelCharacter:FindFirstChild("HumanoidRootPart")
+    if not partHumanoidRoot then return end
 
-    ready = false
+    boolReady = false
 
-    local rock = Instance.new("Part")
-    rock.Name = "ThrownPracticeRock"
-    rock.Shape = Enum.PartType.Ball
-    rock.Size = Vector3.new(1.2, 1.2, 1.2)
-    rock.Material = Enum.Material.Slate
-    rock.Position = root.Position + root.CFrame.LookVector * 3 + Vector3.new(0, 1.5, 0)
-    rock.Parent = workspace
-    rock.AssemblyLinearVelocity = root.CFrame.LookVector * SPEED + Vector3.new(0, 12, 0)
-    Debris:AddItem(rock, 5)
+    local partRock = Instance.new("Part")
+    partRock.Name = "ThrownPracticeRock"
+    partRock.Shape = Enum.PartType.Ball
+    partRock.Size = Vector3.new(1.2, 1.2, 1.2)
+    partRock.Material = Enum.Material.Slate
+    partRock.Position = partHumanoidRoot.Position + partHumanoidRoot.CFrame.LookVector * 3 + Vector3.new(0, 1.5, 0)
+    partRock.Parent = workspace
+    partRock.AssemblyLinearVelocity = partHumanoidRoot.CFrame.LookVector * SPEED + Vector3.new(0, 12, 0)
+    serviceDebris:AddItem(partRock, 5)
 
-    local hitOnce = false
-    rock.Touched:Connect(function(hit)
-        if hitOnce then return end
+    local boolHitOnce = false
+    partRock.Touched:Connect(function(partHit)
+        if boolHitOnce then return end
 
-        local targetModel = hit:FindFirstAncestorOfClass("Model")
-        local humanoid = targetModel and targetModel:FindFirstChildOfClass("Humanoid")
-        local targetRoot = targetModel and targetModel:FindFirstChild("HumanoidRootPart")
-        if not humanoid or targetModel == character then return end
+        local modelTarget = partHit:FindFirstAncestorOfClass("Model")
+        local humanoidTarget = modelTarget and modelTarget:FindFirstChildOfClass("Humanoid")
+        local partTargetRoot = modelTarget and modelTarget:FindFirstChild("HumanoidRootPart")
+        if not humanoidTarget or modelTarget == modelCharacter then return end
 
-        hitOnce = true
-        humanoid:TakeDamage(DAMAGE)
-        if targetRoot then
-            targetRoot.AssemblyLinearVelocity = root.CFrame.LookVector * 45 + Vector3.new(0, 18, 0)
+        boolHitOnce = true
+        humanoidTarget:TakeDamage(DAMAGE)
+        if partTargetRoot then
+            partTargetRoot.AssemblyLinearVelocity = partHumanoidRoot.CFrame.LookVector * 45 + Vector3.new(0, 18, 0)
         end
-        rock:Destroy()
+        partRock:Destroy()
     end)
 
     task.wait(COOLDOWN)
-    ready = true
+    boolReady = true
 end)

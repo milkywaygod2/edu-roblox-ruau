@@ -10,43 +10,43 @@
 -- 학생 목표: Equipped/Unequipped, 충돌 판정, 방어 상태 변수가 캐릭터 능력치를 바꾸는 방식을 이해합니다.
 -- 검증 기준: 방패 장착 시 체력이 늘고, 방어 판정이 켜지며, 해제 시 원래 상태로 돌아오면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local tool = script.Parent
+local toolPracticeShield = script.Parent
 
 local BONUS_HEALTH = 60
 local BLOCK_HEAL = 5
-local equippedCharacter = nil
-local savedStats = nil
+local modelEquippedCharacter = nil
+local tableSavedStats = nil
 
-tool.Equipped:Connect(function()
-    equippedCharacter = tool.Parent
-    local humanoid = equippedCharacter:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
+toolPracticeShield.Equipped:Connect(function()
+    modelEquippedCharacter = toolPracticeShield.Parent
+    local humanoidPlayer = modelEquippedCharacter:FindFirstChildOfClass("Humanoid")
+    if not humanoidPlayer then return end
 
-    savedStats = {MaxHealth = humanoid.MaxHealth, WalkSpeed = humanoid.WalkSpeed}
-    humanoid.MaxHealth += BONUS_HEALTH
-    humanoid.Health = math.min(humanoid.Health + BONUS_HEALTH, humanoid.MaxHealth)
-    humanoid.WalkSpeed -= 2
+    tableSavedStats = {MaxHealth = humanoidPlayer.MaxHealth, WalkSpeed = humanoidPlayer.WalkSpeed}
+    humanoidPlayer.MaxHealth += BONUS_HEALTH
+    humanoidPlayer.Health = math.min(humanoidPlayer.Health + BONUS_HEALTH, humanoidPlayer.MaxHealth)
+    humanoidPlayer.WalkSpeed -= 2
 end)
 
-tool.Unequipped:Connect(function()
-    if not equippedCharacter or not savedStats then return end
+toolPracticeShield.Unequipped:Connect(function()
+    if not modelEquippedCharacter or not tableSavedStats then return end
 
-    local humanoid = equippedCharacter:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        humanoid.MaxHealth = savedStats.MaxHealth
-        humanoid.Health = math.min(humanoid.Health, savedStats.MaxHealth)
-        humanoid.WalkSpeed = savedStats.WalkSpeed
+    local humanoidPlayer = modelEquippedCharacter:FindFirstChildOfClass("Humanoid")
+    if humanoidPlayer then
+        humanoidPlayer.MaxHealth = tableSavedStats.MaxHealth
+        humanoidPlayer.Health = math.min(humanoidPlayer.Health, tableSavedStats.MaxHealth)
+        humanoidPlayer.WalkSpeed = tableSavedStats.WalkSpeed
     end
 
-    equippedCharacter = nil
-    savedStats = nil
+    modelEquippedCharacter = nil
+    tableSavedStats = nil
 end)
 
-tool.Handle.Touched:Connect(function(hit)
-    if not hit.Name:match("Arrow") and not hit.Name:match("Projectile") then return end
-    if not equippedCharacter then return end
+toolPracticeShield.Handle.Touched:Connect(function(partHit)
+    if not partHit.Name:match("Arrow") and not partHit.Name:match("Projectile") then return end
+    if not modelEquippedCharacter then return end
 
-    local humanoid = equippedCharacter:FindFirstChildOfClass("Humanoid")
-    if humanoid then humanoid.Health = math.min(humanoid.Health + BLOCK_HEAL, humanoid.MaxHealth) end
-    hit:Destroy()
+    local humanoidPlayer = modelEquippedCharacter:FindFirstChildOfClass("Humanoid")
+    if humanoidPlayer then humanoidPlayer.Health = math.min(humanoidPlayer.Health + BLOCK_HEAL, humanoidPlayer.MaxHealth) end
+    partHit:Destroy()
 end)

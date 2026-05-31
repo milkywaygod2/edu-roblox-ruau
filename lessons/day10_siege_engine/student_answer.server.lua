@@ -10,33 +10,33 @@
 -- 학생 목표: ClickDetector 입력과 벡터 방향 계산이 공성 탄환 발사 규칙으로 이어지는 흐름을 이해합니다.
 -- 검증 기준: 버튼 클릭 시 대포알이 발사지점에서 목표 방향으로 날아가면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local Debris = game:GetService("Debris")
-local folder = workspace:WaitForChild("Day10_SiegeEngine")
-local button = folder:WaitForChild("LaunchButton")
-local launchPoint = folder:WaitForChild("LaunchPoint")
-local targetPoint = folder:WaitForChild("TargetPoint")
+local serviceDebris = game:GetService("Debris")
+local folderDay10SiegeEngine = workspace:WaitForChild("Day10_SiegeEngine")
+local partLaunchButton = folderDay10SiegeEngine:WaitForChild("LaunchButton")
+local partLaunchPoint = folderDay10SiegeEngine:WaitForChild("LaunchPoint")
+local partTargetPoint = folderDay10SiegeEngine:WaitForChild("TargetPoint")
 
 local COOLDOWN = 2.5
-local ready = true
+local boolReady = true
 
 local function launch_stone(player)
-    if not ready then return end
-    ready = false
+    if not boolReady then return end
+    boolReady = false
 
-    local stone = Instance.new("Part")
-    stone.Name = "SiegeStone"
-    stone.Shape = Enum.PartType.Ball
-    stone.Size = Vector3.new(3, 3, 3)
-    stone.Material = Enum.Material.Slate
-    stone.Position = launchPoint.Position
-    stone.Parent = workspace
+    local partSiegeStone = Instance.new("Part")
+    partSiegeStone.Name = "SiegeStone"
+    partSiegeStone.Shape = Enum.PartType.Ball
+    partSiegeStone.Size = Vector3.new(3, 3, 3)
+    partSiegeStone.Material = Enum.Material.Slate
+    partSiegeStone.Position = partLaunchPoint.Position
+    partSiegeStone.Parent = workspace
 
-    local direction = (targetPoint.Position - launchPoint.Position).Unit
-    stone.AssemblyLinearVelocity = direction * 95 + Vector3.new(0, 45, 0)
-    Debris:AddItem(stone, 8)
+    local vectorDirection = (partTargetPoint.Position - partLaunchPoint.Position).Unit
+    partSiegeStone.AssemblyLinearVelocity = vectorDirection * 95 + Vector3.new(0, 45, 0)
+    serviceDebris:AddItem(partSiegeStone, 8)
 
     task.wait(COOLDOWN)
-    ready = true
+    boolReady = true
 end
 
-button.ClickDetector.MouseClick:Connect(launch_stone)
+partLaunchButton.ClickDetector.MouseClick:Connect(launch_stone)

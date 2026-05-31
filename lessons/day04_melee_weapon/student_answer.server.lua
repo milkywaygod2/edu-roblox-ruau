@@ -10,32 +10,32 @@
 -- 학생 목표: Tool.Activated, Touched, debounce 변수가 전투 밸런스를 제어하는 방식을 이해합니다.
 -- 검증 기준: 검을 사용하면 짧은 공격 판정만 켜지고, 쿨타임 동안 연속 피해가 막히면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local tool = script.Parent
+local toolBalanceSword = script.Parent
 
 local DAMAGE = 20
 local ACTIVE_TIME = 0.25
 local COOLDOWN = 1.2
-local canAttack = true
+local boolCanAttack = true
 
-tool.Activated:Connect(function()
-    if not canAttack then return end
+toolBalanceSword.Activated:Connect(function()
+    if not boolCanAttack then return end
 
-    canAttack = false
-    local alreadyHit = {}
-    tool.Handle.BrickColor = BrickColor.new("Really red")
+    boolCanAttack = false
+    local tableAlreadyHit = {}
+    toolBalanceSword.Handle.BrickColor = BrickColor.new("Really red")
 
-    local connection = tool.Handle.Touched:Connect(function(hit)
-        local model = hit:FindFirstAncestorOfClass("Model")
-        local humanoid = model and model:FindFirstChildOfClass("Humanoid")
-        if not humanoid or model == tool.Parent or alreadyHit[humanoid] then return end
+    local connectionTouched = toolBalanceSword.Handle.Touched:Connect(function(partHit)
+        local modelTarget = partHit:FindFirstAncestorOfClass("Model")
+        local humanoidTarget = modelTarget and modelTarget:FindFirstChildOfClass("Humanoid")
+        if not humanoidTarget or modelTarget == toolBalanceSword.Parent or tableAlreadyHit[humanoidTarget] then return end
 
-        alreadyHit[humanoid] = true
-        humanoid:TakeDamage(DAMAGE)
+        tableAlreadyHit[humanoidTarget] = true
+        humanoidTarget:TakeDamage(DAMAGE)
     end)
 
     task.wait(ACTIVE_TIME)
-    connection:Disconnect()
-    tool.Handle.BrickColor = BrickColor.new("Medium stone grey")
+    connectionTouched:Disconnect()
+    toolBalanceSword.Handle.BrickColor = BrickColor.new("Medium stone grey")
     task.wait(COOLDOWN)
-    canAttack = true
+    boolCanAttack = true
 end)
