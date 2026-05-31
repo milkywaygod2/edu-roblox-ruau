@@ -19,45 +19,45 @@
 
 -- --------------------------------------------------------------------------------
 
-local serviceStarterPack = game:GetService("StarterPack") -- [의미] StarterPack 서비스를 가져옴 / [의도] 플레이어가 게임 시작 시 인벤토리에 자동으로 지급받을 도구를 관리하기 위함
-local serviceWorkspace = game:GetService("Workspace")     -- [의미] Workspace 서비스를 가져옴 / [의도] 월드 상에 4일차 더미 폴더와 마커를 관리하기 위함
+local serviceStarterPack = game:GetService("StarterPack") -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임 시작 시 인벤토리에 자동으로 지급받을 도구를 관리하기 위함
+local serviceWorkspace = game:GetService("Workspace")     -- [의미/의도] Workspace 서비스를 가져옴 ➔ 월드 상에 4일차 더미 폴더와 마커를 관리하기 위함
 
-local toolOldTool = serviceStarterPack:FindFirstChild("BalanceSword") -- [의미] StarterPack에서 기존 "BalanceSword" 도구를 찾음 / [의도] 중복으로 지급되는 도구가 있는지 확인하기 위함
-if toolOldTool then toolOldTool:Destroy() end                         -- [의미] 기존에 존재하던 검 도구를 제거함 / [의도] 4일차 준비 코드가 재실행되었을 때 인벤토리에 여러 자루의 검이 쌓이는 것을 막기 위함
+local toolOldTool = serviceStarterPack:FindFirstChild("BalanceSword") -- [의미/의도] StarterPack에서 기존 "BalanceSword" 도구를 찾음 ➔ 중복으로 지급되는 도구가 있는지 확인하기 위함
+if toolOldTool then toolOldTool:Destroy() end                         -- [의미/의도] 기존에 존재하던 검 도구를 제거함 ➔ 4일차 준비 코드가 재실행되었을 때 인벤토리에 여러 자루의 검이 쌓이는 것을 막기 위함
 
-local toolBalanceSword = Instance.new("Tool") -- [의미] 새로운 도구(Tool) 객체를 생성함 / [의도] 플레이어가 착용하고 휘두를 수 있는 근접 무기인 연습용 검을 만들기 위함
-toolBalanceSword.Name = "BalanceSword"        -- [의미] 도구 이름을 "BalanceSword"로 설정 / [의도] 스탯 및 탐색기에서 밸런스 검임을 명확히 구분하기 위함
-toolBalanceSword.ToolTip = "쿨타임이 있는 연습용 검"    -- [의미] 도구의 마우스 오버 툴팁 텍스트를 설정 / [의도] 플레이어에게 해당 검이 어떤 장비인지 시각적인 팁을 제공하기 위함
-toolBalanceSword.Parent = serviceStarterPack  -- [의미] 도구 부모를 StarterPack 서비스로 지정 / [의도] 플레이어가 게임에 접속할 때 자동으로 장비 인벤토리에 들어오도록 지급하기 위함
+local toolBalanceSword = Instance.new("Tool") -- [의미/의도] 새로운 도구(Tool) 객체를 생성함 ➔ 플레이어가 착용하고 휘두를 수 있는 근접 무기인 연습용 검을 만들기 위함
+toolBalanceSword.Name = "BalanceSword"        -- [의미/의도] 도구 이름을 "BalanceSword"로 설정 ➔ 스탯 및 탐색기에서 밸런스 검임을 명확히 구분하기 위함
+toolBalanceSword.ToolTip = "쿨타임이 있는 연습용 검"    -- [의미/의도] 도구의 마우스 오버 툴팁 텍스트를 설정 ➔ 플레이어에게 해당 검이 어떤 장비인지 시각적인 팁을 제공하기 위함
+toolBalanceSword.Parent = serviceStarterPack  -- [의미/의도] 도구 부모를 StarterPack 서비스로 지정 ➔ 플레이어가 게임에 접속할 때 자동으로 장비 인벤토리에 들어오도록 지급하기 위함
 
-local partHandle = Instance.new("Part")                     -- [의미] 새로운 파트(Part) 객체를 생성함 / [의도] 도구가 손에 쥐어질 때 기준점이 되는 부위(Handle)를 만들기 위함
-partHandle.Name = "Handle"                                  -- [의미] 파트 이름을 반드시 "Handle"로 설정 / [의도] 로블록스 도구 시스템이 캐릭터의 손에 붙이는 부위로 자동 인식하게 하기 위함
-partHandle.Size = Vector3.new(1, 5, 1)                      -- [의미] 핸들 파트의 크기를 1x5x1의 얇고 긴 크기로 설정 / [의도] 플레이어가 손에 쥐는 검 모양의 긴 형태로 묘사하기 위함
-partHandle.Material = Enum.Material.Metal                   -- [의미] 파트 재질을 금속(Metal)으로 지정 / [의도] 강철로 만들어진 날카로운 무기 느낌을 주기 위함
-partHandle.BrickColor = BrickColor.new("Medium stone grey") -- [의미] 파트 색을 중간 회색(Medium stone grey)으로 설정 / [의도] 쇠칼의 금속 색상을 표현하기 위함
-partHandle.Parent = toolBalanceSword                        -- [의미] 핸들 파트를 BalanceSword 도구의 자식으로 등록 / [의도] 도구를 집었을 때 이 핸들 파트가 도구 외형으로 표시되게 하기 위함
+local partHandle = Instance.new("Part")                     -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 도구가 손에 쥐어질 때 기준점이 되는 부위(Handle)를 만들기 위함
+partHandle.Name = "Handle"                                  -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손에 붙이는 부위로 자동 인식하게 하기 위함
+partHandle.Size = Vector3.new(1, 5, 1)                      -- [의미/의도] 핸들 파트의 크기를 1x5x1의 얇고 긴 크기로 설정 ➔ 플레이어가 손에 쥐는 검 모양의 긴 형태로 묘사하기 위함
+partHandle.Material = Enum.Material.Metal                   -- [의미/의도] 파트 재질을 금속(Metal)으로 지정 ➔ 강철로 만들어진 날카로운 무기 느낌을 주기 위함
+partHandle.BrickColor = BrickColor.new("Medium stone grey") -- [의미/의도] 파트 색을 중간 회색(Medium stone grey)으로 설정 ➔ 쇠칼의 금속 색상을 표현하기 위함
+partHandle.Parent = toolBalanceSword                        -- [의미/의도] 핸들 파트를 BalanceSword 도구의 자식으로 등록 ➔ 도구를 집었을 때 이 핸들 파트가 도구 외형으로 표시되게 하기 위함
 
-local folderOldDummies = serviceWorkspace:FindFirstChild("Day04_Dummies") -- [의미] Workspace에서 기존 "Day04_Dummies" 폴더가 존재하는지 확인 / [의도] 중복 생성을 검출하기 위함
-if folderOldDummies then folderOldDummies:Destroy() end                   -- [의미] 기존 더미 폴더가 있으면 파괴 / [의도] 4일차 셋업 스크립트 재실행 시 연습용 더미들이 겹쳐서 생기지 않도록 깔끔하게 초기화하기 위함
+local folderOldDummies = serviceWorkspace:FindFirstChild("Day04_Dummies") -- [의미/의도] Workspace에서 기존 "Day04_Dummies" 폴더가 존재하는지 확인 ➔ 중복 생성을 검출하기 위함
+if folderOldDummies then folderOldDummies:Destroy() end                   -- [의미/의도] 기존 더미 폴더가 있으면 파괴 ➔ 4일차 셋업 스크립트 재실행 시 연습용 더미들이 겹쳐서 생기지 않도록 깔끔하게 초기화하기 위함
 
-local folderDay04Dummies = Instance.new("Folder") -- [의미] 새로운 폴더(Folder)를 생성함 / [의도] 4일차 연습용 쿨타임 더미들을 그룹화하여 관리하기 위함
-folderDay04Dummies.Name = "Day04_Dummies"         -- [의미] 폴더 이름을 "Day04_Dummies"로 지정 / [의도] 탐색기에서 4일차 전용 더미 폴더임을 식별하게 위함
-folderDay04Dummies.Parent = serviceWorkspace      -- [의미] 폴더 부모를 Workspace로 설정 / [의도] 월드 상에 더미 폴더가 존재하도록 만들기 위함
+local folderDay04Dummies = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder)를 생성함 ➔ 4일차 연습용 쿨타임 더미들을 그룹화하여 관리하기 위함
+folderDay04Dummies.Name = "Day04_Dummies"         -- [의미/의도] 폴더 이름을 "Day04_Dummies"로 지정 ➔ 탐색기에서 4일차 전용 더미 폴더임을 식별하게 위함
+folderDay04Dummies.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 월드 상에 더미 폴더가 존재하도록 만들기 위함
 
-for index = 1, 5 do                                     -- [의미] index 변수를 1부터 5까지 증가시키며 반복함 / [의도] 총 5마리의 연습용 공격 대상 더미를 정렬하여 소환하기 위함
-    local modelPracticeDummy = Instance.new("Model")    -- [의미] 새로운 모델(Model) 객체를 생성함 / [의도] 캐릭터 역할을 수행할 파트와 Humanoid를 하나로 그룹화하기 위함
-    modelPracticeDummy.Name = "CooldownDummy_" .. index -- [의미] 모델 이름을 인덱스 번호를 붙여 "CooldownDummy_1" 등으로 설정 / [의도] 여러 더미들을 각각 고유 번호로 쉽게 구분하기 위함
-    modelPracticeDummy.Parent = folderDay04Dummies      -- [의미] 모델 부모를 Day04_Dummies 폴더로 설정 / [의도] 4일차 더미 폴더 내에 배치하여 소속을 정리하기 위함
+for index = 1, 5 do                                     -- [의미/의도] index 변수를 1부터 5까지 증가시키며 반복함 ➔ 총 5마리의 연습용 공격 대상 더미를 정렬하여 소환하기 위함
+    local modelPracticeDummy = Instance.new("Model")    -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 캐릭터 역할을 수행할 파트와 Humanoid를 하나로 그룹화하기 위함
+    modelPracticeDummy.Name = "CooldownDummy_" .. index -- [의미/의도] 모델 이름을 인덱스 번호를 붙여 "CooldownDummy_1" 등으로 설정 ➔ 여러 더미들을 각각 고유 번호로 쉽게 구분하기 위함
+    modelPracticeDummy.Parent = folderDay04Dummies      -- [의미/의도] 모델 부모를 Day04_Dummies 폴더로 설정 ➔ 4일차 더미 폴더 내에 배치하여 소속을 정리하기 위함
 
-    local partHumanoidRoot = Instance.new("Part")                     -- [의미] 새로운 파트(Part) 객체를 생성함 / [의도] 더미 캐릭터의 중심 몸통(HumanoidRootPart) 역할을 할 파트를 만들기 위함
-    partHumanoidRoot.Name = "HumanoidRootPart"                        -- [의미] 파트 이름을 반드시 "HumanoidRootPart"로 설정 / [의도] 로블록스 Humanoid 시스템이 캐릭터 모델의 중심 기준점으로 자동 인식하게 하기 위함
-    partHumanoidRoot.Size = Vector3.new(3, 5, 2)                      -- [의미] 몸통 파트의 크기를 3x5x2로 널찍하게 설정 / [의도] 공격자가 검으로 때릴 때 타겟 범위가 넉넉한 샌드백처럼 만들기 위함
-    partHumanoidRoot.Position = Vector3.new(index * 7 - 21, 2.5, -15) -- [의미] 더미의 X좌표 위치를 일정 간격(7칸씩) 정렬하고 바닥(높이 2.5)에 맞게 셋팅하여 앞쪽(Z축 -15)에 배치 / [의도] 5마리의 더미가 겹치지 않고 일직선 상에 가지런히 정렬되도록 위함
-    partHumanoidRoot.Anchored = true                                  -- [의미] 몸통 파트를 공중에 고정시킴 / [의도] 넉백이나 공격을 받아도 더미가 넘어지거나 밀려나지 않고 샌드백처럼 그 자리에 버티도록 고정하기 위함
-    partHumanoidRoot.Parent = modelPracticeDummy                      -- [의미] 몸통 파트를 modelPracticeDummy 모델의 자식으로 등록 / [의도] 더미 모델의 핵심 구성물로 지정하기 위함
+    local partHumanoidRoot = Instance.new("Part")                     -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 더미 캐릭터의 중심 몸통(HumanoidRootPart) 역할을 할 파트를 만들기 위함
+    partHumanoidRoot.Name = "HumanoidRootPart"                        -- [의미/의도] 파트 이름을 반드시 "HumanoidRootPart"로 설정 ➔ 로블록스 Humanoid 시스템이 캐릭터 모델의 중심 기준점으로 자동 인식하게 하기 위함
+    partHumanoidRoot.Size = Vector3.new(3, 5, 2)                      -- [의미/의도] 몸통 파트의 크기를 3x5x2로 널찍하게 설정 ➔ 공격자가 검으로 때릴 때 타겟 범위가 넉넉한 샌드백처럼 만들기 위함
+    partHumanoidRoot.Position = Vector3.new(index * 7 - 21, 2.5, -15) -- [의미/의도] 더미의 X좌표 위치를 일정 간격(7칸씩) 정렬하고 바닥(높이 2.5)에 맞게 셋팅하여 앞쪽(Z축 -15)에 배치 ➔ 5마리의 더미가 겹치지 않고 일직선 상에 가지런히 정렬되도록 위함
+    partHumanoidRoot.Anchored = true                                  -- [의미/의도] 몸통 파트를 공중에 고정시킴 ➔ 넉백이나 공격을 받아도 더미가 넘어지거나 밀려나지 않고 샌드백처럼 그 자리에 버티도록 고정하기 위함
+    partHumanoidRoot.Parent = modelPracticeDummy                      -- [의미/의도] 몸통 파트를 modelPracticeDummy 모델의 자식으로 등록 ➔ 더미 모델의 핵심 구성물로 지정하기 위함
 
-    local humanoidPractice = Instance.new("Humanoid") -- [의미] 새로운 Humanoid 객체를 생성함 / [의도] 일반 파트에 생명력(HP)과 피해(TakeDamage)를 입을 수 있는 생명체 특성을 부여하기 위함
-    humanoidPractice.Parent = modelPracticeDummy      -- [의미] Humanoid 객체를 더미 모델의 자식으로 등록 / [의도] 더미 모델이 실제 HP 바를 가진 살아있는 타겟 dummy가 되도록 활성화하기 위함
-end                                                   -- [의미] 더미 생성을 위한 반복문(for)의 종료 / [의도] 5마리 더미 소환 및 속성 설정을 마침
+    local humanoidPractice = Instance.new("Humanoid") -- [의미/의도] 새로운 Humanoid 객체를 생성함 ➔ 일반 파트에 생명력(HP)과 피해(TakeDamage)를 입을 수 있는 생명체 특성을 부여하기 위함
+    humanoidPractice.Parent = modelPracticeDummy      -- [의미/의도] Humanoid 객체를 더미 모델의 자식으로 등록 ➔ 더미 모델이 실제 HP 바를 가진 살아있는 타겟 dummy가 되도록 활성화하기 위함
+end                                                   -- [의미/의도] 더미 생성을 위한 반복문(for)의 종료 ➔ 5마리 더미 소환 및 속성 설정을 마침
 
-print("4일차 준비 완료") -- [의미] 출력창에 "4일차 준비 완료" 메시지를 출력함 / [의도] 준비 과정이 오류 없이 마무리되었음을 확인하기 위함
+print("4일차 준비 완료") -- [의미/의도] 출력창에 "4일차 준비 완료" 메시지를 출력함 ➔ 준비 과정이 오류 없이 마무리되었음을 확인하기 위함

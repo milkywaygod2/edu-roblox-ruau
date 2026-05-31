@@ -19,21 +19,21 @@
 
 -- --------------------------------------------------------------------------------
 
-local serviceStarterPack = game:GetService("StarterPack")           -- [의미] StarterPack 서비스를 가져옴 / [의도] 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
-local toolOldTool = serviceStarterPack:FindFirstChild("HeavyArmor") -- [의미] StarterPack에서 기존 "HeavyArmor" 도구가 있는지 확인 / [의도] 중복으로 지급되는 리소스가 있는지 찾기 위함
-if toolOldTool then toolOldTool:Destroy() end                       -- [의미] 기존 갑옷 도구가 있으면 삭제 / [의도] 7일차 셋업 재실행 시 중복 장비가 인벤토리에 쌓이는 것을 방지하기 위함
+local serviceStarterPack = game:GetService("StarterPack")           -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
+local toolOldTool = serviceStarterPack:FindFirstChild("HeavyArmor") -- [의미/의도] StarterPack에서 기존 "HeavyArmor" 도구가 있는지 확인 ➔ 중복으로 지급되는 리소스가 있는지 찾기 위함
+if toolOldTool then toolOldTool:Destroy() end                       -- [의미/의도] 기존 갑옷 도구가 있으면 삭제 ➔ 7일차 셋업 재실행 시 중복 장비가 인벤토리에 쌓이는 것을 방지하기 위함
 
-local toolHeavyArmor = Instance.new("Tool")   -- [의미] 새로운 도구(Tool) 객체를 생성함 / [의도] 플레이어가 장착하여 방어력을 대폭 높일 무거운 갑옷 장비를 만들기 위함
-toolHeavyArmor.Name = "HeavyArmor"            -- [의미] 도구 이름을 "HeavyArmor"로 설정 / [의도] 탐색기에서 중갑옷 장비임을 구분할 수 있게 지정하기 위함
-toolHeavyArmor.RequiresHandle = true          -- [의미] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 / [의도] 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
-toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다" -- [의미] 장비의 설명 툴팁을 작성 / [의도] 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
-toolHeavyArmor.Parent = serviceStarterPack    -- [의미] 갑옷 도구를 StarterPack의 자식으로 등록 / [의도] 접속하는 모든 플레이어에게 자동으로 갑옷을 지급하기 위함
+local toolHeavyArmor = Instance.new("Tool")   -- [의미/의도] 새로운 도구(Tool) 객체를 생성함 ➔ 플레이어가 장착하여 방어력을 대폭 높일 무거운 갑옷 장비를 만들기 위함
+toolHeavyArmor.Name = "HeavyArmor"            -- [의미/의도] 도구 이름을 "HeavyArmor"로 설정 ➔ 탐색기에서 중갑옷 장비임을 구분할 수 있게 지정하기 위함
+toolHeavyArmor.RequiresHandle = true          -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
+toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다" -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
+toolHeavyArmor.Parent = serviceStarterPack    -- [의미/의도] 갑옷 도구를 StarterPack의 자식으로 등록 ➔ 접속하는 모든 플레이어에게 자동으로 갑옷을 지급하기 위함
 
-local partHandle = Instance.new("Part")                -- [의미] 새로운 파트(Part) 객체를 생성함 / [의도] 캐릭터가 쥘 갑옷의 중심 핸들이자 외형(Handle)을 만들기 위함
-partHandle.Name = "Handle"                             -- [의미] 파트 이름을 반드시 "Handle"로 설정 / [의도] 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 부착하도록 하기 위함
-partHandle.Size = Vector3.new(2, 2, 1)                 -- [의미] 파트 크기를 2x2x1로 널찍하고 두껍게 설정 / [의도] 무겁고 두꺼운 방패나 흉갑 같은 강인한 디자인을 연출하기 위함
-partHandle.Material = Enum.Material.Metal              -- [의미] 파트 재질을 금속(Metal)으로 설정 / [의도] 철제 중갑옷의 튼튼하고 차가운 금속 질감을 묘사하기 위함
-partHandle.BrickColor = BrickColor.new("Really black") -- [의미] 파트 색을 완전 검은색(Really black)으로 설정 / [의도] 묵직하고 강렬한 블랙 중갑옷 느낌을 시각화하기 위함
-partHandle.Parent = toolHeavyArmor                     -- [의미] 핸들 파트를 갑옷 도구의 자식으로 등록 / [의도] 장착 시 캐릭터 손에 이 검은 금속 덩어리 외형이 부착되도록 하기 위함
+local partHandle = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 쥘 갑옷의 중심 핸들이자 외형(Handle)을 만들기 위함
+partHandle.Name = "Handle"                             -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 부착하도록 하기 위함
+partHandle.Size = Vector3.new(2, 2, 1)                 -- [의미/의도] 파트 크기를 2x2x1로 널찍하고 두껍게 설정 ➔ 무겁고 두꺼운 방패나 흉갑 같은 강인한 디자인을 연출하기 위함
+partHandle.Material = Enum.Material.Metal              -- [의미/의도] 파트 재질을 금속(Metal)으로 설정 ➔ 철제 중갑옷의 튼튼하고 차가운 금속 질감을 묘사하기 위함
+partHandle.BrickColor = BrickColor.new("Really black") -- [의미/의도] 파트 색을 완전 검은색(Really black)으로 설정 ➔ 묵직하고 강렬한 블랙 중갑옷 느낌을 시각화하기 위함
+partHandle.Parent = toolHeavyArmor                     -- [의미/의도] 핸들 파트를 갑옷 도구의 자식으로 등록 ➔ 장착 시 캐릭터 손에 이 검은 금속 덩어리 외형이 부착되도록 하기 위함
 
-print("7일차 준비 완료") -- [의미] 출력창에 메시지 출력 / [의도] 준비 작업이 무사히 끝났음을 확인하기 위함
+print("7일차 준비 완료") -- [의미/의도] 출력창에 메시지 출력 ➔ 준비 작업이 무사히 끝났음을 확인하기 위함
