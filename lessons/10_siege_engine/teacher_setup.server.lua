@@ -20,9 +20,9 @@
 -- --------------------------------------------------------------------------------
 
 local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	Folder      = "Folder",
-	Tool        = "Tool",
-	RemoteEvent = "RemoteEvent",
+	FOLDER       = "Folder",
+	TOOL         = "Tool",
+	REMOTE_EVENT = "RemoteEvent",
 }
 
 local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
@@ -38,7 +38,7 @@ local function createOrReplaceInstance(strClassName, strName, instanceParent) --
 end
 
 local serviceWorkspace = game:GetService("Workspace")                                                        -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
-local folderSiegeEngine10 = createOrReplaceInstance(enumClassName.Folder, "SiegeEngine10", serviceWorkspace) -- [의미/의도] SiegeEngine10 Folder 대체 생성 ➔ 기존 공성 맵 폴더를 지우고 새로운 10일차 공성 병기 맵을 구성하기 위함
+local folderSiegeEngine10 = createOrReplaceInstance(enumClassName.FOLDER, "SiegeEngine10", serviceWorkspace) -- [의미/의도] SiegeEngine10 Folder 대체 생성 ➔ 기존 공성 맵 폴더를 지우고 새로운 10일차 공성 병기 맵을 구성하기 위함
 
 local partLaunchButton = Instance.new("Part")               -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투석기를 작동시킬 물리적 발사 버튼(LaunchButton)을 만들기 위함
 partLaunchButton.Name = "LaunchButton"                      -- [의미/의도] 파트 이름을 "LaunchButton"으로 설정 ➔ 성문 공격을 시작할 발사 스위치 파트임을 구분하기 위함

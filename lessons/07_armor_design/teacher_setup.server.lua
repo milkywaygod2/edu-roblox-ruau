@@ -20,9 +20,9 @@
 -- --------------------------------------------------------------------------------
 
 local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	Folder      = "Folder",
-	Tool        = "Tool",
-	RemoteEvent = "RemoteEvent",
+	FOLDER       = "Folder",
+	TOOL         = "Tool",
+	REMOTE_EVENT = "RemoteEvent",
 }
 
 local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
@@ -38,7 +38,7 @@ local function createOrReplaceInstance(strClassName, strName, instanceParent) --
 end
 
 local serviceStarterPack = game:GetService("StarterPack")                                            -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
-local toolHeavyArmor = createOrReplaceInstance(enumClassName.Tool, "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
+local toolHeavyArmor = createOrReplaceInstance(enumClassName.TOOL, "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
 toolHeavyArmor.RequiresHandle = true                                                                 -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
 toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                                        -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
 

@@ -20,9 +20,9 @@
 -- --------------------------------------------------------------------------------
 
 local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	Folder      = "Folder",
-	Tool        = "Tool",
-	RemoteEvent = "RemoteEvent",
+	FOLDER       = "Folder",
+	TOOL         = "Tool",
+	REMOTE_EVENT = "RemoteEvent",
 }
 
 local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
@@ -40,7 +40,7 @@ end
 local serviceStarterPack = game:GetService("StarterPack") -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어 인벤토리에 자동으로 활(Tool)을 장착시켜주기 위함
 local serviceWorkspace = game:GetService("Workspace")     -- [의미/의도] Workspace 서비스를 가져옴 ➔ 5일차 과녁 연습장 폴더와 파트를 맵에 추가하기 위함
 
-local folderTargetRange05 = createOrReplaceInstance(enumClassName.Folder, "TargetRange05", serviceWorkspace) -- [의미/의도] TargetRange05 Folder 대체 생성 ➔ 기존 과녁판 폴더를 지우고 새로운 5일차 과녁판 경기장을 구성하기 위함
+local folderTargetRange05 = createOrReplaceInstance(enumClassName.FOLDER, "TargetRange05", serviceWorkspace) -- [의미/의도] TargetRange05 Folder 대체 생성 ➔ 기존 과녁판 폴더를 지우고 새로운 5일차 과녁판 경기장을 구성하기 위함
 
 for index = 1, 6 do                                           -- [의미/의도] index 변수를 1부터 6까지 6번 반복 실행 ➔ 쏘아 맞힐 수 있는 6개의 과녁판(Target)을 만들기 위함
     local partTarget = Instance.new("Part")                   -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투사체를 맞춰 쓰러뜨릴 과녁판 파트를 생성하기 위함
@@ -52,7 +52,7 @@ for index = 1, 6 do                                           -- [의미/의도]
     partTarget.Parent = folderTargetRange05                   -- [의미/의도] 과녁 파트를 TargetRange05 폴더의 자식으로 등록 ➔ 과녁 연습장 폴더 내에 그룹화하여 관리하기 위함
 end                                                           -- [의미/의도] 과녁 생성을 위한 반복문(for)의 종료 ➔ 6개의 과녁 생성을 완료함
 
-local toolTrainingBow = createOrReplaceInstance(enumClassName.Tool, "TrainingBow", serviceStarterPack) -- [의미/의도] TrainingBow Tool 대체 생성 ➔ 기존 원거리 무기 활을 지우고 새로운 연습용 활을 초기화하기 위함
+local toolTrainingBow = createOrReplaceInstance(enumClassName.TOOL, "TrainingBow", serviceStarterPack) -- [의미/의도] TrainingBow Tool 대체 생성 ➔ 기존 원거리 무기 활을 지우고 새로운 연습용 활을 초기화하기 위함
 toolTrainingBow.ToolTip = "서버에서 투사체를 만드는 연습용 활"                                                        -- [의미/의도] 활 도구의 마우스 툴팁을 설정 ➔ 플레이어에게 서버 사이드에서 투사체를 생성함을 팁으로 설명하기 위함
 
 local partHandle = Instance.new("Part")  -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 손에 쥘 활의 중심 부위(Handle)를 만들기 위함

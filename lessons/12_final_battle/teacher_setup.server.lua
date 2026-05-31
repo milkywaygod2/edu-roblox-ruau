@@ -20,9 +20,9 @@
 -- --------------------------------------------------------------------------------
 
 local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	Folder      = "Folder",
-	Tool        = "Tool",
-	RemoteEvent = "RemoteEvent",
+	FOLDER       = "Folder",
+	TOOL         = "Tool",
+	REMOTE_EVENT = "RemoteEvent",
 }
 
 local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
@@ -48,7 +48,7 @@ for _, teamName in ipairs({"Blue", "Red"}) do                                   
     teamInstance.Parent = serviceTeams                                                            -- [의미/의도] 팀 객체를 Teams 서비스의 자식으로 등록 ➔ 로블록스 팀 시스템에 정식 팀으로 작동하도록 활성화하기 위함
 end                                                                                               -- [의미/의도] 팀 생성 반복문(for)의 종료 ➔ Blue, Red 팀 등록 완료
 
-local folderFinalBattle12 = createOrReplaceInstance(enumClassName.Folder, "FinalBattle12", serviceWorkspace) -- [의미/의도] FinalBattle12 Folder 대체 생성 ➔ 기존 최종 대전 폴더를 지우고 12일차 맵을 초기화하기 위함
+local folderFinalBattle12 = createOrReplaceInstance(enumClassName.FOLDER, "FinalBattle12", serviceWorkspace) -- [의미/의도] FinalBattle12 Folder 대체 생성 ➔ 기존 최종 대전 폴더를 지우고 12일차 맵을 초기화하기 위함
 
 local partRoundStartButton = Instance.new("Part")              -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 최종 매치 라운드를 시작할 수 있는 물리적인 스위치 버튼(RoundStartButton)을 만들기 위함
 partRoundStartButton.Name = "RoundStartButton"                 -- [의미/의도] 파트 이름을 "RoundStartButton"으로 설정 ➔ 라운드 개시 버튼임을 명확하게 식별하기 위함

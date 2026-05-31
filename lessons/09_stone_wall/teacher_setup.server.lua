@@ -20,9 +20,9 @@
 -- --------------------------------------------------------------------------------
 
 local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	Folder      = "Folder",
-	Tool        = "Tool",
-	RemoteEvent = "RemoteEvent",
+	FOLDER       = "Folder",
+	TOOL         = "Tool",
+	REMOTE_EVENT = "RemoteEvent",
 }
 
 local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
@@ -38,7 +38,7 @@ local function createOrReplaceInstance(strClassName, strName, instanceParent) --
 end
 
 local serviceWorkspace = game:GetService("Workspace")                                                    -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드인 Workspace 상에 9일차 석조 성벽을 생성하기 위함
-local folderStoneWall09 = createOrReplaceInstance(enumClassName.Folder, "StoneWall09", serviceWorkspace) -- [의미/의도] StoneWall09 Folder 대체 생성 ➔ 기존 성벽 폴더를 지우고 새로운 부분 파괴 성벽 맵을 구성하기 위함
+local folderStoneWall09 = createOrReplaceInstance(enumClassName.FOLDER, "StoneWall09", serviceWorkspace) -- [의미/의도] StoneWall09 Folder 대체 생성 ➔ 기존 성벽 폴더를 지우고 새로운 부분 파괴 성벽 맵을 구성하기 위함
 
 for section = 1, 5 do                                 -- [의미/의도] section 변수를 1부터 5 till 5까지 증가시키며 반복함 ➔ 성벽을 5개의 부분 섹션(Section)으로 나누어 독립적인 파괴가 가능하도록 구조화하기 위함
     local modelWallSection = Instance.new("Model")    -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 특정 섹션에 쌓여진 돌 블록 파트들을 하나의 성벽 섹션 모델로 결합하기 위함
