@@ -39,15 +39,15 @@
 
 ```text
 lessons/
-  rock_tool_01/
+  01_rock_tool/
     teacher_setup.server.lua
     student_answer.server.lua
-  magic_skill_11/
+  11_magic_skill/
     teacher_setup.server.lua
     student_answer.server.lua
     student_answer.client.lua
   ...
-  final_battle_12/
+  12_final_battle/
     teacher_setup.server.lua
     student_answer.server.lua
 ```
