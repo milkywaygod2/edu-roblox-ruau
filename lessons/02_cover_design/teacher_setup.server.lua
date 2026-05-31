@@ -19,26 +19,12 @@
 
 -- --------------------------------------------------------------------------------
 
-local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	FOLDER       = "Folder",
-	TOOL         = "Tool",
-	REMOTE_EVENT = "RemoteEvent",
-}
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common")) -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
-	local instanceOld = instanceParent:FindFirstChild(strName)                   -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
-	if instanceOld then                                                          -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
-		instanceOld:Destroy()                                                       -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
-	end                                                                          -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
 
-	local instanceNew = Instance.new(strClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
-	instanceNew.Name = strName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
-	instanceNew.Parent = instanceParent            -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
-	return instanceNew                             -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
-end
 
-local serviceWorkspace = game:GetService("Workspace")                                                      -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 공간(Workspace)에 접근하여 파트 및 폴더를 제어하기 위함
-local folderCoverField02 = createOrReplaceInstance(enumClassName.FOLDER, "CoverField02", serviceWorkspace) -- [의미/의도] CoverField02 Folder 대체 생성 ➔ 기존 엄폐물 필드를 지우고 새로운 엄폐물 배치판을 시작하기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                               -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 공간(Workspace)에 접근하여 파트 및 폴더를 제어하기 위함
+local folderCoverField02 = common.createOrReplaceInstance(common.enumClassName.FOLDER, "CoverField02", serviceWorkspace) -- [의미/의도] CoverField02 Folder 대체 생성 ➔ 기존 엄폐물 필드를 지우고 새로운 엄폐물 배치판을 시작하기 위함
 
 local partGridBase = Instance.new("Part")       -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 엄폐물 실습을 진행할 바닥(GridBase)을 만들기 위함
 partGridBase.Name = "GridBase"                  -- [의미/의도] 파트 이름을 "GridBase"로 설정 ➔ 바닥 구역임을 탐색기에서 구분할 수 있게 지정함
