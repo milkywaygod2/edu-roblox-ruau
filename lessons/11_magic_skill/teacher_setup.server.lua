@@ -19,24 +19,26 @@
 
 -- --------------------------------------------------------------------------------
 
+local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
+
+	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+end
+
 local serviceStarterPack = game:GetService("StarterPack")             -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어 접속 시 마법 지팡이 도구(Tool)를 인벤토리에 자동 배치해주기 위함
 local serviceReplicatedStorage = game:GetService("ReplicatedStorage") -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 클라이언트와 서버가 공유하는 저장소에 원격 이벤트를 배치하기 위함
 local serviceWorkspace = game:GetService("Workspace")                 -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 11일차 마법 아레나와 연습 더미들을 배치하기 위함
 
-local remoteeventOldRemote = serviceReplicatedStorage:FindFirstChild("CastMagic") -- [의미/의도] ReplicatedStorage에서 기존 "CastMagic" 리모트 이벤트를 찾음 ➔ 중복으로 등록된 원격 통신 개체가 있는지 확인하기 위함
-if remoteeventOldRemote then remoteeventOldRemote:Destroy() end                   -- [의미/의도] 기존 리모트 이벤트가 있다면 제거 ➔ 셋업 재실행 시 통신 네트워크에 기형적인 채널 꼬임이 없도록 깔끔하게 지우기 위함
+local remoteeventCastMagic = createOrReplaceInstance("RemoteEvent", "CastMagic", serviceReplicatedStorage) -- [의미/의도] CastMagic RemoteEvent 대체 생성 ➔ 기존 마법 시전 리모트이벤트를 지우고 통신 채널을 새로 구축하기 위함
 
-local remoteeventCastMagic = Instance.new("RemoteEvent") -- [의미/의도] 새로운 리모트이벤트(RemoteEvent) 객체를 생성함 ➔ 클라이언트(마우스 입력)에서 서버(데미지 판정)로 데이터를 전송할 통신 채널을 구축하기 위함
-remoteeventCastMagic.Name = "CastMagic"                  -- [의미/의도] 리모트이벤트 이름을 "CastMagic"으로 설정 ➔ 클라이언트 스크립트가 해당 이름의 통신망을 찾아 연결할 수 있게 예약하기 위함
-remoteeventCastMagic.Parent = serviceReplicatedStorage   -- [의미/의도] 리모트이벤트 부모를 ReplicatedStorage로 설정 ➔ 클라이언트와 서버 스크립터 둘 다 통신망에 동시 접근할 수 있도록 공유 공간에 배치하기 위함
-
-local toolOldTool = serviceStarterPack:FindFirstChild("MagicStaff") -- [의미/의도] StarterPack에서 기존 "MagicStaff" 도구를 찾음 ➔ 기존 지팡이가 존재한다면 제거하기 위함
-if toolOldTool then toolOldTool:Destroy() end                       -- [의미/의도] 기존 지팡이 도구가 있으면 삭제 ➔ 셋업 재실행 시 중복 장비가 인벤토리에 쌓이는 것을 방지하기 위함
-
-local toolMagicStaff = Instance.new("Tool") -- [의미/의도] 새로운 도구(Tool) 객체를 생성함 ➔ 플레이어가 들고 마법을 시전할 마법 지팡이 장비를 만들기 위함
-toolMagicStaff.Name = "MagicStaff"          -- [의미/의도] 도구 이름을 "MagicStaff"으로 설정 ➔ 탐색기에서 마법 지팡이임을 명확하게 식별하기 위함
-toolMagicStaff.ToolTip = "서버 판정 마법을 시전합니다"  -- [의미/의도] 도구 툴팁 설명을 작성 ➔ 플레이어에게 이 지팡이가 서버 연동식 마법 스킬용 장비임을 안내하기 위함
-toolMagicStaff.Parent = serviceStarterPack  -- [의미/의도] 도구를 StarterPack의 자식으로 등록 ➔ 접속하는 플레이어들에게 지팡이를 기본 장비로 지급하기 위함
+local toolMagicStaff = createOrReplaceInstance("Tool", "MagicStaff", serviceStarterPack) -- [의미/의도] MagicStaff Tool 대체 생성 ➔ 기존 마법 지팡이를 정리하고 새로운 마법 무기를 초기화하기 위함
+toolMagicStaff.ToolTip = "서버 판정 마법을 시전합니다"                                               -- [의미/의도] 도구 툴팁 설명을 작성 ➔ 플레이어에게 이 지팡이가 서버 연동식 마법 스킬용 장비임을 안내하기 위함
 
 local partHandle = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 지팡이의 손잡이이자 겉보기 외형(Handle)을 만들기 위함
 partHandle.Name = "Handle"                             -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 달라붙게 하기 위함
@@ -45,12 +47,7 @@ partHandle.Material = Enum.Material.Neon               -- [의미/의도] 파트
 partHandle.BrickColor = BrickColor.new("Royal purple") -- [의미/의도] 파트 색을 고귀한 보라색(Royal purple)으로 지정 ➔ 신비로운 마법 마력이 깃든 지팡이의 색상을 부각시키기 위함
 partHandle.Parent = toolMagicStaff                     -- [의미/의도] 핸들 파트를 MagicStaff 도구의 자식으로 등록 ➔ 장착 시 이 네온 지팡이 외형이 캐릭터 손에 부착되도록 하기 위함
 
-local folderOldArena = serviceWorkspace:FindFirstChild("MagicArena11") -- [의미/의도] Workspace에서 기존 "MagicArena11" 폴더가 있는지 확인 ➔ 중복 생성을 방지하기 위함
-if folderOldArena then folderOldArena:Destroy() end                    -- [의미/의도] 기존 마법 아레나 폴더를 삭제 ➔ 11일차 셋업 재실행 시 연습용 더미 아레나가 겹쳐 생성되는 현상을 차단하기 위함
-
-local folderMagicArena11 = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder) 객체를 생성함 ➔ 11일차 실습에서 쏠 마법 연습 대상 더미들을 묶어서 관리하기 위함
-folderMagicArena11.Name = "MagicArena11"          -- [의미/의도] 폴더 이름을 "MagicArena11"로 설정 ➔ 탐색기에서 11일차 전용 아레나 영역임을 식별하기 위함
-folderMagicArena11.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 월드 상에 마법 아레나 폴더가 존재하게 하기 위함
+local folderMagicArena11 = createOrReplaceInstance("Folder", "MagicArena11", serviceWorkspace) -- [의미/의도] MagicArena11 Folder 대체 생성 ➔ 기존 마법 아레나 폴더를 삭제하고 11일차 마법 연습장을 구성하기 위함
 
 for index = 1, 6 do                                  -- [의미/의도] index 변수를 1부터 6까지 6번 반복 실행 ➔ 마법 광역 공격을 맞아줄 연습용 더미 6마리를 만들기 위함
     local modelPracticeDummy = Instance.new("Model") -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 캐릭터 역할을 할 파트와 Humanoid를 하나로 결합하기 위함

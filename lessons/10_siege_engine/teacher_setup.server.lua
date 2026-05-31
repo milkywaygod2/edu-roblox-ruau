@@ -19,13 +19,20 @@
 
 -- --------------------------------------------------------------------------------
 
-local serviceWorkspace = game:GetService("Workspace")              -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
-local folderOld = serviceWorkspace:FindFirstChild("SiegeEngine10") -- [의미/의도] Workspace 내에서 기존 "SiegeEngine10" 폴더가 존재하는지 확인 ➔ 중복으로 지급되는 리소스가 있는지 찾기 위함
-if folderOld then folderOld:Destroy() end                          -- [의미/의도] 기존 공성 병기 폴더가 존재한다면 제거 ➔ 10일차 셋업 재실행 시 버튼과 발사 위치가 맵에 중복으로 겹쳐 생성되는 것을 방지하기 위함
+local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
 
-local folderSiegeEngine10 = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder) 객체를 생성함 ➔ 10일차 실습에서 다룰 발사 버튼, 발사 원점, 표적지를 하나로 그룹화하여 관리하기 위함
-folderSiegeEngine10.Name = "SiegeEngine10"         -- [의미/의도] 폴더 이름을 "SiegeEngine10"으로 설정 ➔ 탐색기에서 10일차 공성 병기 관련 리소스임을 쉽게 알아볼 수 있게 하기 위함
-folderSiegeEngine10.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 폴더가 게임 월드에 실존하게 하여 플레이어가 상호작용하도록 하기 위함
+	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+end
+
+local serviceWorkspace = game:GetService("Workspace")                                            -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
+local folderSiegeEngine10 = createOrReplaceInstance("Folder", "SiegeEngine10", serviceWorkspace) -- [의미/의도] SiegeEngine10 Folder 대체 생성 ➔ 기존 공성 맵 폴더를 지우고 새로운 10일차 공성 병기 맵을 구성하기 위함
 
 local partLaunchButton = Instance.new("Part")               -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투석기를 작동시킬 물리적 발사 버튼(LaunchButton)을 만들기 위함
 partLaunchButton.Name = "LaunchButton"                      -- [의미/의도] 파트 이름을 "LaunchButton"으로 설정 ➔ 성문 공격을 시작할 발사 스위치 파트임을 구분하기 위함

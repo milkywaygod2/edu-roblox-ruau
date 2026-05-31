@@ -19,13 +19,20 @@
 
 -- --------------------------------------------------------------------------------
 
-local serviceWorkspace = game:GetService("Workspace")         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
-local folderOld = serviceWorkspace:FindFirstChild("Castle08") -- [의미/의도] Workspace에서 기존 "Castle08" 폴더가 존재하는지 확인 ➔ 기존 리소스 중복 검출을 위함
-if folderOld then folderOld:Destroy() end                     -- [의미/의도] 기존 성문 폴더가 있다면 제거 ➔ 셋업 재실행 시 성문 오브젝트가 겹쳐서 생기는 버그를 방지하기 위함
+local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
 
-local folderCastle08 = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder) 객체를 생성함 ➔ 8일차 실습 성벽 및 성문 오브젝트들을 하나로 묶어 관리하기 위함
-folderCastle08.Name = "Castle08"              -- [의미/의도] 폴더 이름을 "Castle08"로 설정 ➔ 탐색기에서 8일차 전용 성 오브젝트 영역임을 알아보기 위함
-folderCastle08.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 폴더가 게임 세상에 실제로 추가되도록 함
+	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+end
+
+local serviceWorkspace = game:GetService("Workspace")                                  -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
+local folderCastle08 = createOrReplaceInstance("Folder", "Castle08", serviceWorkspace) -- [의미/의도] Castle08 Folder 대체 생성 ➔ 기존 성벽/성문 폴더를 지우고 새로운 8일차 성문 실습장을 구성하기 위함
 
 local modelGate = Instance.new("Model") -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 성문을 구성하는 여러 개의 나무판자 파트들을 하나의 성문 모델로 그룹화하기 위함
 modelGate.Name = "Gate"                 -- [의미/의도] 모델 이름을 "Gate"로 설정 ➔ 학생 스크립트가 해당 이름("Gate")으로 성문 모델을 찾아 작동시키게 하기 위함

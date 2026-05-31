@@ -19,6 +19,18 @@
 
 -- --------------------------------------------------------------------------------
 
+local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
+
+	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+end
+
 local serviceTeams = game:GetService("Teams")         -- [의미/의도] Teams 서비스를 가져옴 ➔ 공성전 전투를 치를 Blue/Red 두 진영(팀)을 등록하고 관리하기 위함
 local serviceWorkspace = game:GetService("Workspace") -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 12일차 라운드 버튼과 스폰지점 폴더를 생성하기 위함
 
@@ -30,12 +42,7 @@ for _, teamName in ipairs({"Blue", "Red"}) do                                   
     teamInstance.Parent = serviceTeams                                                            -- [의미/의도] 팀 객체를 Teams 서비스의 자식으로 등록 ➔ 로블록스 팀 시스템에 정식 팀으로 작동하도록 활성화하기 위함
 end                                                                                               -- [의미/의도] 팀 생성 반복문(for)의 종료 ➔ Blue, Red 팀 등록 완료
 
-local folderOld = serviceWorkspace:FindFirstChild("FinalBattle12") -- [의미/의도] Workspace에서 기존 "FinalBattle12" 폴더가 존재하는지 확인 ➔ 이전 수업 찌꺼기가 있는지 찾기 위함
-if folderOld then folderOld:Destroy() end                          -- [의미/의도] 기존 폴더가 존재한다면 제거 ➔ 12일차 셋업 재실행 시 라운드 개시 버튼과 스폰 지점들이 겹쳐서 생기는 에러를 방지하기 위함
-
-local folderFinalBattle12 = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder) 객체를 생성함 ➔ 12일차 실습에서 관리할 라운드 매니저 버튼과 스폰 패드를 하나로 묶기 위함
-folderFinalBattle12.Name = "FinalBattle12"         -- [의미/의도] 폴더 이름을 "FinalBattle12"로 설정 ➔ 탐색기에서 12일차 공성 대대전 영역임을 파악하기 위함
-folderFinalBattle12.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 폴더가 월드 상에 존재하도록 만들기 위함
+local folderFinalBattle12 = createOrReplaceInstance("Folder", "FinalBattle12", serviceWorkspace) -- [의미/의도] FinalBattle12 Folder 대체 생성 ➔ 기존 최종 대전 폴더를 지우고 12일차 맵을 초기화하기 위함
 
 local partRoundStartButton = Instance.new("Part")              -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 최종 매치 라운드를 시작할 수 있는 물리적인 스위치 버튼(RoundStartButton)을 만들기 위함
 partRoundStartButton.Name = "RoundStartButton"                 -- [의미/의도] 파트 이름을 "RoundStartButton"으로 설정 ➔ 라운드 개시 버튼임을 명확하게 식별하기 위함

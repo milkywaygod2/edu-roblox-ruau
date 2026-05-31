@@ -19,13 +19,20 @@
 
 -- --------------------------------------------------------------------------------
 
-local serviceWorkspace = game:GetService("Workspace")            -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드인 Workspace 상에 9일차 석조 성벽을 생성하기 위함
-local folderOld = serviceWorkspace:FindFirstChild("StoneWall09") -- [의미/의도] Workspace에서 기존 "StoneWall09" 폴더가 존재하는지 확인 ➔ 중복으로 생성되는 것을 감지하기 위함
-if folderOld then folderOld:Destroy() end                        -- [의미/의도] 기존 성벽 폴더가 존재한다면 파괴 ➔ 9일차 준비 스크립트 재실행 시 성벽들이 겹쳐서 기형적으로 렌더링되거나 물리 에러가 나는 것을 방지하기 위함
+local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
 
-local folderStoneWall09 = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder) 객체를 생성함 ➔ 9일차 실습에서 제어할 성벽 섹션 모델들을 하나로 그룹화하여 관리하기 위함
-folderStoneWall09.Name = "StoneWall09"           -- [의미/의도] 폴더 이름을 "StoneWall09"로 지정 ➔ 탐색기에서 9일차 석조 성벽 프로젝트 영역임을 파악하기 위함
-folderStoneWall09.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 폴더가 게임 세상에 반영되도록 하기 위함
+	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+end
+
+local serviceWorkspace = game:GetService("Workspace")                                        -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드인 Workspace 상에 9일차 석조 성벽을 생성하기 위함
+local folderStoneWall09 = createOrReplaceInstance("Folder", "StoneWall09", serviceWorkspace) -- [의미/의도] StoneWall09 Folder 대체 생성 ➔ 기존 성벽 폴더를 지우고 새로운 부분 파괴 성벽 맵을 구성하기 위함
 
 for section = 1, 5 do                                 -- [의미/의도] section 변수를 1부터 5 till 5까지 증가시키며 반복함 ➔ 성벽을 5개의 부분 섹션(Section)으로 나누어 독립적인 파괴가 가능하도록 구조화하기 위함
     local modelWallSection = Instance.new("Model")    -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 특정 섹션에 쌓여진 돌 블록 파트들을 하나의 성벽 섹션 모델로 결합하기 위함

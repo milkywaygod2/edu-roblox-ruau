@@ -19,13 +19,20 @@
 
 -- --------------------------------------------------------------------------------
 
-local serviceWorkspace = game:GetService("Workspace")               -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 3일차 폴더와 버튼을 생성하기 위함
-local folderOld = serviceWorkspace:FindFirstChild("ResourceWall03") -- [의미/의도] Workspace 내에서 "ResourceWall03" 이름을 가진 자식 객체를 찾음 ➔ 기존 생성된 폴더가 있는지 검사하기 위함
-if folderOld then folderOld:Destroy() end                           -- [의미/의도] 기존 폴더가 존재한다면 제거함 ➔ 수업 재시작 시 오브젝트가 중복으로 겹쳐서 생기는 버그를 막기 위함
+local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
 
-local folderResourceWall03 = Instance.new("Folder") -- [의미/의도] 새로운 폴더(Folder) 객체를 생성함 ➔ 3일차 수업용 자원 버튼과 방벽 소환판을 한곳에 묶기 위함
-folderResourceWall03.Name = "ResourceWall03"        -- [의미/의도] 폴더 이름을 "ResourceWall03"로 설정 ➔ 탐색기에서 다른 일차의 프로젝트와 구분하기 위함
-folderResourceWall03.Parent = serviceWorkspace      -- [의미/의도] 폴더 부모를 Workspace로 설정 ➔ 폴더가 게임 세상에 존재하게 만들기 위함
+	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+end
+
+local serviceWorkspace = game:GetService("Workspace")                                              -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 3일차 폴더와 버튼을 생성하기 위함
+local folderResourceWall03 = createOrReplaceInstance("Folder", "ResourceWall03", serviceWorkspace) -- [의미/의도] ResourceWall03 Folder 대체 생성 ➔ 기존 자원 방벽 관련 요소를 삭제하고 3일차 실습판을 초기화하기 위함
 
 local partBuildButton = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 플레이어가 눌러서 방벽을 생성할 물리적인 버튼(BuildButton)을 만들기 위함
 partBuildButton.Name = "BuildButton"                        -- [의미/의도] 파트 이름을 "BuildButton"으로 설정 ➔ 탐색기에서 방벽 설치 버튼임을 구분하기 위함
