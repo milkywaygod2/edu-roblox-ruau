@@ -16,6 +16,9 @@
 -- 학생 목표: 팀 배정, 랜덤 스폰, 라운드 타이머, 밸런스 값을 하나의 최종 공성전 규칙으로 연결합니다.
 -- 검증 기준: Play 후 팀/스폰이 배정되고, RoundState와 TimeLeft가 바뀌며, 라운드가 정상 종료되면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local servicePlayers = game:GetService("Players")                                    -- [의미] Players 서비스를 가져옴 / [의도] 접속해 있는 플레이어 리스트를 조회하고 텔레포트시키기 위함
 local folderDay12FinalBattle = workspace:WaitForChild("Day12_FinalBattle")           -- [의미] Workspace에서 "Day12_FinalBattle" 폴더가 생성될 때까지 대기하여 가져옴 / [의도] 12일차 셋업 오브젝트가 완전히 로드된 후 스크립트를 동작시키기 위함
 local partRoundStartButton = folderDay12FinalBattle:WaitForChild("RoundStartButton") -- [의미] 12일차 폴더 내부에서 "RoundStartButton" 파트가 생성될 때까지 대기하여 가져옴 / [의도] 클릭 감지기 클릭 이벤트를 연결하기 위함

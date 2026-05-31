@@ -10,6 +10,9 @@
 -- 학생 목표: Equipped/Unequipped, 충돌 판정, 방어 상태 변수가 캐릭터 능력치를 바꾸는 방식을 이해합니다.
 -- 검증 기준: 방패 장착 시 체력이 늘고, 방어 판정이 켜지며, 해제 시 원래 상태로 돌아오면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local toolPracticeShield = script.Parent -- [의미] 이 스크립트가 들어있는 방패 도구(PracticeShield)를 가져옴 / [의도] 방패 장착(Equipped), 장착 해제(Unequipped), 충돌(Touched) 이벤트를 연결하기 위함
 
 local BONUS_HEALTH = 60            -- [의미] 방패 장착 시 늘어날 추가 체력 보너스 수치를 60으로 설정 / [의도] 방패를 들었을 때 샌드백처럼 더 오랫동안 버틸 수 있게 최대 체력을 증가시키기 위함

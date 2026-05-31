@@ -10,6 +10,9 @@
 -- 학생 목표: CFrame.LookVector, AssemblyLinearVelocity, Debris 자동 삭제가 투사체 규칙을 만드는 방식을 이해합니다.
 -- 검증 기준: 활 사용 시 화살이 앞으로 포물선으로 날아가고, 목표에 닿으면 피해/폭발 효과가 보이면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceDebris = game:GetService("Debris") -- [의미] Debris 서비스를 가져옴 / [의도] 월드에 발사된 화살이 무한히 남아 서버에 부하를 주지 않도록 일정 시간 후 자동 소멸시키기 위함
 local toolTrainingBow = script.Parent           -- [의미] 이 스크립트가 들어있는 활 도구(TrainingBow)를 가져옴 / [의도] 플레이어의 마우스 활성화(Activated) 이벤트를 연결하기 위함
 

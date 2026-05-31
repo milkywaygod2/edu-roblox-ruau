@@ -10,6 +10,9 @@
 -- 학생 목표: 눈에 보이는 Part 속성이 게임 플레이의 엄폐/충돌 규칙으로 바뀌는 과정을 이해합니다.
 -- 검증 기준: Play 후 나무/돌 느낌의 엄폐물이 정해진 위치에 생성되고 Output 오류가 없으면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local folderDay02CoverField = workspace:WaitForChild("Day02_CoverField")               -- [의미] Workspace에서 "Day02_CoverField" 폴더가 생성될 때까지 대기 후 가져옴 / [의도] 선생님 스크립트가 폴더를 생성할 때까지 대기하여 에러를 방지하기 위함
 local materials = {Enum.Material.WoodPlanks, Enum.Material.Slate, Enum.Material.Metal} -- [의미] 나무판자, 돌, 금속 재질을 담은 배열 리스트 생성 / [의도] 다양한 질감의 엄폐물을 생성할 수 있도록 후보군을 저장함
 local colors = {"Reddish brown", "Dark stone grey", "Medium blue"}                     -- [의미] 갈색, 회색, 청색 색상 이름을 담은 배열 리스트 생성 / [의도] 재질에 어울리는 색상들을 매칭하기 위함

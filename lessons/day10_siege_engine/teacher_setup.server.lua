@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day10 공성 병기를 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: 발사 버튼, 발사지점, 목표지점이 생성되고 Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceWorkspace = game:GetService("Workspace")                  -- [의미] Workspace 서비스를 가져옴 / [의도] 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
 local folderOld = serviceWorkspace:FindFirstChild("Day10_SiegeEngine") -- [의미] Workspace 내에서 기존 "Day10_SiegeEngine" 폴더가 존재하는지 확인 / [의도] 중복으로 지급되는 리소스가 있는지 찾기 위함
 if folderOld then folderOld:Destroy() end                              -- [의미] 기존 공성 병기 폴더가 존재한다면 제거 / [의도] 10일차 셋업 재실행 시 버튼과 발사 위치가 맵에 중복으로 겹쳐 생성되는 것을 방지하기 위함

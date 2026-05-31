@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day07 Tool을 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: HeavyArmor Tool이 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceStarterPack = game:GetService("StarterPack")           -- [의미] StarterPack 서비스를 가져옴 / [의도] 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
 local toolOldTool = serviceStarterPack:FindFirstChild("HeavyArmor") -- [의미] StarterPack에서 기존 "HeavyArmor" 도구가 있는지 확인 / [의도] 중복으로 지급되는 리소스가 있는지 찾기 위함
 if toolOldTool then toolOldTool:Destroy() end                       -- [의미] 기존 갑옷 도구가 있으면 삭제 / [의도] 7일차 셋업 재실행 시 중복 장비가 인벤토리에 쌓이는 것을 방지하기 위함

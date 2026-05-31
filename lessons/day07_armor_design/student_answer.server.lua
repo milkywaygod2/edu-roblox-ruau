@@ -10,6 +10,9 @@
 -- 학생 목표: Humanoid 속성 변경과 장비 해제 시 원상복구가 게임 밸런스에 왜 필요한지 이해합니다.
 -- 검증 기준: 갑옷 장착 시 체력은 늘고 속도/점프는 줄며, 해제 시 원래 능력치로 돌아오면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local toolHeavyArmor = script.Parent -- [의미] 이 스크립트가 들어있는 갑옷 도구(HeavyArmor)를 가져옴 / [의도] 갑옷 장착(Equipped) 및 해제(Unequipped) 시의 이벤트를 연결하기 위함
 local modelEquippedCharacter = nil   -- [의미] 현재 갑옷을 착용한 플레이어 캐릭터 모델을 임시 저장할 변수를 빈 값(nil)으로 생성 / [의도] 해제 시점에 원래 스탯으로 안전하게 되돌릴 캐릭터 타겟을 보관하기 위함
 local tableSavedStats = nil          -- [의미] 갑옷 장착 전 원래 능력치(체력, 이속, 점프력)를 백업해둘 변수를 nil로 생성 / [의도] 갑옷을 벗었을 때 캐릭터 스탯을 정확하게 롤백하기 위한 보관함으로 사용하기 위함

@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day01 오브젝트와 Tool을 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: Explorer에 연습 아레나와 PracticeRock이 보이고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceStarterPack = game:GetService("StarterPack") -- [의미] StarterPack 서비스를 가져옴 / [의도] 학생이 시작할 때 가질 툴을 넣어두기 위함
 local serviceWorkspace = game:GetService("Workspace")     -- [의미] Workspace 서비스를 가져옴 / [의도] 맵과 더미 등의 물리 공간을 제어하기 위함
 

@@ -10,6 +10,9 @@
 -- 학생 목표: Model 내부 Part 순회, 체력 변수, 파괴 시 물리 해제가 건물 규칙을 만드는 방식을 이해합니다.
 -- 검증 기준: 대포알 또는 데미지 이벤트 후 성문 체력이 줄고, 0 이하에서 파트가 흩어지면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local folderDay08Castle = workspace:WaitForChild("Day08_Castle") -- [의미] Workspace 내에서 "Day08_Castle" 폴더가 생성될 때까지 대기하여 가져옴 / [의도] 8일차 성 오브젝트가 로드된 후 스크립트를 안정적으로 진행하기 위함
 local modelGate = folderDay08Castle:WaitForChild("Gate")         -- [의미] 8일차 성 폴더 내부에서 "Gate" 성문 모델이 생성될 때까지 대기하여 가져옴 / [의도] 성문에 타격 및 파괴 판정을 걸 대상 모델을 확실히 참조하기 위함
 local health = 120                                               -- [의미] 성문의 총 내구도(체력) 변수를 120으로 설정 / [의도] 공격 투사체(피해량 30)에 4번 맞아야 문이 파괴되는 구조를 맞추기 위함

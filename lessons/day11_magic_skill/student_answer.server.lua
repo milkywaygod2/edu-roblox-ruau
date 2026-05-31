@@ -11,6 +11,9 @@
 -- 학생 목표: 마법 이펙트, 범위 피해, 서버 권한 검사가 하나의 스킬 시스템으로 묶이는 흐름을 이해합니다.
 -- 검증 기준: 지팡이 사용 시 화염구/폭발 효과가 보이고, 범위 안 더미에게만 피해가 들어가면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local servicePlayers = game:GetService("Players")                               -- [의미] Players 서비스를 가져옴 / [의도] 게임을 떠난 플레이어 정보를 감지하고 쿨타임 데이터를 청소하기 위함
 local serviceReplicatedStorage = game:GetService("ReplicatedStorage")           -- [의미] ReplicatedStorage 서비스를 가져옴 / [의도] 클라이언트와 통신하기 위해 공유된 통신망에서 리모트 이벤트를 참조하기 위함
 local remoteeventCastMagic = serviceReplicatedStorage:WaitForChild("CastMagic") -- [의미] ReplicatedStorage에서 "CastMagic" 리모트 이벤트가 생성될 때까지 대기하여 가져옴 / [의도] 클라이언트의 마법 시전 요청 신호를 서버에서 대기하고 수신하기 위함

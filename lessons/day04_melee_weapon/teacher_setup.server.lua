@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day04 Tool과 더미를 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: BalanceSword와 연습 더미가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceStarterPack = game:GetService("StarterPack") -- [의미] StarterPack 서비스를 가져옴 / [의도] 플레이어가 게임 시작 시 인벤토리에 자동으로 지급받을 도구를 관리하기 위함
 local serviceWorkspace = game:GetService("Workspace")     -- [의미] Workspace 서비스를 가져옴 / [의도] 월드 상에 4일차 더미 폴더와 마커를 관리하기 위함
 

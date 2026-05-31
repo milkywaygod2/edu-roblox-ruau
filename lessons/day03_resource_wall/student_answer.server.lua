@@ -16,6 +16,9 @@
 -- 학생 목표: ClickDetector 이벤트, leaderstats 자원, if 조건문이 하나의 방어 시스템으로 묶이는 흐름을 이해합니다.
 -- 검증 기준: 버튼 클릭 시 Wood가 줄고, 자원이 충분할 때만 방벽이 생성되면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local servicePlayers = game:GetService("Players")                            -- [의미] Players 서비스를 가져옴 / [의도] 게임에 입장하는 플레이어 정보를 가져오고 leaderstats를 관리하기 위함
 local folderDay03ResourceWall = workspace:WaitForChild("Day03_ResourceWall") -- [의미] Workspace에서 "Day03_ResourceWall" 폴더가 생성될 때까지 대기 후 가져옴 / [의도] 3일차 월드 오브젝트가 확실히 로드된 후 스크립트를 진행하기 위함
 local partBuildButton = folderDay03ResourceWall:WaitForChild("BuildButton")  -- [의미] 3일차 폴더 내에서 "BuildButton" 파트가 존재할 때까지 대기하여 가져옴 / [의도] 플레이어의 클릭 이벤트를 받을 버튼 객체를 안전하게 참조하기 위함

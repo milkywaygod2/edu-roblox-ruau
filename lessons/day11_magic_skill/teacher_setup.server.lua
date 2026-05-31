@@ -17,6 +17,8 @@
 -- 검증 기준: MagicStaff, 마법 아레나, CastMagic RemoteEvent가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
 
+-- --------------------------------------------------------------------------------
+
 local serviceStarterPack = game:GetService("StarterPack")             -- [의미] StarterPack 서비스를 가져옴 / [의도] 플레이어 접속 시 마법 지팡이 도구(Tool)를 인벤토리에 자동 배치해주기 위함
 local serviceReplicatedStorage = game:GetService("ReplicatedStorage") -- [의미] ReplicatedStorage 서비스를 가져옴 / [의도] 클라이언트와 서버가 공유하는 저장소에 원격 이벤트를 배치하기 위함
 local serviceWorkspace = game:GetService("Workspace")                 -- [의미] Workspace 서비스를 가져옴 / [의도] 게임 세상(Workspace)에 11일차 마법 아레나와 연습 더미들을 배치하기 위함

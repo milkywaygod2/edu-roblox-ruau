@@ -10,6 +10,9 @@
 -- 학생 목표: Tool.Activated, Touched, debounce 변수가 전투 밸런스를 제어하는 방식을 이해합니다.
 -- 검증 기준: 검을 사용하면 짧은 공격 판정만 켜지고, 쿨타임 동안 연속 피해가 막히면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local toolBalanceSword = script.Parent -- [의미] 이 스크립트가 포함된 검 도구(BalanceSword)를 가져옴 / [의도] 검의 활성화(Activated) 및 핸들의 충돌(Touched) 이벤트를 연결하기 위함
 
 local DAMAGE = 20          -- [의미] 검의 한 방 데미지 상수를 20으로 설정 / [의도] 적에게 입힐 공격력을 고정 수치로 지정하기 위함

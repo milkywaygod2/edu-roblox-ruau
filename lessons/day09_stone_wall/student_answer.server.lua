@@ -10,6 +10,9 @@
 -- 학생 목표: 여러 Part를 순회하며 Attribute/체력 값을 이용해 성벽 상태를 관리하는 방식을 이해합니다.
 -- 검증 기준: 특정 성벽 구역만 피해를 받고, 체력이 0이 된 구역만 무너지면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local folderDay09StoneWall = workspace:WaitForChild("Day09_StoneWall") -- [의미] Workspace에서 "Day09_StoneWall" 폴더가 생성될 때까지 대기하여 가져옴 / [의도] 9일차 성벽 리소스가 로드된 후에 스크립트를 안정적으로 구동시키기 위함
 local SECTION_HEALTH = 90                                              -- [의미] 성벽 각 섹션의 내구도를 90으로 고정 설정 / [의도] 투사체(피해량 30)에 3번 맞은 구역만 무너지도록 밸런스를 잡기 위함
 local tableSectionHealth = {}                                          -- [의미] 각 성벽 섹션별 현재 체력을 매핑하여 저장할 빈 테이블(배열) 생성 / [의도] 섹션 전체가 아닌, 투사체가 맞은 해당 부분 성벽의 체력만 개별 차감하기 위해 맵 형태로 활용하기 위함

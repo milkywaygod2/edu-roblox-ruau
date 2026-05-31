@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day03 오브젝트를 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: 방벽 버튼과 WallSpawn 위치가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceWorkspace = game:GetService("Workspace")                   -- [의미] Workspace 서비스를 가져옴 / [의도] 맵 상에 3일차 폴더와 버튼을 생성하기 위함
 local folderOld = serviceWorkspace:FindFirstChild("Day03_ResourceWall") -- [의미] Workspace 내에서 "Day03_ResourceWall" 이름을 가진 자식 객체를 찾음 / [의도] 기존 생성된 폴더가 있는지 검사하기 위함
 if folderOld then folderOld:Destroy() end                               -- [의미] 기존 폴더가 존재한다면 제거함 / [의도] 수업 재시작 시 오브젝트가 중복으로 겹쳐서 생기는 버그를 막기 위함

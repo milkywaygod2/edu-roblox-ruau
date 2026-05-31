@@ -10,6 +10,9 @@
 -- 학생 목표: ClickDetector 입력과 벡터 방향 계산이 공성 탄환 발사 규칙으로 이어지는 흐름을 이해합니다.
 -- 검증 기준: 버튼 클릭 시 대포알이 발사지점에서 목표 방향으로 날아가면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceDebris = game:GetService("Debris")                              -- [의미] Debris 서비스를 가져옴 / [의도] 월드 상에 발사된 공성돌 탄환이 일정 시간 후에 알아서 소멸되도록 예약하고 관리하기 위함
 local folderDay10SiegeEngine = workspace:WaitForChild("Day10_SiegeEngine")   -- [의미] Workspace에서 "Day10_SiegeEngine" 폴더가 생성될 때까지 대기하여 가져옴 / [의도] 10일차 투석기 오브젝트들이 완전히 로드된 후 스크립트를 수행하기 위함
 local partLaunchButton = folderDay10SiegeEngine:WaitForChild("LaunchButton") -- [의미] 10일차 폴더 내부에서 "LaunchButton" 파트가 생성될 때까지 대기하여 가져옴 / [의도] 발사를 작동시킬 입력 장치(버튼)를 정확하게 셋업하기 위함

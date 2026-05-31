@@ -10,6 +10,9 @@
 -- 학생 목표: Tool.Activated와 Touched 이벤트가 서버에서 실제 전투 규칙으로 이어지는 흐름을 이해합니다.
 -- 검증 기준: Play 후 돌멩이를 사용하면 투사체가 날아가고, 더미에게 피해와 넉백이 적용되면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceDebris = game:GetService("Debris") -- [의미] Debris 서비스를 가져옴 / [의도] 생성된 투사체를 일정 시간 뒤 자동으로 삭제하기 위함
 local toolPracticeRock = script.Parent          -- [의미] 이 스크립트가 포함된 도구(Tool)를 가져옴 / [의도] 마우스 클릭(Activated) 이벤트를 감지하기 위함
 

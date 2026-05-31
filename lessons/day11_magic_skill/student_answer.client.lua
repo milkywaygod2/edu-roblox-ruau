@@ -10,6 +10,9 @@
 -- 학생 목표: Tool.Activated 입력은 클라이언트가 받고, 실제 피해 판정은 서버가 처리하는 구조를 이해합니다.
 -- 검증 기준: 지팡이를 장착하고 클릭하면 마우스 위치가 서버로 전달되어 폭발 마법이 실행되면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local servicePlayers = game:GetService("Players")                     -- [의미] Players 서비스를 가져옴 / [의도] 로컬 플레이어(LocalPlayer) 개체를 조회하기 위함
 local serviceReplicatedStorage = game:GetService("ReplicatedStorage") -- [의미] ReplicatedStorage 서비스를 가져옴 / [의도] 서버와 통신할 리모트 이벤트를 공유 공간에서 찾기 위함
 

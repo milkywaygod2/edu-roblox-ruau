@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day09 성벽을 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: 구역별 성벽 파트가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceWorkspace = game:GetService("Workspace")                -- [의미] Workspace 서비스를 가져옴 / [의도] 게임 월드인 Workspace 상에 9일차 석조 성벽을 생성하기 위함
 local folderOld = serviceWorkspace:FindFirstChild("Day09_StoneWall") -- [의미] Workspace에서 기존 "Day09_StoneWall" 폴더가 존재하는지 확인 / [의도] 중복으로 생성되는 것을 감지하기 위함
 if folderOld then folderOld:Destroy() end                            -- [의미] 기존 성벽 폴더가 존재한다면 파괴 / [의도] 9일차 준비 스크립트 재실행 시 성벽들이 겹쳐서 기형적으로 렌더링되거나 물리 에러가 나는 것을 방지하기 위함

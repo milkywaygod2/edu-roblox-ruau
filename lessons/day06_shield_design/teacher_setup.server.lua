@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day06 Tool을 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: PracticeShield Tool이 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceStarterPack = game:GetService("StarterPack")               -- [의미] StarterPack 서비스를 가져옴 / [의도] 플레이어가 게임에 접속할 때 자동으로 방패(Tool)를 인벤토리에 넣어주기 위함
 local toolOldTool = serviceStarterPack:FindFirstChild("PracticeShield") -- [의미] StarterPack에서 기존 "PracticeShield" 도구를 찾음 / [의도] 중복으로 지급되는 도구가 있는지 확인하기 위함
 if toolOldTool then toolOldTool:Destroy() end                           -- [의미] 기존 방패 도구가 존재한다면 삭제 / [의도] 준비 코드가 중복 실행되었을 때 방패가 여러 개 쌓이는 것을 예방하기 위함

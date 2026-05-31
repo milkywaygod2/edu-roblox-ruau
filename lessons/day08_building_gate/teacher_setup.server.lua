@@ -16,6 +16,9 @@
 -- 안전 운영: 기존 Day08 성문을 다시 만들 수 있으므로 저장된 수업 복사본에서만 실행합니다.
 -- 검증 기준: Castle/Gate 모델이 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
+
+-- --------------------------------------------------------------------------------
+
 local serviceWorkspace = game:GetService("Workspace")             -- [의미] Workspace 서비스를 가져옴 / [의도] 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
 local folderOld = serviceWorkspace:FindFirstChild("Day08_Castle") -- [의미] Workspace에서 기존 "Day08_Castle" 폴더가 존재하는지 확인 / [의도] 기존 리소스 중복 검출을 위함
 if folderOld then folderOld:Destroy() end                         -- [의미] 기존 성문 폴더가 있다면 제거 / [의도] 셋업 재실행 시 성문 오브젝트가 겹쳐서 생기는 버그를 방지하기 위함
