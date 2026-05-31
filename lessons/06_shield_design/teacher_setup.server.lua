@@ -23,9 +23,9 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 
 
-local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                                            -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임에 접속할 때 자동으로 방패(Tool)를 인벤토리에 넣어주기 위함
-local toolPracticeShield = common.createOrReplaceInstance(common.enumClassName.TOOL, "PracticeShield", serviceStarterPack) -- [의미/의도] PracticeShield Tool 대체 생성 ➔ 기존 방패 무기를 지우고 새로운 방패 도구를 생성하기 위함
-toolPracticeShield.ToolTip = "장착하면 방어하고 체력이 늘어납니다"                                                                         -- [의미/의도] 장비 툴팁 설명을 작성 ➔ 방패의 기능적 효과를 플레이어에게 툴팁 팝업으로 안내하기 위함
+local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                                             -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임에 접속할 때 자동으로 방패(Tool)를 인벤토리에 넣어주기 위함
+local toolPracticeShield = common.createOrReplaceInstance(common.enumObjectType.TOOL, "PracticeShield", serviceStarterPack) -- [의미/의도] PracticeShield Tool 대체 생성 ➔ 기존 방패 무기를 지우고 새로운 방패 도구를 생성하기 위함
+toolPracticeShield.ToolTip = "장착하면 방어하고 체력이 늘어납니다"                                                                          -- [의미/의도] 장비 툴팁 설명을 작성 ➔ 방패의 기능적 효과를 플레이어에게 툴팁 팝업으로 안내하기 위함
 
 local partHandle = Instance.new("Part")                   -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 손에 쥘 방패의 손잡이이자 외형 본체(Handle)를 만들기 위함
 partHandle.Name = "Handle"                                -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 장착 규격에 맞게 캐릭터 손 위치에 방패가 부착되도록 하기 위함

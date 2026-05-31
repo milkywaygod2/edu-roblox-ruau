@@ -27,10 +27,10 @@ local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK) 
 local serviceReplicatedStorage = game:GetService(common.enumServiceName.REPLICATED_STORAGE) -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 클라이언트와 서버가 공유하는 저장소에 원격 이벤트를 배치하기 위함
 local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                  -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 11일차 마법 아레나와 연습 더미들을 배치하기 위함
 
-local remoteeventCastMagic = common.createOrReplaceInstance(common.enumClassName.REMOTE_EVENT, "CastMagic", serviceReplicatedStorage) -- [의미/의도] CastMagic RemoteEvent 대체 생성 ➔ 기존 마법 시전 리모트이벤트를 지우고 통신 채널을 새로 구축하기 위함
+local remoteeventCastMagic = common.createOrReplaceInstance(common.enumObjectType.REMOTE_EVENT, "CastMagic", serviceReplicatedStorage) -- [의미/의도] CastMagic RemoteEvent 대체 생성 ➔ 기존 마법 시전 리모트이벤트를 지우고 통신 채널을 새로 구축하기 위함
 
-local toolMagicStaff = common.createOrReplaceInstance(common.enumClassName.TOOL, "MagicStaff", serviceStarterPack) -- [의미/의도] MagicStaff Tool 대체 생성 ➔ 기존 마법 지팡이를 정리하고 새로운 마법 무기를 초기화하기 위함
-toolMagicStaff.ToolTip = "서버 판정 마법을 시전합니다"                                                                         -- [의미/의도] 도구 툴팁 설명을 작성 ➔ 플레이어에게 이 지팡이가 서버 연동식 마법 스킬용 장비임을 안내하기 위함
+local toolMagicStaff = common.createOrReplaceInstance(common.enumObjectType.TOOL, "MagicStaff", serviceStarterPack) -- [의미/의도] MagicStaff Tool 대체 생성 ➔ 기존 마법 지팡이를 정리하고 새로운 마법 무기를 초기화하기 위함
+toolMagicStaff.ToolTip = "서버 판정 마법을 시전합니다"                                                                          -- [의미/의도] 도구 툴팁 설명을 작성 ➔ 플레이어에게 이 지팡이가 서버 연동식 마법 스킬용 장비임을 안내하기 위함
 
 local partHandle = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 지팡이의 손잡이이자 겉보기 외형(Handle)을 만들기 위함
 partHandle.Name = "Handle"                             -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 달라붙게 하기 위함
@@ -39,7 +39,7 @@ partHandle.Material = Enum.Material.Neon               -- [의미/의도] 파트
 partHandle.BrickColor = BrickColor.new("Royal purple") -- [의미/의도] 파트 색을 고귀한 보라색(Royal purple)으로 지정 ➔ 신비로운 마법 마력이 깃든 지팡이의 색상을 부각시키기 위함
 partHandle.Parent = toolMagicStaff                     -- [의미/의도] 핸들 파트를 MagicStaff 도구의 자식으로 등록 ➔ 장착 시 이 네온 지팡이 외형이 캐릭터 손에 부착되도록 하기 위함
 
-local folderMagicArena11 = common.createOrReplaceInstance(common.enumClassName.FOLDER, "MagicArena11", serviceWorkspace) -- [의미/의도] MagicArena11 Folder 대체 생성 ➔ 기존 마법 아레나 폴더를 삭제하고 11일차 마법 연습장을 구성하기 위함
+local folderMagicArena11 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "MagicArena11", serviceWorkspace) -- [의미/의도] MagicArena11 Folder 대체 생성 ➔ 기존 마법 아레나 폴더를 삭제하고 11일차 마법 연습장을 구성하기 위함
 
 for index = 1, 6 do                                  -- [의미/의도] index 변수를 1부터 6까지 6번 반복 실행 ➔ 마법 광역 공격을 맞아줄 연습용 더미 6마리를 만들기 위함
     local modelPracticeDummy = Instance.new("Model") -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 캐릭터 역할을 할 파트와 Humanoid를 하나로 결합하기 위함

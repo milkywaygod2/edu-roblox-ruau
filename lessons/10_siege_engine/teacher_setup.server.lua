@@ -23,8 +23,8 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 
 
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                                 -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
-local folderSiegeEngine10 = common.createOrReplaceInstance(common.enumClassName.FOLDER, "SiegeEngine10", serviceWorkspace) -- [의미/의도] SiegeEngine10 Folder 대체 생성 ➔ 기존 공성 맵 폴더를 지우고 새로운 10일차 공성 병기 맵을 구성하기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                                  -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
+local folderSiegeEngine10 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "SiegeEngine10", serviceWorkspace) -- [의미/의도] SiegeEngine10 Folder 대체 생성 ➔ 기존 공성 맵 폴더를 지우고 새로운 10일차 공성 병기 맵을 구성하기 위함
 
 local partLaunchButton = Instance.new("Part")               -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투석기를 작동시킬 물리적 발사 버튼(LaunchButton)을 만들기 위함
 partLaunchButton.Name = "LaunchButton"                      -- [의미/의도] 파트 이름을 "LaunchButton"으로 설정 ➔ 성문 공격을 시작할 발사 스위치 파트임을 구분하기 위함

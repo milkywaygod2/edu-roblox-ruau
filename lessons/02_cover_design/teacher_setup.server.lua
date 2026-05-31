@@ -23,8 +23,8 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 
 
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                               -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 공간(Workspace)에 접근하여 파트 및 폴더를 제어하기 위함
-local folderCoverField02 = common.createOrReplaceInstance(common.enumClassName.FOLDER, "CoverField02", serviceWorkspace) -- [의미/의도] CoverField02 Folder 대체 생성 ➔ 기존 엄폐물 필드를 지우고 새로운 엄폐물 배치판을 시작하기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                                -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 공간(Workspace)에 접근하여 파트 및 폴더를 제어하기 위함
+local folderCoverField02 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "CoverField02", serviceWorkspace) -- [의미/의도] CoverField02 Folder 대체 생성 ➔ 기존 엄폐물 필드를 지우고 새로운 엄폐물 배치판을 시작하기 위함
 
 local partGridBase = Instance.new("Part")       -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 엄폐물 실습을 진행할 바닥(GridBase)을 만들기 위함
 partGridBase.Name = "GridBase"                  -- [의미/의도] 파트 이름을 "GridBase"로 설정 ➔ 바닥 구역임을 탐색기에서 구분할 수 있게 지정함

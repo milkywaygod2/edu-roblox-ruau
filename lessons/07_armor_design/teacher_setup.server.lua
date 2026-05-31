@@ -23,10 +23,10 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 
 
-local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                                    -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
-local toolHeavyArmor = common.createOrReplaceInstance(common.enumClassName.TOOL, "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
-toolHeavyArmor.RequiresHandle = true                                                                               -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
-toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                                                      -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
+local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
+local toolHeavyArmor = common.createOrReplaceInstance(common.enumObjectType.TOOL, "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
+toolHeavyArmor.RequiresHandle = true                                                                                -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
+toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                                                       -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
 
 local partHandle = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 쥘 갑옷의 중심 핸들이자 외형(Handle)을 만들기 위함
 partHandle.Name = "Handle"                             -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 부착하도록 하기 위함

@@ -23,8 +23,8 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 
 
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                                   -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 3일차 폴더와 버튼을 생성하기 위함
-local folderResourceWall03 = common.createOrReplaceInstance(common.enumClassName.FOLDER, "ResourceWall03", serviceWorkspace) -- [의미/의도] ResourceWall03 Folder 대체 생성 ➔ 기존 자원 방벽 관련 요소를 삭제하고 3일차 실습판을 초기화하기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                                    -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 3일차 폴더와 버튼을 생성하기 위함
+local folderResourceWall03 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "ResourceWall03", serviceWorkspace) -- [의미/의도] ResourceWall03 Folder 대체 생성 ➔ 기존 자원 방벽 관련 요소를 삭제하고 3일차 실습판을 초기화하기 위함
 
 local partBuildButton = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 플레이어가 눌러서 방벽을 생성할 물리적인 버튼(BuildButton)을 만들기 위함
 partBuildButton.Name = "BuildButton"                        -- [의미/의도] 파트 이름을 "BuildButton"으로 설정 ➔ 탐색기에서 방벽 설치 버튼임을 구분하기 위함

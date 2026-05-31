@@ -23,8 +23,8 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 
 
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                       -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
-local folderCastle08 = common.createOrReplaceInstance(common.enumClassName.FOLDER, "Castle08", serviceWorkspace) -- [의미/의도] Castle08 Folder 대체 생성 ➔ 기존 성벽/성문 폴더를 지우고 새로운 8일차 성문 실습장을 구성하기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                        -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
+local folderCastle08 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "Castle08", serviceWorkspace) -- [의미/의도] Castle08 Folder 대체 생성 ➔ 기존 성벽/성문 폴더를 지우고 새로운 8일차 성문 실습장을 구성하기 위함
 
 local modelGate = Instance.new("Model") -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 성문을 구성하는 여러 개의 나무판자 파트들을 하나의 성문 모델로 그룹화하기 위함
 modelGate.Name = "Gate"                 -- [의미/의도] 모델 이름을 "Gate"로 설정 ➔ 학생 스크립트가 해당 이름("Gate")으로 성문 모델을 찾아 작동시키게 하기 위함
