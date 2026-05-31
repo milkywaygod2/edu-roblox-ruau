@@ -19,22 +19,28 @@
 
 -- --------------------------------------------------------------------------------
 
-local function createOrReplaceInstance(stringClassName, stringName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
-	local instanceOld = instanceParent:FindFirstChild(stringName)                      -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
-	if instanceOld then                                                                -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
-		instanceOld:Destroy()                                                             -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
-	end                                                                                -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
+local enumClassName = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
+	Folder      = "Folder",
+	Tool        = "Tool",
+	RemoteEvent = "RemoteEvent",
+}
 
-	local instanceNew = Instance.new(stringClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
-	instanceNew.Name = stringName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
-	instanceNew.Parent = instanceParent               -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
-	return instanceNew                                -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
+local function createOrReplaceInstance(strClassName, strName, instanceParent) -- [의미/의도] 기존 인스턴스 대체 생성 함수 정의 ➔ 중복 오브젝트를 자동 정리하고 새 오브젝트를 만들기 위함
+	local instanceOld = instanceParent:FindFirstChild(strName)                   -- [의미/의도] 부모 아래에서 동일한 이름의 기존 객체를 검색함 ➔ 중복 생성을 방지하기 위함
+	if instanceOld then                                                          -- [의미/의도] 기존 객체가 존재한다면 ➔ 구버전 찌꺼기가 충돌하지 않도록 처리하기 위함
+		instanceOld:Destroy()                                                       -- [의미/의도] 기존 객체를 삭제함 ➔ 맵이 꼬이거나 이전 데이터가 남는 것을 막기 위함
+	end                                                                          -- [의미/의도] 기존 객체 정리 조건문 종료 ➔ 다음 생성 단계로 진행하기 위함
+
+	local instanceNew = Instance.new(strClassName) -- [의미/의도] 요청한 클래스 타입의 새 인스턴스를 생성함 ➔ 새 구성 요소를 만들기 위함
+	instanceNew.Name = strName                     -- [의미/의도] 인스턴스의 이름을 지정함 ➔ 탐색기에서 구분 가능하도록 이름을 설정하기 위함
+	instanceNew.Parent = instanceParent            -- [의미/의도] 인스턴스의 부모를 지정함 ➔ 게임 세상의 올바른 위치에 배치하기 위함
+	return instanceNew                             -- [의미/의도] 새로 만들어진 인스턴스를 반환함 ➔ 호출한 곳에서 이어서 속성을 조작할 수 있도록 하기 위함
 end
 
-local serviceStarterPack = game:GetService("StarterPack")                                -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
-local toolHeavyArmor = createOrReplaceInstance("Tool", "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
-toolHeavyArmor.RequiresHandle = true                                                     -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
-toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                            -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
+local serviceStarterPack = game:GetService("StarterPack")                                            -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
+local toolHeavyArmor = createOrReplaceInstance(enumClassName.Tool, "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
+toolHeavyArmor.RequiresHandle = true                                                                 -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
+toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                                        -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
 
 local partHandle = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 쥘 갑옷의 중심 핸들이자 외형(Handle)을 만들기 위함
 partHandle.Name = "Handle"                             -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 부착하도록 하기 위함

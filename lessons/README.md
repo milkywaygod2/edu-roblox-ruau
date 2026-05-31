@@ -7,7 +7,7 @@
 어린 학생들과 초보자들이 변수의 타입과 역할을 직관적으로 이해하고 오타를 최소화할 수 있도록 아래의 **타입 소문자 + 대문자 시작 (접미사 숫자)** 네이밍 컨벤션을 스크립트 작성 시 강제 적용합니다.
 
 ### 1) 기본 규칙
-*   **접두사(타입명)**: 로블록스의 클래스명 또는 데이터 타입을 **약어와 언더바(_) 없이 100% 소문자**로 붙여 씁니다. (`localscript`, `remoteevent` 등 하나의 단어로 취급)
+*   **접두사(타입명)**: 로블록스의 클래스명 전체를 **약어와 언더바(_) 없이 100% 소문자**로 붙여 씁니다. (`localscript`, `remoteevent` 등 하나의 단어로 취급) 기본 데이터 타입(로직 타입)은 C++ 스타일의 약어(`str`, `int`, `float`, `tbl`, `bool`)를 접두사로 사용합니다.
 *   **고유이름**: 타입명 바로 뒤에 붙이며, **첫 글자를 대문자**로 시작하여 이어 씁니다.
 *   **접미사(일차 표시)**: 일차 정보를 표시할 때는 접두사 `DayXX`를 쓰지 않고, 변수명/오브젝트명의 **맨 뒤에 숫자만 접미사(예: 01, 12)**로 붙입니다. (폴더명이나 파일 경로는 스네이크케이스 규칙에 따라 끝에 `_XX`를 붙임)
 
@@ -29,9 +29,10 @@
 | `stringvalue` | StringValue | `stringvalueRoundState12` | 문자열형 데이터 보관 객체 |
 | `boolvalue` | BoolValue | `boolvalueReady12` | 참/거짓형 데이터 보관 객체 |
 | `bool` | Boolean (Luau 기본 데이터 타입) | `boolIsTouched`, `boolIsCooldown` | 스크립트 내 참/거짓 변수 |
-| `table` | Table (Luau 테이블/배열/사전) | `tableDummies`, `tableSpawnPoints` | 여러 데이터를 담는 배열 또는 테이블 변수 |
-| `number` | Number (Luau 소수/정수형 변수) | `numberDamage`, `numberCooldown` | 숫자형 일반 변수 |
-| `string` | String (Luau 문자열 변수) | `stringPlayerName`, `stringError` | 문자열형 일반 변수 |
+| `tbl` | Table (Luau 테이블/배열/사전) | `tblDummies`, `tblSpawnPoints` | 여러 데이터를 담는 배열 또는 테이블 변수 |
+| `int` | Integer (정수형 변수) | `intDamage`, `intCount` | 소수점이 없는 정수형 일반 변수 |
+| `float` | Float / Double (실수형 변수) | `floatCooldown`, `floatSpeed` | 소수점을 포함하는 실수형 일반 변수 |
+| `str` | String (Luau 문자열 변수) | `strPlayerName`, `strErrorMessage` | 문자열형 일반 변수 |
 
 ---
 
