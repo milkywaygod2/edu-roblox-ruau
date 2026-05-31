@@ -10,30 +10,30 @@
 -- 학생 목표: 눈에 보이는 Part 속성이 게임 플레이의 엄폐/충돌 규칙으로 바뀌는 과정을 이해합니다.
 -- 검증 기준: Play 후 나무/돌 느낌의 엄폐물이 정해진 위치에 생성되고 Output 오류가 없으면 성공입니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
-local folderDay02CoverField = workspace:WaitForChild("Day02_CoverField")
-local materials = {Enum.Material.WoodPlanks, Enum.Material.Slate, Enum.Material.Metal}
-local colors = {"Reddish brown", "Dark stone grey", "Medium blue"}
+local folderDay02CoverField = workspace:WaitForChild("Day02_CoverField")               -- [의미] Workspace에서 "Day02_CoverField" 폴더가 생성될 때까지 대기 후 가져옴 / [의도] 선생님 스크립트가 폴더를 생성할 때까지 대기하여 에러를 방지하기 위함
+local materials = {Enum.Material.WoodPlanks, Enum.Material.Slate, Enum.Material.Metal} -- [의미] 나무판자, 돌, 금속 재질을 담은 배열 리스트 생성 / [의도] 다양한 질감의 엄폐물을 생성할 수 있도록 후보군을 저장함
+local colors = {"Reddish brown", "Dark stone grey", "Medium blue"}                     -- [의미] 갈색, 회색, 청색 색상 이름을 담은 배열 리스트 생성 / [의도] 재질에 어울리는 색상들을 매칭하기 위함
 
-local function create_cover(name, vectorOrigin, material, colorName)
-    local modelCover = Instance.new("Model")
-    modelCover.Name = name
-    modelCover.Parent = folderDay02CoverField
+local function create_cover(name, vectorOrigin, material, colorName) -- [의미] 엄폐물을 생성하는 함수 정의 (이름, 기준위치, 재질, 색상명 입력) / [의도] 반복적인 엄폐물 생성 코드를 함수로 묶어 재사용하기 위함
+    local modelCover = Instance.new("Model")                         -- [의미] 새로운 모델(Model) 객체를 생성함 / [의도] 여러 개의 엄폐용 파트들을 하나의 의미 있는 덩어리로 묶어 관리하기 위함
+    modelCover.Name = name                                           -- [의미] 모델의 이름을 매개변수로 받은 name으로 설정 / [의도] 생성되는 엄폐물의 번호를 붙여 구분하기 위함
+    modelCover.Parent = folderDay02CoverField                        -- [의미] 모델의 부모를 Day02_CoverField 폴더로 설정 / [의도] 2일차 엄폐물 폴더 내부에 깔끔하게 위치시키기 위함
 
-    for level = 1, 3 do
-        local partCoverBlock = Instance.new("Part")
-        partCoverBlock.Name = "CoverBlock_" .. level
-        partCoverBlock.Size = Vector3.new(8 - level, 2, 2)
-        partCoverBlock.Position = vectorOrigin + Vector3.new(0, level, 0)
-        partCoverBlock.Anchored = true
-        partCoverBlock.CanCollide = true
-        partCoverBlock.Material = material
-        partCoverBlock.BrickColor = BrickColor.new(colorName)
-        partCoverBlock.Parent = modelCover
-    end
-end
+    for level = 1, 3 do                                                   -- [의미] level 변수를 1부터 3까지 증가시키며 반복함 / [의도] 아래에서 위로 3층 높이의 엄폐물 블록을 쌓아 올리기 위함
+        local partCoverBlock = Instance.new("Part")                       -- [의미] 새로운 파트(Part) 객체를 생성함 / [의도] 엄폐물을 구성하는 개별 벽돌 블록을 만들기 위함
+        partCoverBlock.Name = "CoverBlock_" .. level                      -- [의미] 파트 이름을 "CoverBlock_1" 등으로 층수를 붙여 설정 / [의도] 각 층의 벽돌 블록임을 쉽게 구분하기 위함
+        partCoverBlock.Size = Vector3.new(8 - level, 2, 2)                -- [의미] 파트 크기를 설정하되 가로 길이는 층수가 높을수록 좁아지게(8-level) 설정 / [의도] 위로 갈수록 좁아지는 안정적인 피라미드 모양의 엄폐물을 디자인하기 위함
+        partCoverBlock.Position = vectorOrigin + Vector3.new(0, level, 0) -- [의미] 기준 위치에서 Y(높이) 값을 층수만큼 더한 위치로 설정 / [의도] 파트들이 겹치지 않고 1층, 2층, 3층으로 차곡차곡 쌓이도록 배치하기 위함
+        partCoverBlock.Anchored = true                                    -- [의미] 파트를 공중에 고정시킴 / [의도] 엄폐물이 무너지거나 플레이어에 의해 밀려나지 않도록 고정하기 위함
+        partCoverBlock.CanCollide = true                                  -- [의미] 충돌 여부(CanCollide)를 참(true)으로 설정 / [의도] 플레이어나 발사체가 통과하지 못하고 벽에 걸리는 물리 효과를 구현하기 위함
+        partCoverBlock.Material = material                                -- [의미] 파트 재질을 매개변수로 받은 material로 설정 / [의도] 블록에 어울리는 시각적 질감(나무/돌/금속)을 적용하기 위함
+        partCoverBlock.BrickColor = BrickColor.new(colorName)             -- [의미] 파트 색상을 매개변수로 받은 colorName으로 설정 / [의도] 시각적으로 재질에 매칭되는 적절한 색깔을 입히기 위함
+        partCoverBlock.Parent = modelCover                                -- [의미] 생성된 파트를 앞서 만든 modelCover 모델의 자식으로 등록 / [의도] 3개의 블록이 하나의 엄폐물 모델에 묶여 속하도록 함
+    end                                                                   -- [의미] 3층 블록 생성을 위한 반복문(for)의 종료 / [의도] 3층 구조의 엄폐물 생성을 마침
+end                                                                       -- [의미] create_cover 함수의 종료 / [의도] 엄폐물 생성 함수 정의를 완료함
 
-for index = 1, 3 do
-    create_cover("StudentCover_" .. index, Vector3.new(index * 14 - 28, 1, 8), materials[index], colors[index])
-end
+for index = 1, 3 do                                                                                             -- [의미] index 변수를 1부터 3까지 증가시키며 반복함 / [의도] 총 3개의 엄폐물 모델을 나란히 생성하기 위함
+    create_cover("StudentCover_" .. index, Vector3.new(index * 14 - 28, 1, 8), materials[index], colors[index]) -- [의미] create_cover 함수를 호출하여 3개의 엄폐물을 서로 다른 위치, 재질, 색상으로 생성 / [의도] 14칸 간격으로 배치 마커 근처에 서로 다른 엄폐 구조물을 세우기 위함
+end                                                                                                             -- [의미] 반복문(for)의 종료 / [의도] 3개의 엄폐물 생성을 완료함
 
-print("Day 02 answer complete")
+print("Day 02 answer complete") -- [의미] 출력창에 완료 메시지를 출력함 / [의도] 스크립트 실행이 정상적으로 끝났음을 확인하기 위함
