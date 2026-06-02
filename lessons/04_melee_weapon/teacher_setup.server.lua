@@ -13,15 +13,15 @@
 
 -- --------------------------------------------------------------------------------
 
-local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common")) -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))
 
-local eService = common.eEngineServiceSingleton -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
-local eLogical = common.eEngineLogicalType -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
+local eService = common.eEngineServiceSingleton
+local eLogical = common.eEngineLogicalType
 
 
 
-local svcStarterPack = game:GetService(eService.STARTER_PACK) -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임 시작 시 인벤토리에 자동으로 지급받을 도구를 관리하기 위함
-local svcWorkspace = game:GetService(eService.WORKSPACE)      -- [의미/의도] Workspace 서비스를 가져옴 ➔ 월드 상에 4일차 더미 폴더와 마커를 관리하기 위함
+local svcStarterPack = game:GetService(eService.STARTER_PACK)
+local svcWorkspace = game:GetService(eService.WORKSPACE)
 
 local tblSiegeWorld = common.ensureSiegeWorld(svcWorkspace) -- [의미/의도] 누적 공성전 월드 구조 보장 ➔ 기존 전장 콘텐츠를 유지한 채 검과 추가 더미를 배치하기 위함
 local fldTargetArea = tblSiegeWorld.fldTargetArea -- [의미/의도] 타겟 영역 폴더 참조 ➔ 쿨타임 실험 더미를 공통 타겟 영역에 누적 배치하기 위함
