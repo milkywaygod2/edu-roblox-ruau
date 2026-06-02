@@ -21,24 +21,28 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
+local eEngineServiceSingleton = common.eEngineServiceSingleton
+local ePhysical = common.eEnginePhysicalType
+local eLogical = common.eEngineLogicalType
 
 
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                    -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드인 Workspace 상에 9일차 석조 성벽을 생성하기 위함
-local folderStoneWall09 = common.createOrReplaceInstance(common.enumObjectPhysicalType.FOLDER, common.enumObjectLogicalType.STONE_WALL09, serviceWorkspace) -- [의미/의도] StoneWall09 Folder 대체 생성 ➔ 기존 성벽 폴더를 지우고 새로운 부분 파괴 성벽 맵을 구성하기 위함
+
+local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드인 Workspace 상에 9일차 석조 성벽을 생성하기 위함
+local fldStoneWall09 = common.createOrReplaceInstance(ePhysical.FOLDER, eLogical.STONE_WALL09, svcWorkspace) -- [의미/의도] StoneWall09 Folder 대체 생성 ➔ 기존 성벽 폴더를 지우고 새로운 부분 파괴 성벽 맵을 구성하기 위함
 
 for section = 1, 5 do                                                                                         -- [의미/의도] section 변수를 1부터 5 till 5까지 증가시키며 반복함 ➔ 성벽을 5개의 부분 섹션(Section)으로 나누어 독립적인 파괴가 가능하도록 구조화하기 위함
-    local modelWallSection = Instance.new(common.enumObjectPhysicalType.MODEL)                                -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 특정 섹션에 쌓여진 돌 블록 파트들을 하나의 성벽 섹션 모델로 결합하기 위함
-    modelWallSection.Name = common.enumObjectLogicalType.WALL_SECTION_PREFIX .. section                       -- [의미/의도] 모델 이름을 인덱스를 붙여 "1_WallSection" 등으로 설정 ➔ 각각의 성벽 구획을 고유 번호로 쉽게 구분하고 독립 처리하기 위함
-    modelWallSection.Parent = folderStoneWall09                                                               -- [의미/의도] 성벽 섹션 모델 부모를 StoneWall09 폴더로 지정 ➔ 9일차 성벽 폴더 내에 가지런히 소속시키기 위함
+    local modelWallSection = Instance.new(ePhysical.MODEL)                                  -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 특정 섹션에 쌓여진 돌 블록 파트들을 하나의 성벽 섹션 모델로 결합하기 위함
+    modelWallSection.Name = eLogical.WALL_SECTION_PREFIX .. section                         -- [의미/의도] 모델 이름을 인덱스를 붙여 "1_WallSection" 등으로 설정 ➔ 각각의 성벽 구획을 고유 번호로 쉽게 구분하고 독립 처리하기 위함
+    modelWallSection.Parent = fldStoneWall09                                                                      -- [의미/의도] 성벽 섹션 모델 부모를 StoneWall09 폴더로 지정 ➔ 9일차 성벽 폴더 내에 가지런히 소속시키기 위함
 
     for height = 1, 4 do                                                                                      -- [의미/의도] height 변수를 1부터 4까지 증가시키며 반복함 ➔ 각 성벽 섹션마다 돌 블록을 4층 높이로 쌓아 올리기 위함
-        local partStoneBlock = Instance.new(common.enumObjectPhysicalType.PART)                               -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 성벽의 뼈대가 될 개별 돌 블록 파트를 만들기 위함
-        partStoneBlock.Name = common.enumObjectLogicalType.STONE_BLOCK                                        -- [의미/의도] 파트 이름을 "StoneBlock"으로 설정 ➔ 탐색기에서 돌 블록 파트임을 구분하게 하기 위함
-        partStoneBlock.Size = Vector3.new(6, 2, 2)                                                            -- [의미/의도] 돌 블록 크기를 6x2x2로 넙데데하고 두껍게 설정 ➔ 튼튼해 보이는 직사각형 성벽 벽돌 모양을 묘사하기 위함
-        partStoneBlock.Position = Vector3.new((section - 3) * 6, height * 2 - 1, -24)                         -- [의미/의도] X축은 섹션 번호에 따라 가로 정렬하고, Y축 높이는 층수(height)에 맞게 위로 쌓아, Z축 -24 전방에 위치 설정 ➔ 가로로 붙은 5개 섹션이 각각 4층 높이로 빈틈없이 단단하게 이어져 큰 하나의 성벽을 연출하도록 설계된 정밀 좌표 공식임
-        partStoneBlock.Anchored = true                                                                        -- [의미/의도] 돌 블록 파트를 공중에 고정시킴 ➔ 공격을 받아고정이 풀려 무너지기 전까지는 성벽 블록이 제자리에서 든든히 버티도록 고정하기 위함
-        partStoneBlock.Material = Enum.Material.Slate                                                         -- [의미/의도] 파트 재질을 슬레이트 돌(Slate)로 지정 ➔ 단단한 돌로 쌓아 올린 중세 석조 성벽의 질감을 표현하기 위함
-        partStoneBlock.Parent = modelWallSection                                                              -- [의미/의도] 돌 블록 파트를 해당 modelWallSection 모델의 자식으로 등록 ➔ 돌 블록들이 성벽의 해당 구획 모델에 올바르게 그룹화되도록 지정함
+        local partStoneBlock = Instance.new(ePhysical.PART)                                 -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 성벽의 뼈대가 될 개별 돌 블록 파트를 만들기 위함
+        partStoneBlock.Name = eLogical.STONE_BLOCK                                          -- [의미/의도] 파트 이름을 "StoneBlock"으로 설정 ➔ 탐색기에서 돌 블록 파트임을 구분하게 하기 위함
+        partStoneBlock.Size = Vector3.new(6, 2, 2)                                                              -- [의미/의도] 돌 블록 크기를 6x2x2로 넙데데하고 두껍게 설정 ➔ 튼튼해 보이는 직사각형 성벽 벽돌 모양을 묘사하기 위함
+        partStoneBlock.Position = Vector3.new((section - 3) * 6, height * 2 - 1, -24)                           -- [의미/의도] X축은 섹션 번호에 따라 가로 정렬하고, Y축 높이는 층수(height)에 맞게 위로 쌓아, Z축 -24 전방에 위치 설정 ➔ 가로로 붙은 5개 섹션이 각각 4층 높이로 빈틈없이 단단하게 이어져 큰 하나의 성벽을 연출하도록 설계된 정밀 좌표 공식임
+        partStoneBlock.Anchored = true                                                                          -- [의미/의도] 돌 블록 파트를 공중에 고정시킴 ➔ 공격을 받아고정이 풀려 무너지기 전까지는 성벽 블록이 제자리에서 든든히 버티도록 고정하기 위함
+        partStoneBlock.Material = Enum.Material.Slate                                                           -- [의미/의도] 파트 재질을 슬레이트 돌(Slate)로 지정 ➔ 단단한 돌로 쌓아 올린 중세 석조 성벽의 질감을 표현하기 위함
+        partStoneBlock.Parent = modelWallSection                                                                  -- [의미/의도] 돌 블록 파트를 해당 modelWallSection 모델의 자식으로 등록 ➔ 돌 블록들이 성벽의 해당 구획 모델에 올바르게 그룹화되도록 지정함
     end                                                                                                       -- [의미/의도] 높이 쌓기 반복문(for)의 종료 ➔ 4층짜리 블록 쌓기 처리를 마침
 end                                                                                                           -- [의미/의도] 섹션 생성 반복문(for)의 종료 ➔ 5개 성벽 섹션 생성을 모두 마침
 

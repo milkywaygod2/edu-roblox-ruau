@@ -15,6 +15,8 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
+local ePhysical = common.eEnginePhysicalType
+
 local toolBalanceSword = script.Parent                                                                        -- [의미/의도] 이 스크립트가 포함된 검 도구(BalanceSword)를 가져옴 ➔ 검의 활성화(Activated) 및 핸들의 충돌(Touched) 이벤트를 연결하기 위함
 
 local DAMAGE = 20                                                                                             -- [의미/의도] 검의 한 방 데미지 상수를 20으로 설정 ➔ 적에게 입힐 공격력을 고정 수치로 지정하기 위함
@@ -30,12 +32,12 @@ toolBalanceSword.Activated:Connect(function()                                   
     toolBalanceSword.Handle.BrickColor = BrickColor.new("Really red")                                         -- [의미/의도] 칼날 파트(Handle)의 색을 빨간색(Really red)으로 변경 ➔ 현재 검을 휘둘러서 타격 판정이 활성화되었음을 플레이어에게 시각적으로 강력하게 알려주기 위함
 
     local connectionTouched = toolBalanceSword.Handle.Touched:Connect(function(partHit)                       -- [의미/의도] 칼날 파트(Handle)에 무언가 부딪혔을 때(Touched) 아래의 충돌 판정 함수를 실행하고 이를 변수에 담아 관리함 ➔ 공격 진행 중에 부딪힌 대상이 적인지 파악하고 타격하기 위함
-        local modelTarget = partHit:FindFirstAncestorOfClass(common.enumObjectPhysicalType.MODEL)             -- [의미/의도] 충돌한 파트의 상위 부모 중 모델(Model) 클래스를 찾아 가져옴 ➔ 부딪힌 대상이 플레이어나 더미 같은 캐릭터 모델인지 확인하기 위함
-        local humanoidTarget = modelTarget and modelTarget:FindFirstChildOfClass(common.enumObjectPhysicalType.HUMANOID) -- [의미/의도] 대상 모델 내부에서 생명체 속성(Humanoid)을 가진 컴포넌트를 가져옴 ➔ 체력을 깎을 수 있는 체력 바가 있는 대상인지 식별하기 위함
-        if not humanoidTarget or modelTarget == toolBalanceSword.Parent or tableAlreadyHit[humanoidTarget] then return end -- [의미/의도] 생명체가 없거나, 부딪힌 주체가 나 자신(검의 부모 캐릭터)이거나, 이미 이번 휘두르기에 타격받은 적이면 실행 중단 ➔ 물건 충돌 무시, 나 자신의 자해 방지, 한 번 휘두를 때 동일 대상에게 다단히트가 들어가는 현상을 차단하기 위함
+        local modelTarget = partHit:FindFirstAncestorOfClass(ePhysical.MODEL)              -- [의미/의도] 충돌한 파트의 상위 부모 중 모델(Model) 클래스를 찾아 가져옴 ➔ 부딪힌 대상이 플레이어나 더미 같은 캐릭터 모델인지 확인하기 위함
+        local humTarget = modelTarget and modelTarget:FindFirstChildOfClass(ePhysical.HUMANOID) -- [의미/의도] 대상 모델 내부에서 생명체 속성(Humanoid)을 가진 컴포넌트를 가져옴 ➔ 체력을 깎을 수 있는 체력 바가 있는 대상인지 식별하기 위함
+        if not humTarget or modelTarget == toolBalanceSword.Parent or tableAlreadyHit[humTarget] then return end -- [의미/의도] 생명체가 없거나, 부딪힌 주체가 나 자신(검의 부모 캐릭터)이거나, 이미 이번 휘두르기에 타격받은 적이면 실행 중단 ➔ 물건 충돌 무시, 나 자신의 자해 방지, 한 번 휘두를 때 동일 대상에게 다단히트가 들어가는 현상을 차단하기 위함
 
-        tableAlreadyHit[humanoidTarget] = true                                                                -- [의미/의도] 타격당한 적의 Humanoid 정보를 tableAlreadyHit 테이블에 기록함 ➔ 이번 공격 턴에서는 이 대상에게 추가 피해가 가지 않도록 중복 타격을 방지하기 위함
-        humanoidTarget:TakeDamage(DAMAGE)                                                                     -- [의미/의도] 대상의 체력을 DAMAGE(20)만큼 깎음 ➔ 무기의 기본 피해를 가하기 위함
+        tableAlreadyHit[humTarget] = true                                                                      -- [의미/의도] 타격당한 적의 Humanoid 정보를 tableAlreadyHit 테이블에 기록함 ➔ 이번 공격 턴에서는 이 대상에게 추가 피해가 가지 않도록 중복 타격을 방지하기 위함
+        humTarget:TakeDamage(DAMAGE)                                                                           -- [의미/의도] 대상의 체력을 DAMAGE(20)만큼 깎음 ➔ 무기의 기본 피해를 가하기 위함
     end)                                                                                                      -- [의미/의도] Touched 이벤트 콜백 함수의 종료 ➔ 개별 타격 판정 처리를 마침
 
     task.wait(ACTIVE_TIME)                                                                                    -- [의미/의도] ACTIVE_TIME(0.25초)만큼 실행을 일시 지연시킴 ➔ 검을 휘두르는 시각적 판정 시간 동안만 타격 이벤트를 유지하기 위함

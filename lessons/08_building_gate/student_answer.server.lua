@@ -15,21 +15,24 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local folderCastle08 = workspace:WaitForChild(common.enumObjectLogicalType.CASTLE08)                          -- [의미/의도] Workspace 내에서 "Castle08" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 8일차 성 오브젝트가 로드된 후 스크립트를 안정적으로 진행하기 위함
-local modelGate = folderCastle08:WaitForChild(common.enumObjectLogicalType.GATE)                              -- [의미/의도] 8일차 성 폴더 내부에서 "Gate" 성문 모델이 생성될 때까지 대기하여 가져옴 ➔ 성문에 타격 및 파괴 판정을 걸 대상 모델을 확실히 참조하기 위함
+local ePhysical = common.eEnginePhysicalType
+local eLogical = common.eEngineLogicalType
+
+local fldCastle08 = workspace:WaitForChild(eLogical.CASTLE08)                              -- [의미/의도] Workspace 내에서 "Castle08" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 8일차 성 오브젝트가 로드된 후 스크립트를 안정적으로 진행하기 위함
+local modelGate = fldCastle08:WaitForChild(eLogical.GATE)                                   -- [의미/의도] 8일차 성 폴더 내부에서 "Gate" 성문 모델이 생성될 때까지 대기하여 가져옴 ➔ 성문에 타격 및 파괴 판정을 걸 대상 모델을 확실히 참조하기 위함
 local health = 120                                                                                            -- [의미/의도] 성문의 총 내구도(체력) 변수를 120으로 설정 ➔ 공격 투사체(피해량 30)에 4번 맞아야 문이 파괴되는 구조를 맞추기 위함
 local boolBroken = false                                                                                      -- [의미/의도] 성문이 현재 파괴되었는지를 기록하는 불리언 변수를 false로 초기화 ➔ 이미 문이 부서진 후에도 중복으로 파괴 처리가 일어나는 현상을 막기 위함
 
 local function set_gate_color(color)                                                                          -- [의미/의도] 성문 모델 내 모든 파트의 색을 지정한 color로 변경하는 함수 정의 ➔ 성문이 손상됨에 따라 시각적인 경고 색상으로 변화를 주기 위함
-    for _, partGatePlank in ipairs(modelGate:GetDescendants()) do                                             -- [의미/의도] modelGate 모델 내부의 모든 하위 자식(Descendants)들을 순회하며 하나씩 partGatePlank에 담음 ➔ 성문을 구성하는 모든 나무판자 파트들을 누락 없이 제어하기 위함
-        if partGatePlank:IsA(common.enumObjectPhysicalType.BASE_PART) then partGatePlank.BrickColor = BrickColor.new(color) end -- [의미/의도] 순회 중인 객체가 물리적인 파트(BasePart) 계열이라면 색상을 지정된 color로 변경 ➔ 성문 판자 파트들만 골라내어 깔끔하게 도색을 일괄 변경하기 위함
+    for _, partGatePlank in ipairs(modelGate:GetDescendants()) do                                              -- [의미/의도] modelGate 모델 내부의 모든 하위 자식(Descendants)들을 순회하며 하나씩 partGatePlank에 담음 ➔ 성문을 구성하는 모든 나무판자 파트들을 누락 없이 제어하기 위함
+        if partGatePlank:IsA(ePhysical.BASE_PART) then partGatePlank.BrickColor = BrickColor.new(color) end -- [의미/의도] 순회 중인 객체가 물리적인 파트(BasePart) 계열이라면 색상을 지정된 color로 변경 ➔ 성문 판자 파트들만 골라내어 깔끔하게 도색을 일괄 변경하기 위함
     end                                                                                                       -- [의미/의도] 성문 색상 변경 반복문(for)의 종료 ➔ 모든 판자 파트의 도색 처리를 마침
 end                                                                                                           -- [의미/의도] set_gate_color 함수의 종료 ➔ 성문 색상 변경 함수 정의 완료
 
 local function break_gate()                                                                                   -- [의미/의도] 성문 파괴를 실행하는 함수 정의 ➔ 성문의 고정을 해제하고 물리적으로 흩날리며 무너지는 파괴 효과를 주어 장엄하게 부서지는 모습을 연출하기 위함
     boolBroken = true                                                                                         -- [의미/의도] 파괴 상태 불리언 값을 참(true)으로 변경 ➔ 성문이 이미 부서진 상태임을 선언하기 위함
-    for _, partGatePlank in ipairs(modelGate:GetDescendants()) do                                             -- [의미/의도] 성문 모델 내부의 모든 하위 파트를 순회함 ➔ 5개의 판자 모두 물리 효과를 적용하여 붕괴시키기 위함
-        if partGatePlank:IsA(common.enumObjectPhysicalType.BASE_PART) then                                    -- [의미/의도] 순회 객체가 BasePart 유형의 물리 파트인 경우 ➔ 물리 고정을 풀고 힘을 가할 수 있는 물리 오브젝트를 분류하기 위함
+    for _, partGatePlank in ipairs(modelGate:GetDescendants()) do                                              -- [의미/의도] 성문 모델 내부의 모든 하위 파트를 순회함 ➔ 5개의 판자 모두 물리 효과를 적용하여 붕괴시키기 위함
+        if partGatePlank:IsA(ePhysical.BASE_PART) then                                    -- [의미/의도] 순회 객체가 BasePart 유형의 물리 파트인 경우 ➔ 물리 고정을 풀고 힘을 가할 수 있는 물리 오브젝트를 분류하기 위함
             partGatePlank.Anchored = false                                                                    -- [의미/의도] 파트의 공중 고정(Anchored)을 해제(false)시킴 ➔ 중력과 충돌에 의해 파트들이 자유롭게 굴러 떨어지도록 물리 법칙을 적용하기 위함
             partGatePlank.AssemblyLinearVelocity = Vector3.new(math.random(-25, 25), 35, math.random(-20, 20)) -- [의미/의도] 파트에 X(-25~25), Y(35), Z(-20~20) 범위의 무작위 속도를 폭발적으로 가함 ➔ 성문이 그냥 털썩 떨어지는 게 아니라 폭발하듯 솟구치며 사방으로 화려하게 흩어지도록 물리 파괴력을 가하기 위함
         end                                                                                                   -- [의미/의도] BasePart 조건문 종료 ➔ 해당 판자 처리 마침
@@ -43,10 +46,10 @@ local function damage_gate(amount)                                              
     if health <= 0 then break_gate() end                                                                      -- [의미/의도] 체력이 0 이하가 되면 break_gate 함수를 호출해 무너뜨림 ➔ 내구도가 다 한 성문을 붕괴시키기 위함
 end                                                                                                           -- [의미/의도] damage_gate 함수의 종료 ➔ 데미지 처리 함수 정의 완료
 
-for _, partGatePlank in ipairs(modelGate:GetDescendants()) do                                                 -- [의미/의도] 성문 모델 내부의 모든 하위 파트들을 순회함 ➔ 각각의 판자 파트마다 투사체 충돌(Touched) 이벤트를 일일이 연결해 주기 위함
-    if partGatePlank:IsA(common.enumObjectPhysicalType.BASE_PART) then                                        -- [의미/의도] 파트가 BasePart 타입이면 ➔ 충돌 감지(Touched) 이벤트를 가질 수 있는 물리적 객체에만 연결을 시도하기 위함
+for _, partGatePlank in ipairs(modelGate:GetDescendants()) do                                                  -- [의미/의도] 성문 모델 내부의 모든 하위 파트들을 순회함 ➔ 각각의 판자 파트마다 투사체 충돌(Touched) 이벤트를 일일이 연결해 주기 위함
+    if partGatePlank:IsA(ePhysical.BASE_PART) then                                        -- [의미/의도] 파트가 BasePart 타입이면 ➔ 충돌 감지(Touched) 이벤트를 가질 수 있는 물리적 객체에만 연결을 시도하기 위함
         partGatePlank.Touched:Connect(function(partHit)                                                       -- [의미/의도] 개별 성문 판자에 무언가 닿았을 때(Touched) 충돌한 파트(partHit)를 매개변수로 함수 실행 ➔ 공격 투사체가 문에 부딪혔는지 실시간으로 검사하기 위함
-            if partHit.Name == common.enumObjectLogicalType.PROJECTILE_ARROW_TRAINING or partHit.Name == common.enumObjectLogicalType.SIEGE_STONE then -- [의미/의도] 부딪힌 파트 이름이 화살("TrainingArrow") 또는 공성돌("SiegeStone")이라면 ➔ 아군 캐릭터의 몸이 부딪힌 것은 무시하고 오직 공격용 투사체에 맞았을 때만 피격 판정을 내리기 위함
+            if partHit.Name == eLogical.PROJECTILE_ARROW_TRAINING or partHit.Name == eLogical.SIEGE_STONE then -- [의미/의도] 부딪힌 파트 이름이 화살("TrainingArrow") 또는 공성돌("SiegeStone")이라면 ➔ 아군 캐릭터의 몸이 부딪힌 것은 무시하고 오직 공격용 투사체에 맞았을 때만 피격 판정을 내리기 위함
                 partHit:Destroy()                                                                             -- [의미/의도] 부딪힌 투사체 파트를 즉시 맵에서 파괴함 ➔ 맞은 투사체를 소멸시켜 추가 충돌을 막고 맵을 깔끔하게 치우기 위함
                 damage_gate(30)                                                                               -- [의미/의도] damage_gate 함수를 호출하여 성문에 30만큼의 데미지를 가함 ➔ 투사체 타격 당 30의 내구도를 차감하기 위함
             end                                                                                               -- [의미/의도] 투사체 종류 판별 조건문의 종료 ➔ 개별 판자 피격 조건 처리 완료
