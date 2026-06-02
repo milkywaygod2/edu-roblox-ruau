@@ -19,32 +19,32 @@
 
 -- --------------------------------------------------------------------------------
 
-local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common")) -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
 
 
-local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK) -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어 인벤토리에 자동으로 활(Tool)을 장착시켜주기 위함
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)      -- [의미/의도] Workspace 서비스를 가져옴 ➔ 5일차 과녁 연습장 폴더와 파트를 맵에 추가하기 위함
+local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                               -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어 인벤토리에 자동으로 활(Tool)을 장착시켜주기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                    -- [의미/의도] Workspace 서비스를 가져옴 ➔ 5일차 과녁 연습장 폴더와 파트를 맵에 추가하기 위함
 
-local folderTargetRange05 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "TargetRange05", serviceWorkspace) -- [의미/의도] TargetRange05 Folder 대체 생성 ➔ 기존 과녁판 폴더를 지우고 새로운 5일차 과녁판 경기장을 구성하기 위함
+local folderTargetRange05 = common.createOrReplaceInstance(common.enumObjectPhysicalType.FOLDER, common.enumObjectLogicalType.TARGET_RANGE05, serviceWorkspace) -- [의미/의도] TargetRange05 Folder 대체 생성 ➔ 기존 과녁판 폴더를 지우고 새로운 5일차 과녁판 경기장을 구성하기 위함
 
-for index = 1, 6 do                                           -- [의미/의도] index 변수를 1부터 6까지 6번 반복 실행 ➔ 쏘아 맞힐 수 있는 6개의 과녁판(Target)을 만들기 위함
-    local partTarget = Instance.new("Part")                   -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투사체를 맞춰 쓰러뜨릴 과녁판 파트를 생성하기 위함
-    partTarget.Name = "Target_" .. index                      -- [의미/의도] 과녁판 이름을 인덱스 번호를 붙여 "1_Target" 등으로 설정 ➔ 각 과녁을 개별 번호로 구분하기 위함
-    partTarget.Size = Vector3.new(4, 6, 1)                    -- [의미/의도] 과녁판의 크기를 4x6x1의 넙데데한 크기로 설정 ➔ 플레이어가 활을 쏴서 충분히 맞힐 수 있는 적당한 과녁 너비로 만들기 위함
-    partTarget.Position = Vector3.new(index * 8 - 28, 3, -40) -- [의미/의도] 과녁들을 X축 8칸 간격으로 정렬하고, 높이 3, 전방 Z축 -40에 배치 ➔ 플레이어의 정면에 거리를 두고 일정한 간격으로 나란히 서 있는 과녁 사격장을 연출하기 위함
-    partTarget.Anchored = true                                -- [의미/의도] 과녁 파트를 고정시킴 ➔ 화살에 맞기 전까지 바람이나 중력에 의해 넘어지지 않고 꼿꼿이 서 있게 하기 위함
-    partTarget.BrickColor = BrickColor.new("Bright red")      -- [의미/의도] 과녁 파트 색을 밝은 빨간색(Bright red)으로 지정 ➔ 멀리서도 뚜렷하게 표적으로 식별되도록 시각적으로 강조하기 위함
-    partTarget.Parent = folderTargetRange05                   -- [의미/의도] 과녁 파트를 TargetRange05 폴더의 자식으로 등록 ➔ 과녁 연습장 폴더 내에 그룹화하여 관리하기 위함
-end                                                           -- [의미/의도] 과녁 생성을 위한 반복문(for)의 종료 ➔ 6개의 과녁 생성을 완료함
+for index = 1, 6 do                                                                                           -- [의미/의도] index 변수를 1부터 6까지 6번 반복 실행 ➔ 쏘아 맞힐 수 있는 6개의 과녁판(Target)을 만들기 위함
+    local partTarget = Instance.new(common.enumObjectPhysicalType.PART)                                       -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투사체를 맞춰 쓰러뜨릴 과녁판 파트를 생성하기 위함
+    partTarget.Name = common.enumObjectLogicalType.TARGET_PREFIX .. index                                     -- [의미/의도] 과녁판 이름을 인덱스 번호를 붙여 "1_Target" 등으로 설정 ➔ 각 과녁을 개별 번호로 구분하기 위함
+    partTarget.Size = Vector3.new(4, 6, 1)                                                                    -- [의미/의도] 과녁판의 크기를 4x6x1의 넙데데한 크기로 설정 ➔ 플레이어가 활을 쏴서 충분히 맞힐 수 있는 적당한 과녁 너비로 만들기 위함
+    partTarget.Position = Vector3.new(index * 8 - 28, 3, -40)                                                 -- [의미/의도] 과녁들을 X축 8칸 간격으로 정렬하고, 높이 3, 전방 Z축 -40에 배치 ➔ 플레이어의 정면에 거리를 두고 일정한 간격으로 나란히 서 있는 과녁 사격장을 연출하기 위함
+    partTarget.Anchored = true                                                                                -- [의미/의도] 과녁 파트를 고정시킴 ➔ 화살에 맞기 전까지 바람이나 중력에 의해 넘어지지 않고 꼿꼿이 서 있게 하기 위함
+    partTarget.BrickColor = BrickColor.new("Bright red")                                                      -- [의미/의도] 과녁 파트 색을 밝은 빨간색(Bright red)으로 지정 ➔ 멀리서도 뚜렷하게 표적으로 식별되도록 시각적으로 강조하기 위함
+    partTarget.Parent = folderTargetRange05                                                                   -- [의미/의도] 과녁 파트를 TargetRange05 폴더의 자식으로 등록 ➔ 과녁 연습장 폴더 내에 그룹화하여 관리하기 위함
+end                                                                                                           -- [의미/의도] 과녁 생성을 위한 반복문(for)의 종료 ➔ 6개의 과녁 생성을 완료함
 
-local toolTrainingBow = common.createOrReplaceInstance(common.enumObjectType.TOOL, "TrainingBow", serviceStarterPack) -- [의미/의도] TrainingBow Tool 대체 생성 ➔ 기존 원거리 무기 활을 지우고 새로운 연습용 활을 초기화하기 위함
-toolTrainingBow.ToolTip = "서버에서 투사체를 만드는 연습용 활"                                                                       -- [의미/의도] 활 도구의 마우스 툴팁을 설정 ➔ 플레이어에게 서버 사이드에서 투사체를 생성함을 팁으로 설명하기 위함
+local toolTrainingBow = common.createOrReplaceInstance(common.enumObjectPhysicalType.TOOL, common.enumObjectLogicalType.TRAINING_BOW, serviceStarterPack) -- [의미/의도] TrainingBow Tool 대체 생성 ➔ 기존 원거리 무기 활을 지우고 새로운 연습용 활을 초기화하기 위함
+toolTrainingBow.ToolTip = "서버에서 투사체를 만드는 연습용 활"                                                               -- [의미/의도] 활 도구의 마우스 툴팁을 설정 ➔ 플레이어에게 서버 사이드에서 투사체를 생성함을 팁으로 설명하기 위함
 
-local partHandle = Instance.new("Part")  -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 손에 쥘 활의 중심 부위(Handle)를 만들기 위함
-partHandle.Name = "Handle"               -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 탑재 시스템이 캐릭터 손바닥에 부착할 파트로 인식하도록 하기 위함
-partHandle.Size = Vector3.new(1, 4, 1)   -- [의미/의도] 핸들 파트 크기를 1x4x1로 얇고 길게 설정 ➔ 캐릭터가 쥘 수 있는 적당한 활대 크기를 구현하기 위함
-partHandle.Material = Enum.Material.Wood -- [의미/의도] 재질을 나무(Wood)로 설정 ➔ 활의 자연 친화적인 나무 질감을 표현하기 위함
-partHandle.Parent = toolTrainingBow      -- [의미/의도] 핸들 파트를 활 도구의 자식으로 등록 ➔ 도구 착용 시 외형으로 나타나게 하기 위함
+local partHandle = Instance.new(common.enumObjectPhysicalType.PART)                                           -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 손에 쥘 활의 중심 부위(Handle)를 만들기 위함
+partHandle.Name = common.enumObjectLogicalType.RESERVED_HANDLE                                                -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 탑재 시스템이 캐릭터 손바닥에 부착할 파트로 인식하도록 하기 위함
+partHandle.Size = Vector3.new(1, 4, 1)                                                                        -- [의미/의도] 핸들 파트 크기를 1x4x1로 얇고 길게 설정 ➔ 캐릭터가 쥘 수 있는 적당한 활대 크기를 구현하기 위함
+partHandle.Material = Enum.Material.Wood                                                                      -- [의미/의도] 재질을 나무(Wood)로 설정 ➔ 활의 자연 친화적인 나무 질감을 표현하기 위함
+partHandle.Parent = toolTrainingBow                                                                           -- [의미/의도] 핸들 파트를 활 도구의 자식으로 등록 ➔ 도구 착용 시 외형으로 나타나게 하기 위함
 
-print("5일차 준비 완료") -- [의미/의도] 출력창에 완료 메시지를 출력함 ➔ 5일차 사격장 및 활 생성 셋업이 완료되었음을 알려주기 위함
+print("5일차 준비 완료")                                                                                            -- [의미/의도] 출력창에 완료 메시지를 출력함 ➔ 5일차 사격장 및 활 생성 셋업이 완료되었음을 알려주기 위함

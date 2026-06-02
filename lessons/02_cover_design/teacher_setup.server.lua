@@ -19,29 +19,29 @@
 
 -- --------------------------------------------------------------------------------
 
-local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common")) -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
 
 
-local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                                -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 공간(Workspace)에 접근하여 파트 및 폴더를 제어하기 위함
-local folderCoverField02 = common.createOrReplaceInstance(common.enumObjectType.FOLDER, "CoverField02", serviceWorkspace) -- [의미/의도] CoverField02 Folder 대체 생성 ➔ 기존 엄폐물 필드를 지우고 새로운 엄폐물 배치판을 시작하기 위함
+local serviceWorkspace = game:GetService(common.enumServiceName.WORKSPACE)                                    -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 공간(Workspace)에 접근하여 파트 및 폴더를 제어하기 위함
+local folderCoverField02 = common.createOrReplaceInstance(common.enumObjectPhysicalType.FOLDER, common.enumObjectLogicalType.COVER_FIELD02, serviceWorkspace) -- [의미/의도] CoverField02 Folder 대체 생성 ➔ 기존 엄폐물 필드를 지우고 새로운 엄폐물 배치판을 시작하기 위함
 
-local partGridBase = Instance.new("Part")       -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 엄폐물 실습을 진행할 바닥(GridBase)을 만들기 위함
-partGridBase.Name = "GridBase"                  -- [의미/의도] 파트 이름을 "GridBase"로 설정 ➔ 바닥 구역임을 탐색기에서 구분할 수 있게 지정함
-partGridBase.Size = Vector3.new(90, 1, 70)      -- [의미/의도] 바닥 파트의 가로, 세로, 높이 크기를 설정 ➔ 엄폐물 배치 실습을 진행할 수 있는 넉넉한 공간을 확보하기 위함
-partGridBase.Position = Vector3.new(0, -0.5, 0) -- [의미/의도] 바닥 파트의 중심 좌표 위치를 설정 ➔ 맵의 중심부에 위치시키기 위함
-partGridBase.Anchored = true                    -- [의미/의도] 파트를 공중에 고정시킴 ➔ 물리 중력에 의해 떨어지거나 밀리지 않고 맵에 단단히 고정되도록 함
-partGridBase.Material = Enum.Material.Concrete  -- [의미/의도] 파트의 재질을 콘크리트(Concrete)로 설정 ➔ 엄폐 실습장 바닥의 재질을 시각적으로 나타내기 위함
-partGridBase.Parent = folderCoverField02        -- [의미/의도] 바닥 파트를 CoverField02 폴더의 자식으로 등록 ➔ 해당 폴더 안에서 깔끔하게 관리하기 위함
+local partGridBase = Instance.new(common.enumObjectPhysicalType.PART)                                         -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 엄폐물 실습을 진행할 바닥(GridBase)을 만들기 위함
+partGridBase.Name = common.enumObjectLogicalType.GRID_BASE                                                    -- [의미/의도] 파트 이름을 "GridBase"로 설정 ➔ 바닥 구역임을 탐색기에서 구분할 수 있게 지정함
+partGridBase.Size = Vector3.new(90, 1, 70)                                                                    -- [의미/의도] 바닥 파트의 가로, 세로, 높이 크기를 설정 ➔ 엄폐물 배치 실습을 진행할 수 있는 넉넉한 공간을 확보하기 위함
+partGridBase.Position = Vector3.new(0, -0.5, 0)                                                               -- [의미/의도] 바닥 파트의 중심 좌표 위치를 설정 ➔ 맵의 중심부에 위치시키기 위함
+partGridBase.Anchored = true                                                                                  -- [의미/의도] 파트를 공중에 고정시킴 ➔ 물리 중력에 의해 떨어지거나 밀리지 않고 맵에 단단히 고정되도록 함
+partGridBase.Material = Enum.Material.Concrete                                                                -- [의미/의도] 파트의 재질을 콘크리트(Concrete)로 설정 ➔ 엄폐 실습장 바닥의 재질을 시각적으로 나타내기 위함
+partGridBase.Parent = folderCoverField02                                                                      -- [의미/의도] 바닥 파트를 CoverField02 폴더의 자식으로 등록 ➔ 해당 폴더 안에서 깔끔하게 관리하기 위함
 
-for index = 1, 5 do                                                  -- [의미/의도] index 변수를 1부터 5까지 증가시키며 반복함 ➔ 총 5개의 엄폐물 배치 기준 표시판(Marker)을 만들기 위함
-    local partCoverMarker = Instance.new("Part")                     -- [의미/의도] 새로운 파트(Part)를 생성함 ➔ 엄폐물을 배치할 기준 위치 마커를 만들기 위함
-    partCoverMarker.Name = "CoverMarker_" .. index                   -- [의미/의도] 마커의 이름을 번호를 붙여 "1_CoverMarker" 등으로 설정 ➔ 각각의 마커를 이름으로 쉽게 구분하기 위함
-    partCoverMarker.Size = Vector3.new(2, 0.2, 2)                    -- [의미/의도] 마커 파트의 크기를 2x0.2x2로 얇게 설정 ➔ 바닥에 밀착되는 얇은 표시판 형태로 만들기 위함
-    partCoverMarker.Position = Vector3.new(index * 8 - 24, 0.1, -10) -- [의미/의도] 마커 파트의 위치 좌표를 인덱스별로 다르게 계산하여 배치 ➔ 5개의 마커가 일정 간격(8칸)으로 나란히 정렬되도록 위함
-    partCoverMarker.Anchored = true                                  -- [의미/의도] 마커 파트를 고정시킴 ➔ 플레이어가 밟아도 움직이지 않도록 고정하기 위함
-    partCoverMarker.BrickColor = BrickColor.new("Bright yellow")     -- [의미/의도] 마커 파트의 색상을 밝은 노란색(Bright yellow)으로 설정 ➔ 바닥에서 눈에 잘 띄게 표현하기 위함
-    partCoverMarker.Parent = folderCoverField02                      -- [의미/의도] 마커 파트를 CoverField02 폴더의 자식으로 등록 ➔ 2일차 폴더 내부에서 엄폐물 마커들을 한데 모아 관리하기 위함
-end                                                                  -- [의미/의도] 반복문(for)의 종료 ➔ 5번의 마커 생성 및 설정을 마침
+for index = 1, 5 do                                                                                           -- [의미/의도] index 변수를 1부터 5까지 증가시키며 반복함 ➔ 총 5개의 엄폐물 배치 기준 표시판(Marker)을 만들기 위함
+    local partCoverMarker = Instance.new(common.enumObjectPhysicalType.PART)                                  -- [의미/의도] 새로운 파트(Part)를 생성함 ➔ 엄폐물을 배치할 기준 위치 마커를 만들기 위함
+    partCoverMarker.Name = common.enumObjectLogicalType.COVER_MARKER_PREFIX .. index                          -- [의미/의도] 마커의 이름을 번호를 붙여 "1_CoverMarker" 등으로 설정 ➔ 각각의 마커를 이름으로 쉽게 구분하기 위함
+    partCoverMarker.Size = Vector3.new(2, 0.2, 2)                                                             -- [의미/의도] 마커 파트의 크기를 2x0.2x2로 얇게 설정 ➔ 바닥에 밀착되는 얇은 표시판 형태로 만들기 위함
+    partCoverMarker.Position = Vector3.new(index * 8 - 24, 0.1, -10)                                          -- [의미/의도] 마커 파트의 위치 좌표를 인덱스별로 다르게 계산하여 배치 ➔ 5개의 마커가 일정 간격(8칸)으로 나란히 정렬되도록 위함
+    partCoverMarker.Anchored = true                                                                           -- [의미/의도] 마커 파트를 고정시킴 ➔ 플레이어가 밟아도 움직이지 않도록 고정하기 위함
+    partCoverMarker.BrickColor = BrickColor.new("Bright yellow")                                              -- [의미/의도] 마커 파트의 색상을 밝은 노란색(Bright yellow)으로 설정 ➔ 바닥에서 눈에 잘 띄게 표현하기 위함
+    partCoverMarker.Parent = folderCoverField02                                                               -- [의미/의도] 마커 파트를 CoverField02 폴더의 자식으로 등록 ➔ 2일차 폴더 내부에서 엄폐물 마커들을 한데 모아 관리하기 위함
+end                                                                                                           -- [의미/의도] 반복문(for)의 종료 ➔ 5번의 마커 생성 및 설정을 마침
 
-print("2일차 준비 완료") -- [의미/의도] 출력창에 "2일차 준비 완료" 메시지를 출력함 ➔ 스크립트가 정상적으로 끝까지 실행되었음을 알리기 위함
+print("2일차 준비 완료")                                                                                            -- [의미/의도] 출력창에 "2일차 준비 완료" 메시지를 출력함 ➔ 스크립트가 정상적으로 끝까지 실행되었음을 알리기 위함

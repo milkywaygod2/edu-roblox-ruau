@@ -38,6 +38,12 @@
 		- int           : Integer (정수형) (예: intDamage)
 		- float         : Float/Double (실수형) (예: floatCooldown)
 		- str           : String (문자열) (예: strPlayerName)
+
+	[2. 오브젝트 타입의 두 축 (Physical Type vs Logical Type)]
+	한 오브젝트(Instance)는 직교하는 두 가지 분류 축을 동시에 가집니다.
+	* enumObjectPhysicalType : 엔진이 강제하는 물리(명목) 타입 = .ClassName (예: Part, Humanoid). Instance.new/IsA에 사용.
+	* enumObjectLogicalType  : 개발자가 .Name으로 표현하는 논리 타입(도메인 종류) (예: Handle, Gate). .ClassName으로 구분 안 되는 종류를 .Name으로 나눔.
+	  - RESERVED_ 접두사: 로블록스 엔진이 의미를 고정한 불변 예약 이름(예: Handle, HumanoidRootPart, leaderstats). 값을 바꾸면 엔진 기능이 죽으므로 절대 수정 금지.
 	--------------------------------------------------------------------------------
 ]]
 
@@ -56,11 +62,110 @@ common.enumServiceName = { -- [의미/의도] 서비스 이름 이넘 정의 ➔
 
 -- --------------------------------------------------------------------------------
 
-common.enumObjectType = { -- [의미/의도] 클래스 이름 이넘 정의 ➔ 오타 방지 및 생성할 인스턴스 종류를 한곳에서 안전하게 관리하기 위함
-	FOLDER       = "Folder",
-	TOOL         = "Tool",
-	REMOTE_EVENT = "RemoteEvent",
+common.enumObjectPhysicalType = { -- [의미/의도] 물리(명목) 타입 이넘 정의 ➔ 엔진이 강제하는 .ClassName(실체 타입)을 한곳에서 안전하게 관리하기 위함(Instance.new/IsA에 사용)
+	PART             = "Part",
+	BASE_PART        = "BasePart",
+	MODEL            = "Model",
+	HUMANOID         = "Humanoid",
+	FOLDER           = "Folder",
+	TOOL             = "Tool",
+	INT_VALUE        = "IntValue",
+	CLICK_DETECTOR   = "ClickDetector",
+	REMOTE_EVENT     = "RemoteEvent",
+	PARTICLE_EMITTER = "ParticleEmitter",
+	EXPLOSION        = "Explosion",
+	TEAM             = "Team",
 }
+
+-- --------------------------------------------------------------------------------
+
+common.enumObjectLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 ➔ .ClassName으로 구분 안 되는 도메인 종류를 .Name으로 표현(RESERVED_는 엔진이 강제하는 불변 예약 이름이라 값 수정 금지)
+	RESERVED_HANDLE             = "Handle",
+	RESERVED_HUMANOID_ROOT_PART = "HumanoidRootPart",
+	RESERVED_LEADERSTATS        = "leaderstats",
+
+	-- 01 rock_tool
+	ARENA01               = "Arena01",
+	PRACTICE_BASE         = "PracticeBase",
+	PRACTICE_DUMMY_PREFIX = "PracticeDummy_",
+	PRACTICE_ROCK         = "PracticeRock",
+	THROWN_PRACTICE_ROCK  = "ThrownPracticeRock",
+	-- 02 cover_design
+	COVER_FIELD02         = "CoverField02",
+	GRID_BASE             = "GridBase",
+	COVER_MARKER_PREFIX   = "CoverMarker_",
+	COVER_BLOCK_PREFIX    = "CoverBlock_",
+	COVER_STUDENT_PREFIX  = "StudentCover_",
+	-- 03 resource_wall
+	RESOURCE_WALL03       = "ResourceWall03",
+	BUILD_BUTTON          = "BuildButton",
+	WALL_SPAWN            = "WallSpawn",
+	WALL_BLOCK_SUFFIX     = "_WallBlock",
+	WOOD                  = "Wood",
+	-- 04 melee_weapon
+	BALANCE_SWORD         = "BalanceSword",
+	DUMMIES04             = "Dummies04",
+	COOLDOWN_DUMMY_PREFIX = "CooldownDummy_",
+	-- 05 ranged_weapon
+	TARGET_RANGE05            = "TargetRange05",
+	TRAINING_BOW              = "TrainingBow",
+	PROJECTILE_ALL            = "Projectile",
+	PROJECTILE_ARROW          = "Arrow",
+	PROJECTILE_ARROW_TRAINING = "TrainingArrow",
+	TARGET_PREFIX             = "Target_",
+	-- 06 shield_design
+	PRACTICE_SHIELD       = "PracticeShield",
+	-- 07 armor_design
+	HEAVY_ARMOR           = "HeavyArmor",
+	ARMOR_AURA            = "ArmorAura",
+	-- 08 building_gate
+	CASTLE08              = "Castle08",
+	GATE                  = "Gate",
+	GATE_PLANK_PREFIX     = "GatePlank_",
+	-- 09 stone_wall
+	STONE_WALL09          = "StoneWall09",
+	WALL_SECTION_PREFIX   = "WallSection_",
+	STONE_BLOCK           = "StoneBlock",
+	-- 10 siege_engine
+	SIEGE_ENGINE10        = "SiegeEngine10",
+	LAUNCH_BUTTON         = "LaunchButton",
+	LAUNCH_POINT          = "LaunchPoint",
+	TARGET_POINT          = "TargetPoint",
+	SIEGE_STONE           = "SiegeStone",
+	-- 11 magic_skill
+	CAST_MAGIC            = "CastMagic",
+	MAGIC_STAFF           = "MagicStaff",
+	MAGIC_ARENA11         = "MagicArena11",
+	MAGIC_DUMMY_PREFIX    = "MagicDummy_",
+	-- 12 final_battle
+	TEAM_BLUE             = "Blue",
+	TEAM_RED              = "Red",
+	FINAL_BATTLE12        = "FinalBattle12",
+	ROUND_START_BUTTON    = "RoundStartButton",
+	SPAWN_POINT_PREFIX    = "SpawnPoint_",
+}
+
+-- --------------------------------------------------------------------------------
+
+common.enumAttributeName = { -- [의미/의도] Attribute 이름 이넘 정의 ➔ 서버/클라이언트가 문자열 키를 공유할 때 오타 없이 같은 계약을 사용하기 위함
+	ROUND_STARTER = "RoundStarter",
+	ROUND_STATE   = "RoundState",
+	TIME_LEFT      = "TimeLeft",
+}
+
+-- --------------------------------------------------------------------------------
+
+common.enumRoundState = { -- [의미/의도] 라운드 상태값 이넘 정의 ➔ Attribute에 저장되는 라운드 진행 상태 문자열을 한곳에서 안전하게 관리하기 위함
+	PREPARING = "Preparing",
+	PLAYING   = "Playing",
+	FINISHED  = "Finished",
+}
+
+-- --------------------------------------------------------------------------------
+
+function common.hasObjectNamePrefix(strName, strPrefix) -- [의미/의도] 오브젝트 이름이 지정된 enum 접두사로 시작하는지 검사 ➔ 부분 문자열 검색이 다른 logical type 경계를 침범하지 않도록 접두사 기준으로만 판정하기 위함
+	return strName:sub(1, #strPrefix) == strPrefix    -- [의미/의도] 이름 앞부분이 접두사와 정확히 일치하는지 반환 ➔ "TargetPoint"처럼 접두사 경계가 다른 이름을 오인하지 않도록 하기 위함
+end
 
 -- --------------------------------------------------------------------------------
 

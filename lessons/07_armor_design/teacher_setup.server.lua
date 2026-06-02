@@ -19,20 +19,20 @@
 
 -- --------------------------------------------------------------------------------
 
-local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common")) -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
 
 
-local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
-local toolHeavyArmor = common.createOrReplaceInstance(common.enumObjectType.TOOL, "HeavyArmor", serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
-toolHeavyArmor.RequiresHandle = true                                                                                -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
-toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                                                       -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
+local serviceStarterPack = game:GetService(common.enumServiceName.STARTER_PACK)                               -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
+local toolHeavyArmor = common.createOrReplaceInstance(common.enumObjectPhysicalType.TOOL, common.enumObjectLogicalType.HEAVY_ARMOR, serviceStarterPack) -- [의미/의도] HeavyArmor Tool 대체 생성 ➔ 기존 갑옷 장비를 정리하고 새로운 기본 갑옷 툴을 생성하기 위함
+toolHeavyArmor.RequiresHandle = true                                                                          -- [의미/의도] 도구 작동 시 물리적인 핸들 파트가 필요하도록 참(true)으로 설정 ➔ 캐릭터가 손에 쥘 수 있는 파트가 손잡이 규격으로 필요함을 활성화하기 위함
+toolHeavyArmor.ToolTip = "장착하면 갑옷 능력치가 적용됩니다"                                                                 -- [의미/의도] 장비의 설명 툴팁을 작성 ➔ 플레이어에게 갑옷 장착에 따른 스탯 변화 효과를 안내하기 위함
 
-local partHandle = Instance.new("Part")                -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 쥘 갑옷의 중심 핸들이자 외형(Handle)을 만들기 위함
-partHandle.Name = "Handle"                             -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 부착하도록 하기 위함
-partHandle.Size = Vector3.new(2, 2, 1)                 -- [의미/의도] 파트 크기를 2x2x1로 널찍하고 두껍게 설정 ➔ 무겁고 두꺼운 방패나 흉갑 같은 강인한 디자인을 연출하기 위함
-partHandle.Material = Enum.Material.Metal              -- [의미/의도] 파트 재질을 금속(Metal)으로 설정 ➔ 철제 중갑옷의 튼튼하고 차가운 금속 질감을 묘사하기 위함
-partHandle.BrickColor = BrickColor.new("Really black") -- [의미/의도] 파트 색을 완전 검은색(Really black)으로 설정 ➔ 묵직하고 강렬한 블랙 중갑옷 느낌을 시각화하기 위함
-partHandle.Parent = toolHeavyArmor                     -- [의미/의도] 핸들 파트를 갑옷 도구의 자식으로 등록 ➔ 장착 시 캐릭터 손에 이 검은 금속 덩어리 외형이 부착되도록 하기 위함
+local partHandle = Instance.new(common.enumObjectPhysicalType.PART)                                           -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 캐릭터가 쥘 갑옷의 중심 핸들이자 외형(Handle)을 만들기 위함
+partHandle.Name = common.enumObjectLogicalType.RESERVED_HANDLE                                                -- [의미/의도] 파트 이름을 반드시 "Handle"로 설정 ➔ 로블록스 도구 시스템이 캐릭터의 손 위치에 알아서 부착하도록 하기 위함
+partHandle.Size = Vector3.new(2, 2, 1)                                                                        -- [의미/의도] 파트 크기를 2x2x1로 널찍하고 두껍게 설정 ➔ 무겁고 두꺼운 방패나 흉갑 같은 강인한 디자인을 연출하기 위함
+partHandle.Material = Enum.Material.Metal                                                                     -- [의미/의도] 파트 재질을 금속(Metal)으로 설정 ➔ 철제 중갑옷의 튼튼하고 차가운 금속 질감을 묘사하기 위함
+partHandle.BrickColor = BrickColor.new("Really black")                                                        -- [의미/의도] 파트 색을 완전 검은색(Really black)으로 설정 ➔ 묵직하고 강렬한 블랙 중갑옷 느낌을 시각화하기 위함
+partHandle.Parent = toolHeavyArmor                                                                            -- [의미/의도] 핸들 파트를 갑옷 도구의 자식으로 등록 ➔ 장착 시 캐릭터 손에 이 검은 금속 덩어리 외형이 부착되도록 하기 위함
 
-print("7일차 준비 완료") -- [의미/의도] 출력창에 메시지 출력 ➔ 준비 작업이 무사히 끝났음을 확인하기 위함
+print("7일차 준비 완료")                                                                                            -- [의미/의도] 출력창에 메시지 출력 ➔ 준비 작업이 무사히 끝났음을 확인하기 위함
