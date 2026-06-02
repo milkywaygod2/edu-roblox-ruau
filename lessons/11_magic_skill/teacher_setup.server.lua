@@ -1,14 +1,14 @@
 -- Roblox Studio 수업 스크립트 안내
 -- 수업: 11_magic_skill - 마법 스킬과 서버 판정
 -- 문서 매핑: 커리큘럼 11회차와 강의가이드 "마법 스킬과 RemoteEvent"를 연결한 준비 코드입니다.
--- 강의가이드 연결: 마우스 입력은 클라이언트가 요청하고, 피해와 범위 검사는 서버가 판정하는 구조를 강조합니다.
+-- 강의가이드 연결: 마법 지팡이도 직접 지급하지 않고 전장에서 파밍하며, 피해와 범위 검사는 서버가 판정합니다.
 -- 역할: teacher_setup.server.lua, 선생님 전용 수업 준비 코드입니다.
 -- 편집 위치: Roblox Studio에서 Explorer, Properties, Output 창을 켜고 작업합니다.
 -- 붙여넣기 위치: ServerScriptService > Script 이름 11_magic_skill_TeacherSetup
 -- 실행 순서: 붙여넣기 > Play 실행 > 생성물 확인 > Stop > 수업 플레이테스트 전 setup Script 비활성화 또는 삭제
--- 생성/보장 대상: StarterPack/MagicStaff, Workspace/SiegeWorld/TargetArea/MagicDummy_*, ReplicatedStorage/CastMagic
--- 안전 운영: 기존 공성전 월드를 지우지 않고 마법 Tool, 더미, RemoteEvent만 보강합니다.
--- 검증 기준: MagicStaff, 마법 더미, CastMagic RemoteEvent가 생성되고, Output에 준비 완료 메시지가 빨간 오류 없이 출력됩니다.
+-- 생성/보장 대상: Workspace/OutpostBattleWorld/ObjectiveArea/ArcaneGuard_*, ItemSpawns/ItemSpawn_MagicStaff_*, ReplicatedStorage/CastMagic
+-- 안전 운영: 기존 전초기지 공방전 월드를 지우지 않고 마법 목표, 지팡이 스폰 위치, RemoteEvent만 보강합니다.
+-- 검증 기준: ArcaneGuard_*, ItemSpawn_MagicStaff_*, CastMagic RemoteEvent가 생성되고 Output에 준비 완료 메시지가 출력됩니다.
 -- 참고 문서: lessons/README.md, docs/curriculum_12_weeks.md, docs/roblox_luau_lecture_guide.md
 
 -- --------------------------------------------------------------------------------
@@ -19,28 +19,36 @@ local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
-
-
-local svcStarterPack = game:GetService(eService.STARTER_PACK)
 local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)
 local svcWorkspace = game:GetService(eService.WORKSPACE)
 
-local tblSiegeWorld = common.ensureSiegeWorld(svcWorkspace) -- [의미/의도] 누적 공성전 월드 구조 보장 ➔ 기존 전장 콘텐츠를 유지한 채 마법 실험 대상을 추가하기 위함
-local fldTargetArea = tblSiegeWorld.fldTargetArea -- [의미/의도] 타겟 영역 폴더 참조 ➔ 마법 연습 더미를 공통 타겟 영역에 누적 배치하기 위함
+local tblOutpostWorld = common.ensureOutpostBattleWorld(svcWorkspace) -- [의미/의도] 누적 전초기지 공방전 구조 보장 ➔ 기존 전장 콘텐츠를 유지한 채 마법 요소를 추가하기 위함
+local fldObjectiveArea = tblOutpostWorld.fldObjectiveArea -- [의미/의도] 목표물 영역 참조 ➔ 마법 교전 가드를 공통 목표 영역에 누적 배치하기 위함
+local fldItemSpawnArea = tblOutpostWorld.fldItemSpawnArea -- [의미/의도] 아이템 스폰 영역 참조 ➔ 학생 튜닝 지팡이를 맵에서 파밍하게 하기 위함
 
 common.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage) -- [의미/의도] CastMagic RemoteEvent 보장 ➔ 클라이언트 입력과 서버 판정을 연결할 통신 채널을 유지하기 위함
 
-common.ensureToolWithHandle(eLogical.MAGIC_STAFF, "서버 판정 마법을 시전합니다", svcStarterPack, { -- [의미/의도] MagicStaff Tool과 Handle 보장 ➔ 마법 입력 장비를 이후 공성전 회차에서도 유지하기 위함
-    Size = Vector3.new(0.6, 5, 0.6),             -- [의미/의도] 파트 크기를 0.6x5x0.6으로 가늘고 긴 막대 모양으로 설정 ➔ 시각적으로 긴 장대 마법 지팡이 형태를 묘사하기 위함
-    Material = Enum.Material.Neon,               -- [의미/의도] 파트 재질을 네온(Neon)으로 설정 ➔ 지팡이가 보랏빛 마법 에너지를 내며 화려하게 발광하도록 연출하기 위함
-    BrickColor = BrickColor.new("Royal purple"), -- [의미/의도] 파트 색을 고귀한 보라색(Royal purple)으로 지정 ➔ 신비로운 마법 마력이 깃든 지팡이의 색상을 부각시키기 위함
-})
-
-for index = 1, 6 do -- [의미/의도] index 변수를 1부터 6까지 6번 반복 실행 ➔ 마법 광역 공격을 맞아줄 연습용 더미 6마리를 만들기 위함
-    common.ensureHumanoidDummy(eLogical.MAGIC_DUMMY_PREFIX .. index, fldTargetArea, { -- [의미/의도] 마법 연습 더미 보장 ➔ 공통 타겟 영역에서 광역 스킬 실험 대상을 유지하기 위함
-        Size = Vector3.new(3, 5, 2),                      -- [의미/의도] 파트 크기를 3x5x2로 큼직하게 설정 ➔ 넓은 면적의 샌드백처럼 만들기 위함
-        Position = Vector3.new(index * 7 - 24, 2.5, -25), -- [의미/의도] 더미 X좌표를 7칸 간격으로 가로 정렬 ➔ 6마리의 더미가 겹치지 않고 일직선상에 간격을 두고 나란히 정렬되도록 위함
+for index, vectorPosition in ipairs({
+    Vector3.new(-21, 2.5, -26),
+    Vector3.new(-14, 2.5, -30),
+    Vector3.new(-7, 2.5, -34),
+    Vector3.new(7, 2.5, -34),
+    Vector3.new(14, 2.5, -30),
+    Vector3.new(21, 2.5, -26),
+}) do
+    common.ensureHumanoidTarget(eLogical.ARCANE_GUARD_PREFIX .. index, fldObjectiveArea, {
+        Size = Vector3.new(3, 5, 2),
+        Position = vectorPosition,
+        BrickColor = BrickColor.new("Royal purple"),
+    }, {
+        MaxHealth = 100,
+        Health = 100,
     })
 end
+
+common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.MAGIC_STAFF, {
+    Vector3.new(-8, 0.1, -30),
+    Vector3.new(8, 0.1, -30),
+}, "Royal purple")
 
 print("11일차 준비 완료")

@@ -1,4 +1,4 @@
-# **로블록스 루아: 공성전형 게임 제작 & 코드 라이브러리 (Studio/Team Create 적용)**
+# **로블록스 루아: 전초기지 공방전 게임 제작 & 코드 라이브러리 (Studio/Team Create 적용)**
 
 **교육 철학:** 로블록스 수업은 "눈에 보이는 물체를 만들고, 바로 플레이 테스트하고, 친구와 규칙을 고치는" 경험을 중심에 둡니다. 마인크래프트 파이썬 수업이 명령어와 한글 함수로 즉각적인 마법을 보여준다면, 로블록스 루아 수업은 **파트(Part), 모델(Model), 도구(Tool), 이벤트(Event), 서버 스크립트(Server Script)**를 조립해 실제 멀티플레이 게임 규칙을 만드는 데 초점을 둡니다.
 
@@ -17,9 +17,9 @@
 
 ## ---
 
-**본격 로블록스 게임 제작 구간 (공성전형 시나리오)**
+**본격 로블록스 게임 제작 구간 (5v5 전초기지 공방전 시나리오)**
 
-아래 시나리오는 특정 12주 회차에 강제로 맞추기 위한 목록이 아니라, 로블록스 수업에서 반복해서 꺼내 쓸 수 있는 고유한 미션 라이브러리입니다. 선생님은 수업 시간, 학생 수준, 장비 상태에 따라 필요한 미션을 골라 조합하면 됩니다.
+아래 시나리오는 특정 12주 회차에 강제로 맞추기 위한 목록이 아니라, 로블록스 수업에서 반복해서 꺼내 쓸 수 있는 고유한 미션 라이브러리입니다. 기본 룰은 양 팀이 각자 전초기지 코어를 지키며, 맵에 흩어진 학생 튜닝 장비를 찾아 쓰는 소규모 목표전입니다.
 
 ---
 
@@ -27,7 +27,7 @@
 
 **[선생님 Studio 준비 가이드]**
 
-* **권장 위치:** Workspace에 `수업맵` Model을 만들고, 그 안에 `로비`, `성벽`, `전장`, `스폰` 폴더를 만듭니다.
+* **권장 위치:** Workspace에 `OutpostBattleWorld` Folder를 만들고, 그 안에 `Battlefield`, `ObjectiveArea`, `ItemSpawns`, `BuildArea`, `Fortification`, `SiegeEngine` 폴더를 만듭니다.
 * **팀 구성:** Teams 서비스에 `Blue`, `Red`, `Builder` 팀을 만들고 TeamColor를 다르게 지정합니다.
 * **스폰 관리:** 각 팀 색상에 맞는 SpawnLocation을 배치하고 `Neutral`을 false로 둡니다.
 
@@ -58,15 +58,15 @@ Players.PlayerAdded:Connect(assign_team)
 
 ---
 
-### **2. 돌멩이 툴 만들기 (기초 무기)**
+### **2. 돌멩이 파밍 Tool 만들기 (기초 무기)**
 
 **[선생님 Studio 준비 가이드]**
 
-* StarterPack에 Tool을 하나 만들고 이름을 `돌멩이`로 바꿉니다.
+* `Workspace/OutpostBattleWorld/ItemSpawns`에 Tool을 놓고 이름을 `FieldItem_ThrowingStone_학생버전`처럼 둡니다.
 * Tool 안에 `Handle` Part를 넣고 손에 잡히는 크기로 줄입니다.
-* Tool 안에 Script를 넣어 서버에서 데미지를 처리하게 합니다.
+* 플레이어가 클릭해서 주우면 Backpack으로 이동하고, 서버에서 데미지를 처리하게 합니다.
 
-**게임 설명:** 학생은 손에 든 돌멩이를 클릭해 짧은 거리 공격을 합니다.
+**게임 설명:** 학생은 맵에서 돌멩이를 찾아 줍고, 장착한 뒤 클릭해 전초기지 목표를 공격합니다.
 
 * **수동 플레이:** 파트를 직접 들고 던지는 흉내만 냅니다.
 * **스마트 플레이:** Tool.Activated 이벤트로 투사체를 만들고 데미지를 적용합니다.
@@ -226,7 +226,7 @@ tool.Activated:Connect(attack)
 
 **[선생님 Studio 준비 가이드]**
 
-* StarterPack에 `무거운갑옷` Tool을 준비합니다.
+* `Workspace/OutpostBattleWorld/ItemSpawns`에 `FieldArmor` 계열 Tool을 배치해 플레이어가 직접 줍게 합니다.
 * 장착하면 체력은 늘어나지만 WalkSpeed가 줄어드는 규칙을 넣습니다.
 * 학생에게 "강한 장비에는 대가가 있다"는 밸런스 개념을 설명합니다.
 
@@ -314,21 +314,21 @@ tool.Activated:Connect(fire_projectile)
 
 ---
 
-### **7. 파괴되는 성문 만들기**
+### **7. 파괴되는 전초기지 문 만들기**
 
 **[선생님 Studio 준비 가이드]**
 
-* Workspace에 `성문` Model을 만들고 여러 개의 Part로 나누어 둡니다.
+* `Workspace/OutpostBattleWorld/Fortification`에 `Gate` Model을 만들고 여러 개의 Part로 나누어 둡니다.
 * 각 Part에 `Health` IntValue를 넣거나, Model 전체에 체력을 둡니다.
-* 전투 중 성문이 서서히 무너지는 장면을 목표로 합니다.
+* 전투 중 전초기지 문이 서서히 무너지는 장면을 목표로 합니다.
 
 **게임 설명:** 한 번에 사라지는 문보다, 맞을수록 흔들리고 결국 무너지는 문이 훨씬 게임답습니다.
 
-* **수동 플레이:** 선생님이 성문을 직접 삭제합니다.
+* **수동 플레이:** 선생님이 문을 직접 삭제합니다.
 * **스마트 플레이:** 체력 값이 0이 되면 Anchored를 풀고 무너지게 만듭니다.
 
 ```lua
-local gate = workspace:WaitForChild("성문")
+local gate = workspace.OutpostBattleWorld.Fortification:WaitForChild("Gate")
 local health = 100
 
 local function break_gate()
@@ -366,7 +366,7 @@ end
 **[선생님 Studio 준비 가이드]**
 
 * ReplicatedStorage에 RemoteEvent를 만들고 이름을 `CastMagic`으로 둡니다.
-* StarterPack의 Tool 안에는 LocalScript를 넣어 마우스 위치를 서버로 보냅니다.
+* `StarterPlayerScripts`의 LocalScript가 주운 MagicStaff Tool을 감지해 마우스 위치를 서버로 보냅니다.
 * ServerScriptService의 Script에서 실제 데미지와 이펙트를 처리합니다.
 
 **게임 설명:** 클라이언트는 "어디에 쓰고 싶다"고 요청하고, 서버는 "정말 가능한 요청인지" 검사한 뒤 마법을 실행합니다.
@@ -375,22 +375,25 @@ end
 * **스마트 플레이:** RemoteEvent로 입력과 판정을 분리합니다.
 
 ```lua
--- LocalScript inside Tool
-local tool = script.Parent
+-- StarterPlayerScripts LocalScript
 local player = game.Players.LocalPlayer
 local remote = game.ReplicatedStorage:WaitForChild("CastMagic")
+local backpack = player:WaitForChild("Backpack")
 
 local mouse
+mouse = player:GetMouse()
 
-tool.Equipped:Connect(function()
-    mouse = player:GetMouse()
-end)
-
-tool.Activated:Connect(function()
-    if mouse then
-        remote:FireServer(mouse.Hit.Position)
+local function connect_tool(tool)
+    if not tool:IsA("Tool") or tool:GetAttribute("FieldItemType") ~= "MagicStaff" then
+        return
     end
-end)
+
+    tool.Activated:Connect(function()
+        remote:FireServer(mouse.Hit.Position)
+    end)
+end
+
+backpack.ChildAdded:Connect(connect_tool)
 ```
 
 ```lua
@@ -428,7 +431,7 @@ end)
 * 투석기 팔은 처음에는 장식으로 두고, 실제 공격은 서버 스크립트가 대포알을 생성하게 합니다.
 * 학생 수준이 높으면 HingeConstraint, SpringConstraint로 물리 투석기를 확장합니다.
 
-**게임 설명:** 안전한 곳에서 버튼을 누르면 성문을 향해 공성 탄환이 날아갑니다.
+**게임 설명:** 안전한 곳에서 버튼을 누르면 전초기지 방어 구조물을 향해 무거운 탄환이 날아갑니다.
 
 * **수동 플레이:** 선생님이 대포알을 복사해 던집니다.
 * **스마트 플레이:** 버튼 클릭으로 목표 방향 탄환을 생성합니다.
@@ -436,7 +439,7 @@ end)
 ```lua
 local button = workspace:WaitForChild("투석기버튼")
 local launch_point = workspace:WaitForChild("발사지점")
-local target = workspace:WaitForChild("성문목표")
+local target = workspace.OutpostBattleWorld.SiegeEngine:WaitForChild("TargetPoint")
 
 local function launch()
     local stone = Instance.new("Part")
@@ -461,36 +464,25 @@ button.ClickDetector.MouseClick:Connect(launch)
 **[선생님 Studio 준비 가이드]**
 
 * 전투 시작 전에는 모든 학생의 무기, 스폰, 팀 배정을 점검합니다.
-* ServerScriptService에 `RoundManager` Script를 두고 라운드 시작/종료를 관리합니다.
+* ServerScriptService에 최종전 학생 설정 Script를 두고 라운드 시작/종료를 관리합니다.
+* `Blue`와 `Red`는 최대 5명씩 배정하고, 각 팀은 자기 코어 근처 스폰에서 시작합니다.
+* 라운드 시작 시 플레이어가 들고 있던 파밍 장비는 맵의 원래 위치로 돌아갑니다.
+* 승패는 상대 코어 파괴를 우선하고, 시간이 끝나면 남은 코어 체력이 높은 팀이 이깁니다.
 * 버그가 발생하면 즉시 멈추기보다, Output 창을 함께 보고 원인을 찾아 고칩니다.
 
 **게임 설명:** 마지막 수업은 완성 발표가 아니라 "플레이 테스트와 개선"입니다. 너무 강한 무기, 막히는 스폰, 이상한 충돌을 찾아 고치는 과정 자체가 수업입니다.
 
 * **수동 운영:** 선생님이 말로 시작/종료를 통제합니다.
-* **스마트 운영:** 라운드 타이머와 승리 조건을 코드로 관리합니다.
+* **스마트 운영:** 팀 배정, 팀별 스폰, 라운드 타이머, 코어 체력 승리 조건을 코드로 관리합니다.
 
 ```lua
-local ROUND_TIME = 180
-local round_running = false
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))
 
-local function start_round()
-    if round_running then
-        return
-    end
-
-    round_running = true
-    workspace:SetAttribute("RoundState", "Playing")
-
-    for time_left = ROUND_TIME, 0, -1 do
-        workspace:SetAttribute("TimeLeft", time_left)
-        task.wait(1)
-    end
-
-    workspace:SetAttribute("RoundState", "Finished")
-    round_running = false
-end
-
-workspace:WaitForChild("라운드시작버튼").ClickDetector.MouseClick:Connect(start_round)
+common.installFinalBattleSystem(workspace, game:GetService("Players"), {
+    RoundTime = 180,
+    MaxPlayersPerTeam = 5,
+    CoreHealth = 160,
+})
 ```
 
 ## ---
@@ -565,30 +557,29 @@ end)
 
 ```text
 Workspace
-  수업맵
-    로비
-    전장
-    성벽
-    스폰
-    버튼
+  OutpostBattleWorld
+    Battlefield
+    ObjectiveArea
+    ItemSpawns
+    BuildArea
+    Fortification
+    SiegeEngine
 ReplicatedStorage
-  Remotes
-  SharedModules
+  Common
+  CastMagic
 ServerScriptService
-  RoundManager
-  DamageService
-  BuildService
-StarterPack
-  돌멩이
-  마법지팡이
+  StudentAnswer*
+StarterPlayer
+  StarterPlayerScripts
+    MagicClient11
 StarterGui
   RoundHud
 ```
 
 * **Workspace:** 실제 맵과 눈에 보이는 오브젝트를 둡니다.
 * **ReplicatedStorage:** 클라이언트와 서버가 함께 알아야 하는 RemoteEvent, ModuleScript를 둡니다.
-* **ServerScriptService:** 데미지, 자원, 라운드, 승리 조건처럼 신뢰가 필요한 코드를 둡니다.
-* **StarterPack:** 학생이 손에 들 Tool을 둡니다.
+* **ServerScriptService:** 데미지, 자원, 라운드, 승리 조건, 파밍 장비 생성처럼 신뢰가 필요한 코드를 둡니다.
+* **ItemSpawns:** 학생이 튜닝한 Tool을 전장에 놓고, 플레이어가 직접 찾아 줍게 합니다.
 * **StarterGui:** 점수판, 타이머, 안내 UI를 둡니다.
 
 ## ---
