@@ -15,9 +15,9 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eService = common.eEngineServiceSingleton
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local eService = common.eEngineServiceSingleton  -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
+local ePhysical = common.eEnginePhysicalType     -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType       -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local svcDebris = game:GetService(eService.DEBRIS)                                               -- [의미/의도] Debris 서비스를 가져옴 ➔ 생성된 투사체를 일정 시간 뒤 자동으로 삭제하기 위함
 local toolPracticeRock = script.Parent                                                                        -- [의미/의도] 이 스크립트가 포함된 도구(Tool)를 가져옴 ➔ 마우스 클릭(Activated) 이벤트를 감지하기 위함
@@ -59,10 +59,10 @@ toolPracticeRock.Activated:Connect(function()                                   
         humTarget:TakeDamage(DAMAGE)                                                                           -- [의미/의도] 대상을 DAMAGE만큼 공격 ➔ 무기 공격 데미지를 적용하기 위함
         if partTargetRoot then                                                                                  -- [의미/의도] 대상의 몸통 파트가 존재한다면 ➔ 안전하게 물리적 힘을 가할 수 있을 때만 넉백을 주기 위함
             partTargetRoot.AssemblyLinearVelocity = partHumanoidRoot.CFrame.LookVector * 45 + Vector3.new(0, 18, 0) -- [의미/의도] 발사 방향 기준 수평으로 45, 공중으로 18만큼 속도를 강제 주입 ➔ 공격에 맞은 적이 뒤로 시원하게 날아가는 넉백 효과를 연출하기 위함
-        end
+        end                                                                                                   -- [의미/의도] 몸통 파트 존재 조건문(if) 종료 ➔ 넉백 적용 처리를 마침
         partRock:Destroy()                                                                                     -- [의미/의도] 돌멩이 파트를 즉시 파괴 ➔ 타격이 끝난 무기를 맵에서 지워 깔끔하게 정리하기 위함
-    end)
+    end)                                                                                                      -- [의미/의도] Touched 콜백 함수 종료 ➔ 돌멩이 충돌 판정 연결을 마침
 
     task.wait(COOLDOWN)                                                                                       -- [의미/의도] COOLDOWN 시간만큼 대기 ➔ 지정된 쿨타임 동안 다음 공격이 나가지 않도록 지연함
     boolReady = true                                                                                          -- [의미/의도] 공격 가능 상태로 환원 ➔ 쿨타임이 완료되어 다시 공격할 수 있게 열어둠
-end)
+end)                                                                                                          -- [의미/의도] Activated 콜백 함수 종료 ➔ 도구 클릭 시 발사 동작 정의를 마침

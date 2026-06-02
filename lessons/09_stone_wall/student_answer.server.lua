@@ -15,8 +15,8 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local ePhysical = common.eEnginePhysicalType  -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType    -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local fldStoneWall09 = workspace:WaitForChild(eLogical.STONE_WALL09)                        -- [의미/의도] Workspace에서 "StoneWall09" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 9일차 성벽 리소스가 로드된 후에 스크립트를 안정적으로 구동시키기 위함
 local SECTION_HEALTH = 90                                                                                     -- [의미/의도] 성벽 각 섹션의 내구도를 90으로 고정 설정 ➔ 투사체(피해량 30)에 3번 맞은 구역만 무너지도록 밸런스를 잡기 위함

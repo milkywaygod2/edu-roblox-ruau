@@ -15,7 +15,7 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local ePhysical = common.eEnginePhysicalType
+local ePhysical = common.eEnginePhysicalType  -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
 
 local toolBalanceSword = script.Parent                                                                        -- [의미/의도] 이 스크립트가 포함된 검 도구(BalanceSword)를 가져옴 ➔ 검의 활성화(Activated) 및 핸들의 충돌(Touched) 이벤트를 연결하기 위함
 

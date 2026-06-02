@@ -21,11 +21,11 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eService = common.eEngineServiceSingleton
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
-local eAttrKey = common.eEngineAttributeKey
-local eRoundState = common.eRoundStateValue
+local eService = common.eEngineServiceSingleton  -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
+local ePhysical = common.eEnginePhysicalType     -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType       -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
+local eAttrKey = common.eEngineAttributeKey      -- [의미/의도] Attribute 키 이넘 단축 참조 ➔ 속성 키 상수를 짧은 이름으로 쓰기 위함
+local eRoundState = common.eRoundStateValue      -- [의미/의도] 라운드 상태값 이넘 단축 참조 ➔ 상태 문자열 상수를 짧은 이름으로 쓰기 위함
 
 local svcPlayers = game:GetService(eService.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 접속해 있는 플레이어 리스트를 조회하고 텔레포트시키기 위함
 local fldFinalBattle12 = workspace:WaitForChild(eLogical.FINAL_BATTLE12)                    -- [의미/의도] Workspace에서 "FinalBattle12" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 12일차 셋업 오브젝트가 완전히 로드된 후 스크립트를 동작시키기 위함

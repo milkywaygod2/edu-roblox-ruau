@@ -15,9 +15,9 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eService = common.eEngineServiceSingleton
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local eService = common.eEngineServiceSingleton  -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
+local ePhysical = common.eEnginePhysicalType     -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType       -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local svcDebris = game:GetService(eService.DEBRIS)                                               -- [의미/의도] Debris 서비스를 가져옴 ➔ 월드 상에 발사된 공성돌 탄환이 일정 시간 후에 알아서 소멸되도록 예약하고 관리하기 위함
 local fldSiegeEngine10 = workspace:WaitForChild(eLogical.SIEGE_ENGINE10)                    -- [의미/의도] Workspace에서 "SiegeEngine10" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 10일차 투석기 오브젝트들이 완전히 로드된 후 스크립트를 수행하기 위함

@@ -15,8 +15,8 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local ePhysical = common.eEnginePhysicalType  -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType    -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local toolPracticeShield = script.Parent                                                                      -- [의미/의도] 이 스크립트가 들어있는 방패 도구(PracticeShield)를 가져옴 ➔ 방패 장착(Equipped), 장착 해제(Unequipped), 충돌(Touched) 이벤트를 연결하기 위함
 

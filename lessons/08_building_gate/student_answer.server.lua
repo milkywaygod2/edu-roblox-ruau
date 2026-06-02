@@ -15,8 +15,8 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local ePhysical = common.eEnginePhysicalType  -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType    -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local fldCastle08 = workspace:WaitForChild(eLogical.CASTLE08)                              -- [의미/의도] Workspace 내에서 "Castle08" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 8일차 성 오브젝트가 로드된 후 스크립트를 안정적으로 진행하기 위함
 local modelGate = fldCastle08:WaitForChild(eLogical.GATE)                                   -- [의미/의도] 8일차 성 폴더 내부에서 "Gate" 성문 모델이 생성될 때까지 대기하여 가져옴 ➔ 성문에 타격 및 파괴 판정을 걸 대상 모델을 확실히 참조하기 위함

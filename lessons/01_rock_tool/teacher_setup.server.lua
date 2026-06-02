@@ -21,9 +21,9 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eService = common.eEngineServiceSingleton
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local eService = common.eEngineServiceSingleton  -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
+local ePhysical = common.eEnginePhysicalType     -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType       -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local svcStarterPack = game:GetService(eService.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 학생이 시작할 때 가질 툴을 넣어두기 위함
 local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵과 더미 등의 물리 공간을 제어하기 위함
@@ -55,7 +55,7 @@ for index = 1, 4 do                                                             
     humPractice.MaxHealth = 100                                                                                -- [의미/의도] 최대 체력을 100으로 설정 ➔ 표준 캐릭터 스펙의 최대 체력을 지정하기 위함
     humPractice.Health = 100                                                                                   -- [의미/의도] 현재 체력을 100으로 설정 ➔ 더미가 처음 생겨날 때 꽉 찬 체력을 갖게 하기 위함
     humPractice.Parent = modelPracticeDummy                                                                      -- [의미/의도] Humanoid의 부모를 더미 모델로 설정 ➔ 모델이 인간형 생명체로 작동되도록 최종 완성하기 위함
-end
+end                                                                                                             -- [의미/의도] 더미 생성 반복문(for) 종료 ➔ 지정한 개수의 연습 더미 생성을 마침
 
 local toolPracticeRock = common.createOrReplaceInstance(ePhysical.TOOL, eLogical.PRACTICE_ROCK, svcStarterPack) -- [의미/의도] PracticeRock Tool 대체 생성 ➔ 기존 무기를 지우고 기본 지급용 무기를 초기화하기 위함
 toolPracticeRock.ToolTip = "클릭하면 연습용 돌멩이를 던집니다"                                                                 -- [의미/의도] 말풍선 설명을 설정 ➔ 마우스를 올렸을 때 사용법 힌트를 띄우기 위함

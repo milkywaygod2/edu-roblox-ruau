@@ -15,8 +15,8 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local ePhysical = common.eEnginePhysicalType
-local eLogical = common.eEngineLogicalType
+local ePhysical = common.eEnginePhysicalType  -- [의미/의도] 물리 타입 이넘 단축 참조 ➔ .ClassName 상수를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType    -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 local toolHeavyArmor = script.Parent                                                                          -- [의미/의도] 이 스크립트가 들어있는 갑옷 도구(HeavyArmor)를 가져옴 ➔ 갑옷 장착(Equipped) 및 해제(Unequipped) 시의 이벤트를 연결하기 위함
 local modelEquippedCharacter = nil                                                                            -- [의미/의도] 현재 갑옷을 착용한 플레이어 캐릭터 모델을 임시 저장할 변수를 빈 값(nil)으로 생성 ➔ 해제 시점에 원래 스탯으로 안전하게 되돌릴 캐릭터 타겟을 보관하기 위함
