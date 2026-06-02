@@ -21,13 +21,13 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 3일차 폴더와 버튼을 생성하기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 3일차 폴더와 버튼을 생성하기 위함
 local fldResourceWall03 = common.createOrReplaceInstance(ePhysical.FOLDER, eLogical.RESOURCE_WALL03, svcWorkspace) -- [의미/의도] ResourceWall03 Folder 대체 생성 ➔ 기존 자원 방벽 관련 요소를 삭제하고 3일차 실습판을 초기화하기 위함
 
 local partBuildButton = Instance.new(ePhysical.PART)                                        -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 플레이어가 눌러서 방벽을 생성할 물리적인 버튼(BuildButton)을 만들기 위함

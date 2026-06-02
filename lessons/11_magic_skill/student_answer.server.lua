@@ -16,12 +16,12 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
-local svcPlayers = game:GetService(eEngineServiceSingleton.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 게임을 떠난 플레이어 정보를 감지하고 쿨타임 데이터를 청소하기 위함
-local svcReplicatedStorage = game:GetService(eEngineServiceSingleton.REPLICATED_STORAGE)                         -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 클라이언트와 통신하기 위해 공유된 통신망에서 리모트 이벤트를 참조하기 위함
+local svcPlayers = game:GetService(eService.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 게임을 떠난 플레이어 정보를 감지하고 쿨타임 데이터를 청소하기 위함
+local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)                         -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 클라이언트와 통신하기 위해 공유된 통신망에서 리모트 이벤트를 참조하기 위함
 local eventCastMagic = svcReplicatedStorage:WaitForChild(eLogical.CAST_MAGIC)                  -- [의미/의도] ReplicatedStorage에서 "CastMagic" 리모트 이벤트가 생성될 때까지 대기하여 가져옴 ➔ 클라이언트의 마법 시전 요청 신호를 서버에서 대기하고 수신하기 위함
 
 local MAX_DISTANCE = 80                                                                                       -- [의미/의도] 마법 시전이 가능한 최대 사거리를 80칸으로 제한 ➔ 클라이언트가 너무 먼 위치나 맵 전체에 광역 공격을 핵으로 요청해 타격하는 불공정 행위를 서버에서 차단하기 위함

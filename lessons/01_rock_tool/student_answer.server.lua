@@ -15,11 +15,11 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
-local svcDebris = game:GetService(eEngineServiceSingleton.DEBRIS)                                               -- [의미/의도] Debris 서비스를 가져옴 ➔ 생성된 투사체를 일정 시간 뒤 자동으로 삭제하기 위함
+local svcDebris = game:GetService(eService.DEBRIS)                                               -- [의미/의도] Debris 서비스를 가져옴 ➔ 생성된 투사체를 일정 시간 뒤 자동으로 삭제하기 위함
 local toolPracticeRock = script.Parent                                                                        -- [의미/의도] 이 스크립트가 포함된 도구(Tool)를 가져옴 ➔ 마우스 클릭(Activated) 이벤트를 감지하기 위함
 
 local DAMAGE = 15                                                                                             -- [의미/의도] 타격 데미지 상수를 15로 설정 ➔ 적에게 입힐 기본 피해량을 지정하기 위함

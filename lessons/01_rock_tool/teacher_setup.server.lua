@@ -21,12 +21,12 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
-local svcStarterPack = game:GetService(eEngineServiceSingleton.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 학생이 시작할 때 가질 툴을 넣어두기 위함
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵과 더미 등의 물리 공간을 제어하기 위함
+local svcStarterPack = game:GetService(eService.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 학생이 시작할 때 가질 툴을 넣어두기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵과 더미 등의 물리 공간을 제어하기 위함
 
 local fldArena01 = common.createOrReplaceInstance(ePhysical.FOLDER, eLogical.ARENA01, svcWorkspace) -- [의미/의도] Arena01 Folder 대체 생성 ➔ 기존 폴더를 지우고 깨끗한 새 폴더로 1일차 맵 구성을 시작하기 위함
 

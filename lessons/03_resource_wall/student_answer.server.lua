@@ -21,11 +21,11 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
-local svcPlayers = game:GetService(eEngineServiceSingleton.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 게임에 입장하는 플레이어 정보를 가져오고 leaderstats를 관리하기 위함
+local svcPlayers = game:GetService(eService.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 게임에 입장하는 플레이어 정보를 가져오고 leaderstats를 관리하기 위함
 local fldResourceWall03 = workspace:WaitForChild(eLogical.RESOURCE_WALL03)                  -- [의미/의도] Workspace에서 "ResourceWall03" 폴더가 생성될 때까지 대기 후 가져옴 ➔ 3일차 월드 오브젝트가 확실히 로드된 후 스크립트를 진행하기 위함
 local partBuildButton = fldResourceWall03:WaitForChild(eLogical.BUILD_BUTTON)                 -- [의미/의도] 3일차 폴더 내에서 "BuildButton" 파트가 존재할 때까지 대기하여 가져옴 ➔ 플레이어의 클릭 이벤트를 받을 버튼 객체를 안전하게 참조하기 위함
 local partWallSpawn = fldResourceWall03:WaitForChild(eLogical.WALL_SPAWN)                     -- [의미/의도] 3일차 폴더 내에서 "WallSpawn" 파트가 존재할 때까지 대기하여 가져옴 ➔ 방벽이 소환될 물리적인 기준 좌표를 사용하기 위함

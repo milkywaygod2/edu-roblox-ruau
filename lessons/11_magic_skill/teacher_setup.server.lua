@@ -21,15 +21,15 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                                    -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcStarterPack = game:GetService(eEngineServiceSingleton.STARTER_PACK)                                              -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어 접속 시 마법 지팡이 도구(Tool)를 인벤토리에 자동 배치해주기 위함
-local svcReplicatedStorage = game:GetService(eEngineServiceSingleton.REPLICATED_STORAGE)                                  -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 클라이언트와 서버가 공유하는 저장소에 원격 이벤트를 배치하기 위함
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                                  -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 11일차 마법 아레나와 연습 더미들을 배치하기 위함
+local svcStarterPack = game:GetService(eService.STARTER_PACK)                                              -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어 접속 시 마법 지팡이 도구(Tool)를 인벤토리에 자동 배치해주기 위함
+local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)                                  -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 클라이언트와 서버가 공유하는 저장소에 원격 이벤트를 배치하기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                                  -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 11일차 마법 아레나와 연습 더미들을 배치하기 위함
 
 local eventCastMagic = common.createOrReplaceInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage) -- [의미/의도] CastMagic RemoteEvent 대체 생성 ➔ 기존 마법 시전 리모트이벤트를 지우고 통신 채널을 새로 구축하기 위함
 

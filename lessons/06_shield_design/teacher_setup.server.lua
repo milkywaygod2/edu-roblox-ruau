@@ -21,13 +21,13 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcStarterPack = game:GetService(eEngineServiceSingleton.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임에 접속할 때 자동으로 방패(Tool)를 인벤토리에 넣어주기 위함
+local svcStarterPack = game:GetService(eService.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임에 접속할 때 자동으로 방패(Tool)를 인벤토리에 넣어주기 위함
 local toolPracticeShield = common.createOrReplaceInstance(ePhysical.TOOL, eLogical.PRACTICE_SHIELD, svcStarterPack) -- [의미/의도] PracticeShield Tool 대체 생성 ➔ 기존 방패 무기를 지우고 새로운 방패 도구를 생성하기 위함
 toolPracticeShield.ToolTip = "장착하면 방어하고 체력이 늘어납니다"                                                              -- [의미/의도] 장비 툴팁 설명을 작성 ➔ 방패의 기능적 효과를 플레이어에게 툴팁 팝업으로 안내하기 위함
 

@@ -21,14 +21,14 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcTeams = game:GetService(eEngineServiceSingleton.TEAMS)                                                 -- [의미/의도] Teams 서비스를 가져옴 ➔ 공성전 전투를 치를 Blue/Red 두 진영(팀)을 등록하고 관리하기 위함
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 12일차 라운드 버튼과 스폰지점 폴더를 생성하기 위함
+local svcTeams = game:GetService(eService.TEAMS)                                                 -- [의미/의도] Teams 서비스를 가져옴 ➔ 공성전 전투를 치를 Blue/Red 두 진영(팀)을 등록하고 관리하기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 세상(Workspace)에 12일차 라운드 버튼과 스폰지점 폴더를 생성하기 위함
 
 for _, teamName in ipairs({eLogical.TEAM_BLUE, eLogical.TEAM_RED}) do -- [의미/의도] "Blue", "Red" 두 문자열을 가지고 2번 반복을 실행 ➔ 청팀과 홍팀 두 개의 진영 오브젝트를 생성하기 위함
     local teamInstance = svcTeams:FindFirstChild(teamName) or Instance.new(ePhysical.TEAM) -- [의미/의도] Teams 서비스 내에서 해당 이름의 팀을 찾거나, 없으면 새로운 팀(Team) 객체를 생성 ➔ 기존 팀이 있다면 중복 생성을 막고 재사용하며, 없으면 새로 만들기 위함

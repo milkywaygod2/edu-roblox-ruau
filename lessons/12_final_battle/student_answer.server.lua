@@ -21,13 +21,13 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 local eAttrKey = common.eEngineAttributeKey
 local eRoundState = common.eRoundStateValue
 
-local svcPlayers = game:GetService(eEngineServiceSingleton.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 접속해 있는 플레이어 리스트를 조회하고 텔레포트시키기 위함
+local svcPlayers = game:GetService(eService.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 접속해 있는 플레이어 리스트를 조회하고 텔레포트시키기 위함
 local fldFinalBattle12 = workspace:WaitForChild(eLogical.FINAL_BATTLE12)                    -- [의미/의도] Workspace에서 "FinalBattle12" 폴더가 생성될 때까지 대기하여 가져옴 ➔ 12일차 셋업 오브젝트가 완전히 로드된 후 스크립트를 동작시키기 위함
 local partRoundStartButton = fldFinalBattle12:WaitForChild(eLogical.ROUND_START_BUTTON) -- [의미/의도] 12일차 폴더 내부에서 "RoundStartButton" 파트가 생성될 때까지 대기하여 가져옴 ➔ 클릭 감지기 클릭 이벤트를 연결하기 위함
 

@@ -21,14 +21,14 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcStarterPack = game:GetService(eEngineServiceSingleton.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임 시작 시 인벤토리에 자동으로 지급받을 도구를 관리하기 위함
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 월드 상에 4일차 더미 폴더와 마커를 관리하기 위함
+local svcStarterPack = game:GetService(eService.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 플레이어가 게임 시작 시 인벤토리에 자동으로 지급받을 도구를 관리하기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 월드 상에 4일차 더미 폴더와 마커를 관리하기 위함
 
 local toolBalanceSword = common.createOrReplaceInstance(ePhysical.TOOL, eLogical.BALANCE_SWORD, svcStarterPack) -- [의미/의도] BalanceSword Tool 대체 생성 ➔ 기존 근접 검 무기를 지우고 새로운 연습용 검을 배치하기 위함
 toolBalanceSword.ToolTip = "쿨타임이 있는 연습용 검"                                                                      -- [의미/의도] 도구의 마우스 오버 툴팁 텍스트를 설정 ➔ 플레이어에게 해당 검이 어떤 장비인지 시각적인 팁을 제공하기 위함

@@ -21,13 +21,13 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 맵 상에 8일차 성문 폴더와 관련 파트들을 생성하고 배치하기 위함
 local fldCastle08 = common.createOrReplaceInstance(ePhysical.FOLDER, eLogical.CASTLE08, svcWorkspace) -- [의미/의도] Castle08 Folder 대체 생성 ➔ 기존 성벽/성문 폴더를 지우고 새로운 8일차 성문 실습장을 구성하기 위함
 
 local modelGate = Instance.new(ePhysical.MODEL)                                            -- [의미/의도] 새로운 모델(Model) 객체를 생성함 ➔ 성문을 구성하는 여러 개의 나무판자 파트들을 하나의 성문 모델로 그룹화하기 위함

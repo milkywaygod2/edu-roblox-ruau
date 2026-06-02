@@ -21,13 +21,13 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local ePhysical = common.eEnginePhysicalType
 local eLogical = common.eEngineLogicalType
 
 
 
-local svcWorkspace = game:GetService(eEngineServiceSingleton.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
+local svcWorkspace = game:GetService(eService.WORKSPACE)                                         -- [의미/의도] Workspace 서비스를 가져옴 ➔ 게임 월드 Workspace에 10일차 공성 병기 및 발사대 오브젝트를 배치하기 위함
 local fldSiegeEngine10 = common.createOrReplaceInstance(ePhysical.FOLDER, eLogical.SIEGE_ENGINE10, svcWorkspace) -- [의미/의도] SiegeEngine10 Folder 대체 생성 ➔ 기존 공성 맵 폴더를 지우고 새로운 10일차 공성 병기 맵을 구성하기 위함
 
 local partLaunchButton = Instance.new(ePhysical.PART)                                       -- [의미/의도] 새로운 파트(Part) 객체를 생성함 ➔ 투석기를 작동시킬 물리적 발사 버튼(LaunchButton)을 만들기 위함

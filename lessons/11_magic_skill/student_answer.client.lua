@@ -15,11 +15,11 @@
 
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 이넘 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eEngineServiceSingleton = common.eEngineServiceSingleton
+local eService = common.eEngineServiceSingleton
 local eLogical = common.eEngineLogicalType
 
-local svcPlayers = game:GetService(eEngineServiceSingleton.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 로컬 플레이어(LocalPlayer) 개체를 조회하기 위함
-local svcReplicatedStorage = game:GetService(eEngineServiceSingleton.REPLICATED_STORAGE)                         -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 서버와 통신할 리모트 이벤트를 공유 공간에서 찾기 위함
+local svcPlayers = game:GetService(eService.PLAYERS)                                             -- [의미/의도] Players 서비스를 가져옴 ➔ 로컬 플레이어(LocalPlayer) 개체를 조회하기 위함
+local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)                         -- [의미/의도] ReplicatedStorage 서비스를 가져옴 ➔ 서버와 통신할 리모트 이벤트를 공유 공간에서 찾기 위함
 
 local playerLocal = svcPlayers.LocalPlayer                                                                     -- [의미/의도] 현재 게임을 플레이 중인 로컬 플레이어 개체를 가져옴 ➔ 클라이언트 측 마우스 입력을 감지할 마우스 개체를 얻기 위함
 local toolMagicStaff = script.Parent                                                                          -- [의미/의도] 이 로컬 스크립트가 포함된 지팡이 도구(MagicStaff)를 가져옴 ➔ 도구의 장착(Equipped), 해제(Unequipped), 사용(Activated) 이벤트를 연결하기 위함
