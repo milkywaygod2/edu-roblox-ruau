@@ -13,18 +13,18 @@
 
 -- --------------------------------------------------------------------------------
 
-local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))                           -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
+local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common")) -- [의미/의도] 공통 모듈 require ➔ 공통 함수와 Enum 상수를 로드하여 중복 코드를 방지하고 재사용하기 위함
 
-local eService = common.eEngineServiceSingleton  -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
-local eLogical = common.eEngineLogicalType       -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
+local eService = common.eEngineServiceSingleton -- [의미/의도] 서비스 싱글턴 이넘 단축 참조 ➔ game:GetService 키를 짧은 이름으로 쓰기 위함
+local eLogical = common.eEngineLogicalType -- [의미/의도] 논리 타입 이넘 단축 참조 ➔ .Name 도메인 상수를 짧은 이름으로 쓰기 위함
 
 
 
-local svcStarterPack = game:GetService(eService.STARTER_PACK)                                     -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
+local svcStarterPack = game:GetService(eService.STARTER_PACK) -- [의미/의도] StarterPack 서비스를 가져옴 ➔ 게임 시작 시 플레이어에게 자동으로 무거운 갑옷(Tool)을 장비 인벤토리에 지급하기 위함
 common.ensureToolWithHandle(eLogical.HEAVY_ARMOR, "장착하면 갑옷 능력치가 적용됩니다", svcStarterPack, { -- [의미/의도] HeavyArmor Tool과 Handle 보장 ➔ 갑옷 장비가 이후 공성전 회차에서도 유지되도록 하기 위함
-    Size = Vector3.new(2, 2, 1),                                                                                          -- [의미/의도] 파트 크기를 2x2x1로 널찍하고 두껍게 설정 ➔ 무겁고 두꺼운 방패나 흉갑 같은 강인한 디자인을 연출하기 위함
-    Material = Enum.Material.Metal,                                                                                       -- [의미/의도] 파트 재질을 금속(Metal)으로 설정 ➔ 철제 중갑옷의 튼튼하고 차가운 금속 질감을 묘사하기 위함
-    BrickColor = BrickColor.new("Really black"),                                                                          -- [의미/의도] 파트 색을 완전 검은색(Really black)으로 설정 ➔ 묵직하고 강렬한 블랙 중갑옷 느낌을 시각화하기 위함
+    Size = Vector3.new(2, 2, 1),                 -- [의미/의도] 파트 크기를 2x2x1로 널찍하고 두껍게 설정 ➔ 무겁고 두꺼운 방패나 흉갑 같은 강인한 디자인을 연출하기 위함
+    Material = Enum.Material.Metal,              -- [의미/의도] 파트 재질을 금속(Metal)으로 설정 ➔ 철제 중갑옷의 튼튼하고 차가운 금속 질감을 묘사하기 위함
+    BrickColor = BrickColor.new("Really black"), -- [의미/의도] 파트 색을 완전 검은색(Really black)으로 설정 ➔ 묵직하고 강렬한 블랙 중갑옷 느낌을 시각화하기 위함
 })
 
-print("7일차 준비 완료")                                                                                            -- [의미/의도] 출력창에 메시지 출력 ➔ 준비 작업이 무사히 끝났음을 확인하기 위함
+print("7일차 준비 완료")
