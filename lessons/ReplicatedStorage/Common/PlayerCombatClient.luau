@@ -135,7 +135,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 				{
 					Name = "Strength",
 					Title = "힘 (Strength)",
-					Desc = "• 투척 에너지 1.2배\n• 한계 중량 180kg 상향\n• 무거운 물체 조작",
+					Desc = "• 투척 에너지 1.2배\n• 한계 중량 70kg (기본 50kg)\n• 무거운 물체 조작",
 					Color = Color3.fromRGB(150, 45, 45),
 					LayoutOrder = 1
 				},
