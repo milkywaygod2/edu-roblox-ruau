@@ -458,16 +458,16 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		
 		-- 1 Stud = 0.3m 물리 고증 기반 질량(kg) 서버 검증
 		local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(enumProjectileMaterial)
-		local volumeM3 = (vectorProjectileSize.X * vectorProjectileSize.Y * vectorProjectileSize.Z) * 0.027
+		local volumeM3 = (vectorProjectileSize.X * vectorProjectileSize.Y * vectorProjectileSize.Z) * 0.027 * 0.8 -- 형상 보정 20% 할인 적용 (돌멩이의 비정형성 반영)
 		local massKg = volumeM3 * tblMaterialProfile.Density
 
 		-- 특화에 따른 무게 제한 및 발사 에너지 증가 (20,000J -> 24,000J)
 		local strSpec = playerAttacker:GetAttribute("Specialization") or "None"
-		local numberMaxWeight = 30
+		local numberMaxWeight = 50 -- 일반 들기 한계 50kg으로 완화
 		local energyJoules = 20000
 
 		if strSpec == "Strength" then
-			numberMaxWeight = 50 -- 힘 특화 시 50kg으로 제한 완화
+			numberMaxWeight = 70 -- 힘 특화 시 70kg으로 제한 완화
 			energyJoules = 24000  -- 힘 특화 시 발사 에너지 20% 증가
 		end
 
