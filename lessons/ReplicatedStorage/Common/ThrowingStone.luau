@@ -233,9 +233,9 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		vectorSize = StudentConfig.readEquipmentSize(tblAppearanceConfig, "CollisionSize", "ThrowingStone", tblValidationMessages, strSourceName)
 	end
 	
-	-- 커스텀 및 기본 머티리얼 추출
-	local rawMaterialInput = tblAppearanceConfig and tblAppearanceConfig.Material
-	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(rawMaterialInput)
+	-- RealMaterial 문자열 파싱 및 검증
+	local strRealMaterial = StudentConfig.readThrowingStoneMaterial(tblAppearanceConfig, "Material", "Rock", tblValidationMessages, strSourceName)
+	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(strRealMaterial)
 	local enumMaterial = tblMaterialProfile.RobloxMaterial
 
 	local enumShape = StudentConfig.readConfigEnumItem(tblAppearanceConfig, "CollisionShape", Enum.PartType.Ball)
@@ -260,7 +260,6 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
 	end
 
-	local strLookShape = StudentConfig.readConfigString(tblConfig, "Trait", "Balanced")
 	local strTrait = StudentConfig.readConfigString(tblConfig, "Trait", "Balanced")
 	local strLookShape = StudentConfig.readConfigString(tblAppearanceConfig, "LookShape", "")
 	if strLookShape == "" then
@@ -275,7 +274,7 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 10으로 보정했습니다.")
 	end
-	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, rawMaterialInput, strTrait)
+	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, strRealMaterial, strTrait)
 
 	return {
 		VariantId = strVariantId,
