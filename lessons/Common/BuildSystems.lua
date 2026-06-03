@@ -65,8 +65,8 @@ function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblCon
 	local fldBuildArea = tblOutpostWorld.fldBuildArea
 	local partBuildButton = fldBuildArea:WaitForChild(eLogical.BUILD_BUTTON)
 	local partWallSpawn = fldBuildArea:WaitForChild(eLogical.WALL_SPAWN)
-	local intStartWood = StudentConfig.readConfigInteger(tblConfig, "StartWood", 30, 0, 200)
-	local intWallCost = StudentConfig.readConfigInteger(tblConfig, "WallCost", 10, 1, 100)
+	local intStartGold = StudentConfig.readConfigInteger(tblConfig, "StartGold", 100, 0, 500)
+	local intWallCost = StudentConfig.readConfigInteger(tblConfig, "WallCost", 20, 1, 100)
 	local intBlockCount = StudentConfig.readConfigInteger(tblConfig, "BlockCount", 8, 2, 12)
 	local vectorBlockSize = StudentConfig.readConfigVector3(tblConfig, "BlockSize", Vector3.new(4, 6, 1), Vector3.new(1, 2, 0.5), Vector3.new(8, 12, 4))
 	local enumMaterial = StudentConfig.readConfigEnumItem(tblConfig, "BlockMaterial", Enum.Material.WoodPlanks)
@@ -81,21 +81,21 @@ function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblCon
 			fldLeaderstats.Parent = player
 		end
 
-		local ivalWood = fldLeaderstats:FindFirstChild(eLogical.WOOD)
-		if not ivalWood then
-			ivalWood = Instance.new(ePhysical.INT_VALUE)
-			ivalWood.Name = eLogical.WOOD
-			ivalWood.Value = intStartWood
-			ivalWood.Parent = fldLeaderstats
+		local ivalGold = fldLeaderstats:FindFirstChild("Gold")
+		if not ivalGold then
+			ivalGold = Instance.new(ePhysical.INT_VALUE)
+			ivalGold.Name = "Gold"
+			ivalGold.Value = intStartGold
+			ivalGold.Parent = fldLeaderstats
 		end
 	end
 
 	local function build_wall(player)
 		local fldLeaderstats = player:FindFirstChild(eLogical.RESERVED_LEADERSTATS)
-		local ivalWood = fldLeaderstats and fldLeaderstats:FindFirstChild(eLogical.WOOD)
-		if not ivalWood or ivalWood.Value < intWallCost then return end
+		local ivalGold = fldLeaderstats and fldLeaderstats:FindFirstChild("Gold")
+		if not ivalGold or ivalGold.Value < intWallCost then return end
 
-		ivalWood.Value -= intWallCost
+		ivalGold.Value -= intWallCost
 		intNextRow += 1
 
 		for index = 1, intBlockCount do
@@ -114,7 +114,7 @@ function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblCon
 				CanTakeDamage = true,     -- 투사체 공격으로 파괴 가능
 				MaxHealth = 120,          -- 단단한 방벽 내구도
 				ResourceYield = 10,       -- 부서지면 자원 파편 드랍
-				ResourceType = "Wood",
+				ResourceType = "Wood",    -- 부서지면 나무 자원 파편 드랍 (회수)
 				Anchored = true
 			})
 			partWallBlock.Name = player.Name .. eLogical.WALL_BLOCK_SUFFIX .. "_" .. intNextRow .. "_" .. index
