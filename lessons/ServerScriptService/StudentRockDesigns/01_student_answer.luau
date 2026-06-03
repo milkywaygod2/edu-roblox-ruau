@@ -6,7 +6,6 @@
 local rock = {}
 local appearance = {}
 
-appearance.BrickColor = BrickColor.new("Really black")
 appearance.Material = Enum.Material.Slate
 appearance.Size = Vector3.new(1.4, 1.1, 1.2)
 appearance.CollisionShape = Enum.PartType.Ball

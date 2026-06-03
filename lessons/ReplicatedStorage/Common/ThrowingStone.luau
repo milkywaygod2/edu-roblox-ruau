@@ -227,18 +227,13 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	if valueShape ~= nil and enumShape == Enum.PartType.Ball and valueShape ~= Enum.PartType.Ball then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShape는 Enum.PartType 값을 써야 해서 Ball로 보정했습니다.")
 	end
-	local brickColor = StudentConfig.readConfigBrickColor(tblAppearanceConfig, "BrickColor", "Dark stone grey")
-	local colorProjectile = brickColor.Color
-	if tblAppearanceConfig and tblAppearanceConfig.Color ~= nil then
-		colorProjectile = StudentConfig.readConfigColor3(tblAppearanceConfig, "Color", colorProjectile, tblValidationMessages, strSourceName)
-		brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
+	-- 리얼머티리얼(실물 재질) 고증에 따라 색상 속성은 재질 고유의 기본 색상으로 강제 지정
+	if tblAppearanceConfig and (tblAppearanceConfig.BrickColor ~= nil or tblAppearanceConfig.Color ~= nil) then
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "재질 고증 시스템에 따라 색상은 자동으로 " .. matchedEnum.Name .. "의 기본 고증 색상으로 통제되어 지정된 색상은 제외되었습니다.")
 	end
-	
-	-- 만약 학생이 색상을 수동 지정하지 않았다면, 커스텀 머티리얼 고유의 멋진 기본 색상을 입힙니다.
-	if tblAppearanceConfig and tblAppearanceConfig.Color == nil and tblAppearanceConfig.BrickColor == nil and tblMaterialProfile.DefaultColor then
-		colorProjectile = tblMaterialProfile.DefaultColor
-		brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
-	end
+
+	local colorProjectile = tblMaterialProfile.DefaultColor or Color3.fromRGB(120, 120, 120)
+	local brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
 
 	local strLookShape = StudentConfig.readConfigString(tblAppearanceConfig, "LookShape", "")
 	if strLookShape == "" then
