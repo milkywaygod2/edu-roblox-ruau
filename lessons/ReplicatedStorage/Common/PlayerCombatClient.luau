@@ -74,6 +74,95 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	guiCrosshair.Enabled = false
 	guiCrosshair.Parent = playerLocal:WaitForChild("PlayerGui")
 
+	-- HUD UI ScreenGui
+	local guiHud = Instance.new(ePhysical.SCREEN_GUI)
+	guiHud.Name = "PlayerCombatHudGui"
+	guiHud.ResetOnSpawn = false
+	guiHud.Enabled = true
+	guiHud.Parent = playerLocal:WaitForChild("PlayerGui")
+
+	-- HUD Container
+	local frameHudContainer = Instance.new(ePhysical.FRAME)
+	frameHudContainer.Name = "HudContainer"
+	frameHudContainer.AnchorPoint = Vector2.new(0.5, 1)
+	frameHudContainer.Size = UDim2.fromOffset(360, 80)
+	frameHudContainer.Position = UDim2.new(0.5, 0, 1, -25)
+	frameHudContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+	frameHudContainer.BackgroundTransparency = 0.25
+	frameHudContainer.BorderSizePixel = 0
+	frameHudContainer.Parent = guiHud
+
+	local cornerHud = Instance.new("UICorner")
+	cornerHud.CornerRadius = UDim.new(0, 10)
+	cornerHud.Parent = frameHudContainer
+
+	local strokeHud = Instance.new("UIStroke")
+	strokeHud.Color = Color3.fromRGB(65, 65, 80)
+	strokeHud.Thickness = 2
+	strokeHud.Parent = frameHudContainer
+
+	-- Health Bar Background
+	local frameHealthBack = Instance.new(ePhysical.FRAME)
+	frameHealthBack.Name = "HealthBack"
+	frameHealthBack.Position = UDim2.fromOffset(15, 12)
+	frameHealthBack.Size = UDim2.fromOffset(330, 20)
+	frameHealthBack.BackgroundColor3 = Color3.fromRGB(45, 15, 15)
+	frameHealthBack.BorderSizePixel = 0
+	frameHealthBack.Parent = frameHudContainer
+
+	local cornerHealthBack = Instance.new("UICorner")
+	cornerHealthBack.CornerRadius = UDim.new(0, 5)
+	cornerHealthBack.Parent = frameHealthBack
+
+	-- Health Bar Fill
+	local frameHealthFill = Instance.new(ePhysical.FRAME)
+	frameHealthFill.Name = "HealthFill"
+	frameHealthFill.Size = UDim2.fromScale(1, 1)
+	frameHealthFill.BackgroundColor3 = Color3.fromRGB(225, 45, 45)
+	frameHealthFill.BorderSizePixel = 0
+	frameHealthFill.Parent = frameHealthBack
+
+	local cornerHealthFill = Instance.new("UICorner")
+	cornerHealthFill.CornerRadius = UDim.new(0, 5)
+	cornerHealthFill.Parent = frameHealthFill
+
+	-- Health Text Label
+	local labelHealth = Instance.new("TextLabel")
+	labelHealth.Name = "HealthLabel"
+	labelHealth.Size = UDim2.fromScale(1, 1)
+	labelHealth.BackgroundTransparency = 1
+	labelHealth.TextColor3 = Color3.fromRGB(255, 255, 255)
+	labelHealth.TextSize = 12
+	labelHealth.Font = Enum.Font.GothamBold
+	labelHealth.Text = "HP: 100 / 100"
+	labelHealth.Parent = frameHealthBack
+
+	-- Weapon Name Label
+	local labelWeaponName = Instance.new("TextLabel")
+	labelWeaponName.Name = "WeaponName"
+	labelWeaponName.Position = UDim2.fromOffset(15, 42)
+	labelWeaponName.Size = UDim2.fromOffset(150, 25)
+	labelWeaponName.BackgroundTransparency = 1
+	labelWeaponName.TextColor3 = Color3.fromRGB(240, 240, 245)
+	labelWeaponName.TextSize = 14
+	labelWeaponName.Font = Enum.Font.GothamBold
+	labelWeaponName.TextXAlignment = Enum.TextXAlignment.Left
+	labelWeaponName.Text = "장착: 주먹"
+	labelWeaponName.Parent = frameHudContainer
+
+	-- Weapon Stats Label
+	local labelWeaponStats = Instance.new("TextLabel")
+	labelWeaponStats.Name = "WeaponStats"
+	labelWeaponStats.Position = UDim2.fromOffset(165, 42)
+	labelWeaponStats.Size = UDim2.fromOffset(180, 25)
+	labelWeaponStats.BackgroundTransparency = 1
+	labelWeaponStats.TextColor3 = Color3.fromRGB(180, 180, 195)
+	labelWeaponStats.TextSize = 11
+	labelWeaponStats.Font = Enum.Font.GothamMedium
+	labelWeaponStats.TextXAlignment = Enum.TextXAlignment.Right
+	labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
+	labelWeaponStats.Parent = frameHudContainer
+
 	local frameCrosshair = Instance.new(ePhysical.FRAME)
 	frameCrosshair.Name = "Crosshair"
 	frameCrosshair.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -534,6 +623,54 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		)
 	end)
 
+	local numberLastUiUpdateTime = 0
+
+	local function update_hud_ui()
+		local modelCharacter = playerLocal.Character
+		local humanoidPlayer = modelCharacter and modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
+
+		-- 1. 체력 HUD 동기화
+		if humanoidPlayer then
+			local numberHealthRatio = math.clamp(humanoidPlayer.Health / humanoidPlayer.MaxHealth, 0, 1)
+			frameHealthFill.Size = UDim2.fromScale(numberHealthRatio, 1)
+			labelHealth.Text = string.format("HP: %d / %d", math.ceil(humanoidPlayer.Health), math.ceil(humanoidPlayer.MaxHealth))
+		else
+			frameHealthFill.Size = UDim2.fromScale(0, 1)
+			labelHealth.Text = "HP: 0 / 0"
+		end
+
+		-- 2. 장착 무기 스탯 동기화
+		local toolEquipped = get_equipped_tool()
+		if toolEquipped then
+			labelWeaponName.Text = "장착: " .. toolEquipped.Name
+
+			local numberDamage = toolEquipped:GetAttribute("Damage") or toolEquipped:GetAttribute("DamageValue")
+			local strTrait = toolEquipped:GetAttribute("Trait") or ""
+
+			-- 스탯 속성이 없는 경우 도메인 무기 기준 Fallback
+			if not numberDamage then
+				if is_throwing_stone(toolEquipped) then
+					numberDamage = 15
+					strTrait = "원거리 투척"
+				elseif toolEquipped.Name:find("Sword") or toolEquipped.Name:find("검") then
+					numberDamage = 25
+					strTrait = "근접 베기"
+				elseif toolEquipped.Name:find("Bow") or toolEquipped.Name:find("활") then
+					numberDamage = 20
+					strTrait = "원거리 궁사"
+				else
+					numberDamage = 15
+					strTrait = "일반 도구"
+				end
+			end
+
+			labelWeaponStats.Text = string.format("데미지: %d | 특성: %s", numberDamage, strTrait)
+		else
+			labelWeaponName.Text = "장착: 주먹"
+			labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
+		end
+	end
+
 	svcRunService.RenderStepped:Connect(function()
 		local cameraCurrent = svcWorkspace.CurrentCamera
 		if cameraCurrent then
@@ -545,6 +682,12 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 		frameChargeFill.Size = UDim2.fromScale(get_charge(), 1)
 		update_fist_action_visuals()
+
+		local numberNow = os.clock()
+		if numberNow - numberLastUiUpdateTime > 0.08 then
+			numberLastUiUpdateTime = numberNow
+			update_hud_ui()
+		end
 	end)
 
 	watch_container(playerLocal:WaitForChild("Backpack"))
