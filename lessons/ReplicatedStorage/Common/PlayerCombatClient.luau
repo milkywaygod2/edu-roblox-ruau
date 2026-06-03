@@ -67,6 +67,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local cframeCameraFollow = nil
 	local numberCameraYaw = 0
 	local numberCameraPitch = math.rad(-10)
+	local set_default_aim_control_enabled = nil
 
 	local eventSpecializationSelect = svcReplicatedStorage:WaitForChild(eLogical.SPECIALIZATION_SELECT, 5)
 	if eventSpecializationSelect and not playerLocal:GetAttribute("Specialization") then
@@ -702,7 +703,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end)
 	end
 
-	local function set_default_aim_control_enabled(boolEnabled)
+	function set_default_aim_control_enabled(boolEnabled)
 		set_crosshair_enabled(boolEnabled)
 		set_character_aim_enabled(boolEnabled)
 		set_camera_follow_enabled(boolEnabled)
