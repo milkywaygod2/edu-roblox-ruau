@@ -117,11 +117,10 @@ local ACTIVE_LESSON_DAY = 3
 local rock = {}
 local appearance = {}
 
-appearance.BrickColor = BrickColor.new("Bright red")
 appearance.Material = Enum.Material.Slate
 appearance.Size = Vector3.new(1.2, 1.2, 1.2)
 appearance.CollisionShape = Enum.PartType.Ball
-appearance.LookShape = ""
+appearance.LookShape = "" -- 공식 에셋 팩 링크: https://create.roblox.com/store/asset/17354921094
 
 rock.DisplayName = "불타는 돌"
 rock.Appearance = appearance
@@ -133,7 +132,7 @@ return rock
 
 2~12회차는 `ServerScriptService > StudentLessonConfigs` 폴더 안의 ModuleScript가 설정 table만 `return`합니다. `Common`은 `02_student_answer` 또는 `StudentAnswer02`처럼 ModuleScript 이름의 앞/뒤 숫자로 회차를 판단합니다. 학생 파일은 `require(Common)`이나 `common.install*`을 호출하지 않고, `TeacherSetup`이 Play 시점에 이 ModuleScript들을 읽어 설치합니다.
 
-`Appearance`는 돌의 모양 묶음입니다. `Size`는 실제 게임 기준 크기이자 `LookShape`가 들어갈 최대 크기입니다. `CollisionShape`는 기본 충돌 Part 모양이고, `LookShape`는 그 크기 안에 맞춰 붙는 겉모습 모델입니다. `BrickColor` 대신 `Color = Color3.fromRGB(...)`를 써도 됩니다.
+`Appearance`는 돌의 모양 묶음입니다. `Size`는 실제 게임 기준 크기이자 `LookShape`가 들어갈 최대 크기입니다. `CollisionShape`는 기본 충돌 Part 모양이고, `LookShape`는 그 크기 안에 맞춰 붙는 겉모습 모델입니다. (학생들이 엉뚱한 색상을 임의로 지정해 비주얼을 해치지 못하도록, 서버 측에서 재질에 부합하는 고유 기본 색상이 자동으로 강제 적용됩니다.)
 
 `Damage`, `Speed`, `Cooldown`, `Knockback` 같은 결과값은 학생 코드에 넣지 않습니다. `Common`이 돌의 크기, 재질, 성격을 읽고 서버에서 계산합니다. `SpawnCount`는 1~10으로 제한되며, 스폰 위치는 선생님이 놓은 기준점 주변에 자동 분산됩니다. 학생 코드에는 `SpawnOffset`을 넣지 않습니다.
 
@@ -150,7 +149,11 @@ return rock
 
 돌멩이 `Material`은 자유도를 유지하기 위해 blacklist 방식으로 처리합니다. `Enum.Material.Air`, `Enum.Material.Water`, `Enum.Material.ForceField`처럼 돌 Part에 맞지 않거나 특수 효과성인 재질만 `Enum.Material.Slate`로 되돌리고, 나머지 Material은 가능한 한 그대로 반영합니다.
 
-Creator Store 모델은 `ReplicatedStorage > OutpostAssets > RockLooks` 폴더 안에 넣고 이름으로 참조합니다.
+Roblox Creator Store(크리에이터 상점)에서 공식 무료 모델 팩을 다운받아 다양한 디자인을 테스트해 볼 수 있습니다.
+* **공식 무료 모델 팩 다운로드 링크**: [[edu-roblox-ruau] Rock Looks 크리에이터 상점 링크](https://create.roblox.com/store/asset/17354921094)
+* **에셋 팩 검색어**: `[edu-roblox-ruau] Rock Looks`
+* **모델 Asset ID**: `17354921094`
+* **임포트 방법**: 가져온 모델 팩(Meteor, Skull, Spike, Star 등)을 `ReplicatedStorage > OutpostAssets > RockLooks` 폴더 안에 위치시키고, 사용하고 싶은 모델명을 이름으로 참조합니다.
 
 ```lua
 appearance.LookShape = "Meteor"

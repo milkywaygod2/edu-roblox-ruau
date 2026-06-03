@@ -77,11 +77,10 @@ Players.PlayerAdded:Connect(assign_team)
 local rock = {}
 local appearance = {}
 
-appearance.BrickColor = BrickColor.new("Really black")
 appearance.Material = Enum.Material.Slate
 appearance.Size = Vector3.new(1.4, 1.1, 1.2)
 appearance.CollisionShape = Enum.PartType.Ball
-appearance.LookShape = ""
+appearance.LookShape = "" -- 공식 무료 에셋 팩 다운로드 링크: https://create.roblox.com/store/asset/17354921094
 
 rock.DisplayName = "검은 운석"
 rock.Appearance = appearance
@@ -91,7 +90,7 @@ rock.SpawnCount = 3
 return rock
 ```
 
-`appearance`에는 색, 재질, `Size`, `CollisionShape`, `LookShape`만 넣습니다. 1회차에서는 이펙트보다 "전장에 놓인 돌을 줍고 던진다"는 플레이 루프를 우선합니다.
+`appearance`에는 재질, `Size`, `CollisionShape`, `LookShape`만 넣습니다. (학생들이 엉뚱한 색을 직접 지정하는 대신 재질에 적합한 기본 고유 색상이 자동으로 강제 적용됩니다.) 1회차에서는 이펙트보다 "전장에 놓인 돌을 줍고 던진다"는 플레이 루프를 우선합니다.
 
 ---
 
