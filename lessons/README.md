@@ -13,7 +13,7 @@ Blue/Red는 공수 고정이 없는 대칭 팀입니다. 접속한 모든 플레
 - `lessons/01_student_answer.module.lua` ~ `lessons/12_student_answer.module.lua`: 일자별 학생용 설정 ModuleScript입니다. 허용된 데이터 값만 수정하고, 실제 아이템 생성, 획득, 데미지, 자원, 쿨타임, 라운드 판정은 `Common`이 처리합니다.
 - `lessons/11_student_answer.client.lua`: 11일차 클라이언트 입력 코드입니다. 클라이언트는 입력과 요청만 담당하고 데미지, 자원, 라운드 상태는 서버가 판정합니다.
 
-`Common`이 커지면 날짜별 파일이 아니라 개념별 ModuleScript로 나눕니다. 분리 기준은 `docs/ARCH_common_modularization.md`를 따릅니다.
+`Common`이 커지면 날짜별 파일이 아니라 개념별 ModuleScript로 나눕니다. 분리 기준은 `docs/ARCH_공통모듈_개념별분리.md`를 따릅니다.
 
 ## 2. 누적 월드 구조
 
