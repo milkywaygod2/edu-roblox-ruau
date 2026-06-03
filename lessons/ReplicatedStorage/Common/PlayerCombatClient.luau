@@ -157,16 +157,33 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 			local UserInputService = game:GetService("UserInputService")
 			local connectionInput
+			local camera = workspace.CurrentCamera or workspace:WaitForChild("Camera", 5)
+			local originalCameraType = camera and camera.CameraType or Enum.CameraType.Custom
 
-			-- 특화 선택 완료 전까지 마우스 커서를 화면에 고정 해제하고 카메라 회전을 일시 정지시킵니다.
+			-- 3중 방어: 카메라 타입을 Scriptable로 전환하고 Modal을 켜서 마우스 및 시선 고정을 강제 차단합니다.
+			if camera then
+				camera.CameraType = Enum.CameraType.Scriptable
+			end
 			UserInputService.ModalEnabled = true
+
+			-- 마우스 조작 도중 카메라 스크립트가 MouseBehavior를 강제 잠금하는 것을 방어하는 50ms 주기 루프
+			task.spawn(function()
+				while guiSpec and guiSpec.Parent do
+					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+					task.wait(0.05)
+				end
+			end)
 
 			local function selectSpec(specName)
 				if connectionInput then
 					connectionInput:Disconnect()
 					connectionInput = nil
 				end
+				if camera then
+					camera.CameraType = originalCameraType
+				end
 				UserInputService.ModalEnabled = false
+				UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 				eventSpecializationSelect:FireServer(specName)
 				guiSpec:Destroy()
 			end
