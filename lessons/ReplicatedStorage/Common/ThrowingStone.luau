@@ -92,71 +92,71 @@ ThrowingStone.RealMaterial = {
 
 local MaterialDatabase = {
 	[ThrowingStone.RealMaterial.Rock] = {
-		Density = 1.0,
-		Hardness = 1.0,
+		Density = 2700, -- 돌(현무암/슬레이트) 밀도: 2,700 kg/m³
+		Hardness = 4.0,  -- 모스 경도: 4.0
 		RobloxMaterial = Enum.Material.Slate,
 		DefaultColor = Color3.fromRGB(120, 120, 120),
 		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Iron] = {
-		Density = 2.8,
-		Hardness = 1.5,
+		Density = 7870, -- 순철 밀도: 7,870 kg/m³
+		Hardness = 4.5,  -- 모스 경도: 4.5
 		RobloxMaterial = Enum.Material.Metal,
 		DefaultColor = Color3.fromRGB(190, 190, 195),
 		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Gold] = {
-		Density = 4.8, -- 금: 아주 묵직함 (밀도가 철의 1.7배)
-		Hardness = 0.9, -- 하지만 물리적으로 연성이라 경도는 낮음
+		Density = 19300, -- 순금 밀도: 19,300 kg/m³
+		Hardness = 2.5,   -- 모스 경도: 2.5 (밀도는 높으나 연성)
 		RobloxMaterial = Enum.Material.Metal,
 		DefaultColor = Color3.fromRGB(255, 215, 0),
 		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Diamond] = {
-		Density = 1.6, -- 다이아몬드: 질량 보통
-		Hardness = 3.0, -- 경도는 가장 단단함!
+		Density = 3510, -- 다이아몬드 밀도: 3,510 kg/m³
+		Hardness = 10.0, -- 모스 경도: 10.0 (가장 단단함)
 		RobloxMaterial = Enum.Material.Glass,
 		DefaultColor = Color3.fromRGB(180, 240, 255),
 		Transparency = 0.35
 	},
 	[ThrowingStone.RealMaterial.Wood] = {
-		Density = 0.6,
-		Hardness = 0.6,
+		Density = 700,  -- 목재 밀도: 700 kg/m³
+		Hardness = 0.8,  -- 모스 경도: 0.8 (상대적으로 무름)
 		RobloxMaterial = Enum.Material.Wood,
 		DefaultColor = Color3.fromRGB(130, 90, 60),
 		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Ice] = {
-		Density = 0.9,
-		Hardness = 0.8,
+		Density = 917,  -- 얼음 밀도: 917 kg/m³
+		Hardness = 1.5,  -- 모스 경도: 1.5
 		RobloxMaterial = Enum.Material.Ice,
 		DefaultColor = Color3.fromRGB(180, 220, 255),
 		Transparency = 0.2
 	},
 	[ThrowingStone.RealMaterial.Rubber] = {
-		Density = 1.2,
-		Hardness = 0.4,
+		Density = 1100, -- 고무 밀도: 1,100 kg/m³
+		Hardness = 0.2,  -- 모스 경도: 0.2 (극도로 낮음, 충격 흡수)
 		RobloxMaterial = Enum.Material.CorrodedMetal,
 		DefaultColor = Color3.fromRGB(85, 60, 60),
 		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Obsidian] = {
-		Density = 1.8,
-		Hardness = 1.3,
+		Density = 2400, -- 흑요석 밀도: 2,400 kg/m³
+		Hardness = 5.5,  -- 모스 경도: 5.5
 		RobloxMaterial = Enum.Material.Basalt,
 		DefaultColor = Color3.fromRGB(30, 30, 35),
 		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Glass] = {
-		Density = 1.1,
-		Hardness = 1.1,
+		Density = 2500, -- 유리 밀도: 2,500 kg/m³
+		Hardness = 5.5,  -- 모스 경도: 5.5
 		RobloxMaterial = Enum.Material.Glass,
 		DefaultColor = Color3.fromRGB(240, 250, 255),
 		Transparency = 0.45
 	},
 	[ThrowingStone.RealMaterial.Neon] = {
-		Density = 0.7,
-		Hardness = 0.7,
+		Density = 600,  -- 네온(특수 경량 방출 물질) 밀도: 600 kg/m³
+		Hardness = 2.0,  -- 모스 경도: 2.0
 		RobloxMaterial = Enum.Material.Neon,
 		DefaultColor = Color3.fromRGB(255, 100, 0),
 		Transparency = 0
@@ -196,33 +196,52 @@ end
 function ThrowingStone.calculateThrowingStoneStats(vectorSize, customMaterialNameOrEnum)
 	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(customMaterialNameOrEnum)
 	
-	-- 부피 연산 (가로 * 세로 * 높이) -> 기준 부피인 1.728 대비 상대 비율
-	local numberVolume = vectorSize.X * vectorSize.Y * vectorSize.Z
-	local numberRelativeVolume = numberVolume / 1.728
-	local numberSizeMass = StudentConfig.clampNumber(numberRelativeVolume, 0.25, 5)
+	-- 1. 부피 연산 (1 Stud = 0.3m 고증)
+	-- 실제 부피 (m³) = 스터드 부피 * (0.3m)^3 = 스터드 부피 * 0.027
+	local volumeStud = vectorSize.X * vectorSize.Y * vectorSize.Z
+	local volumeM3 = volumeStud * 0.027
+	
+	-- 2. 실제 질량 (kg) = 실제 부피 (m³) * 실제 밀도 (kg/m³)
+	local densityKgM3 = tblMaterialProfile.Density
+	local massKg = volumeM3 * densityKgM3
+	
+	-- 3. 모스 경도 (Mohs Hardness)
+	local hardnessMohs = tblMaterialProfile.Hardness
 
-	-- [진짜 물리학 공식] 질량 = 부피 * 밀도
-	local numberMass = numberSizeMass * tblMaterialProfile.Density
-	local numberHardness = tblMaterialProfile.Hardness
+	-- 4. 투척 에너지 (E = 20,000 Joules = 20 kJ)
+	-- 게임 플레이 감각에 맞는 속도 범위 유지를 위해 마법적인 일정한 투척 에너지 설정
+	local energyJoules = 20000
+	
+	-- 5. 발사 속도 (v = sqrt(2E/m) m/s)
+	-- 1m = 3.333 studs 비례식 적용하여 스터드 속도(studs/s) 산출
+	local speedMS = math.sqrt(2 * energyJoules / massKg)
+	local speedStud = speedMS * 3.333
 
-	-- [진짜 물리학 공식] 속도(Speed): 발사 에너지가 일정할 때 속도는 sqrt(1/Mass)에 비례
-	local numberBaseSpeed = 90
-	local numberFinalSpeed = numberBaseSpeed / math.sqrt(numberMass)
+	-- 6. 충격 시의 운동량 (P = m * v_m_s)
+	local momentum = massKg * speedMS
 
-	-- [진짜 물리학 공식] 쿨다운(충전 시간): 무거울수록 비례해서 발사 준비가 오래 걸림
-	local numberFinalCooldown = 0.55 + numberMass * 0.22
+	-- 7. 넉백: 타격 시 전달되는 운동량 P에 비례
+	local knockbackForward = 18 + momentum * 0.015
+	local knockbackUp = 10 + momentum * 0.005
 
-	-- [진짜 물리학 공식] 넉백: 운동량 변화(충격량 P = m * v)에 비례
-	local numberFinalKnockbackForward = (28 + numberMass * 10) * (numberFinalSpeed / numberBaseSpeed)
+	-- 8. 데미지: 충돌 에너지 전달율과 밀접한 운동량 P와 경도 H의 제곱근 조화
+	-- 경도가 낮으면(Rubber 등) 찌그러지며 피해를 흡수하고, 높으면(Diamond 등) 무기 손실 없이 대상에게 에너지 충격력을 100% 가함
+	local damage = 8 + 0.2 * math.sqrt(momentum * hardnessMohs)
+
+	-- 9. 쿨다운 (충전 시간): 질량(kg)에 비례하여 무거운 재질일수록 던질 준비가 무거움
+	local cooldown = 0.45 + massKg * 0.005
+
+	-- 10. 투척 궤적 (아크): 가볍고 빠를수록 직사(작은 Arc), 무거울수록 곡사(큰 Arc)
+	local arc = 5 + massKg * 0.025
 
 	return {
-		Damage = StudentConfig.clampNumber(9 + numberMass * numberHardness * 5.5, 8, 30),
-		Cooldown = StudentConfig.clampNumber(numberFinalCooldown, 0.45, 2.4),
-		Speed = StudentConfig.clampNumber(numberFinalSpeed, 45, 135),
-		Arc = StudentConfig.clampNumber(18 - numberMass * 1.8, 5, 35),
-		KnockbackForward = StudentConfig.clampNumber(numberFinalKnockbackForward, 18, 80),
-		KnockbackUp = StudentConfig.clampNumber(12 + numberMass * 3, 8, 35),
-		Lifetime = StudentConfig.clampNumber(4 + numberMass * 0.35, 3, 8),
+		Damage = StudentConfig.clampNumber(damage, 8, 30),
+		Cooldown = StudentConfig.clampNumber(cooldown, 0.45, 2.4),
+		Speed = StudentConfig.clampNumber(speedStud, 45, 135),
+		Arc = StudentConfig.clampNumber(arc, 5, 35),
+		KnockbackForward = StudentConfig.clampNumber(knockbackForward, 18, 80),
+		KnockbackUp = StudentConfig.clampNumber(knockbackUp, 8, 35),
+		Lifetime = StudentConfig.clampNumber(4 + massKg * 0.002, 3, 8),
 	}
 end
 
