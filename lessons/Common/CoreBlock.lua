@@ -78,22 +78,10 @@ local function spawn_drop_resources(vectorPosition, intYield, strResourceType)
 			local modelTarget = partHit:FindFirstAncestorOfClass("Model")
 			local player = modelTarget and game:GetService("Players"):GetPlayerFromCharacter(modelTarget)
 			if player then
-				if strResourceType == "Gold" then
-					-- 화폐(Gold)는 주머니에 적립되므로 등에 메지 않고 leaderstats 수치로 직접 지급
-					local leaderstats = player:FindFirstChild("leaderstats")
-					local gold = leaderstats and leaderstats:FindFirstChild("Gold")
-					if gold then
-						gold.Value = gold.Value + partDrop:GetAttribute("Value")
-						play_block_effect(partDrop, brickColor.Name)
-						touchedConnection:Disconnect()
-						partDrop:Destroy()
-					end
-				else
-					-- 실물 자원(Wood, Stone 등)은 등에 물리적으로 짊어짐 (소지 제한 시 획득 불가로 남아있음)
-					local success = CoreBlock.carryBlock(player, partDrop)
-					if success then
-						touchedConnection:Disconnect()
-					end
+				-- 물리 획득 시, 자원 종류(Gold, Wood, Stone) 상관없이 전부 등에 물리적으로 짊어짐
+				local success = CoreBlock.carryBlock(player, partDrop)
+				if success then
+					touchedConnection:Disconnect()
 				end
 			end
 		end)
@@ -219,21 +207,14 @@ function CoreBlock.create(instanceParent, cframeOrPosition, tblConfig)
 	end)
 
 	-- 자원 상호작용 바인딩 (등에 짊어지기 수행 혹은 골드 즉시 채굴)
+	-- 자원 상호작용 바인딩 (등에 짊어지기 수행)
 	if canMine then
 		local clickDetector = EngineEnsure.ensureClickDetector(partBlock, 15)
 		
 		local proximityPrompt = Instance.new("ProximityPrompt")
 		proximityPrompt.ObjectText = "CoreBlock"
-		
-		local resourceType = partBlock:GetAttribute("ResourceType")
-		if resourceType == "Gold" then
-			proximityPrompt.ActionText = "골드 채굴하기"
-			proximityPrompt.HoldDuration = 1.0
-		else
-			proximityPrompt.ActionText = "등에 메기"
-			proximityPrompt.HoldDuration = 0.5
-		end
-		
+		proximityPrompt.ActionText = "등에 메기"
+		proximityPrompt.HoldDuration = 0.5
 		proximityPrompt.MaxActivationDistance = 12
 		proximityPrompt.Parent = partBlock
 		
@@ -244,34 +225,10 @@ function CoreBlock.create(instanceParent, cframeOrPosition, tblConfig)
 				return 
 			end
 			
-			local resType = partBlock:GetAttribute("ResourceType")
-			if resType == "Gold" then
-				-- 화폐(Gold) 광맥 채굴 시 지갑에 즉시 골드 추가 및 재생 모드 작동
-				partBlock:SetAttribute("IsMining", true)
-				proximityPrompt.Enabled = false
-				play_block_effect(partBlock, "Gold")
-				partBlock.Transparency = 0.8
-				partBlock.CanCollide = false
-				
-				local leaderstats = player:FindFirstChild("leaderstats")
-				local gold = leaderstats and leaderstats:FindFirstChild("Gold")
-				if gold then
-					gold.Value = gold.Value + partBlock:GetAttribute("ResourceYield")
-				end
-				
-				task.wait(5)
-				if partBlock and partBlock.Parent then
-					partBlock.Transparency = 0
-					partBlock.CanCollide = true
-					partBlock:SetAttribute("IsMining", false)
-					proximityPrompt.Enabled = true
-				end
-			else
-				-- 실물 자원(Wood, Stone 등) 채굴 시 플레이어가 직접 등에 짊어짐
-				local success = CoreBlock.carryBlock(player, partBlock)
-				if not success then
-					play_block_effect(partBlock, "Bright red")
-				end
+			local success = CoreBlock.carryBlock(player, partBlock)
+			if not success then
+				-- 소지 제한 피드백 (빨간 스파크)
+				play_block_effect(partBlock, "Bright red")
 			end
 		end
 		

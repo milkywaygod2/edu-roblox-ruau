@@ -65,7 +65,7 @@ function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblCon
 	local fldBuildArea = tblOutpostWorld.fldBuildArea
 	local partBuildButton = fldBuildArea:WaitForChild(eLogical.BUILD_BUTTON)
 	local partWallSpawn = fldBuildArea:WaitForChild(eLogical.WALL_SPAWN)
-	local intStartGold = StudentConfig.readConfigInteger(tblConfig, "StartGold", 100, 0, 500)
+	local intStartCredit = StudentConfig.readConfigInteger(tblConfig, "StartCredit", 100, 0, 500)
 	local intWallCost = StudentConfig.readConfigInteger(tblConfig, "WallCost", 20, 1, 100)
 	local intBlockCount = StudentConfig.readConfigInteger(tblConfig, "BlockCount", 8, 2, 12)
 	local vectorBlockSize = StudentConfig.readConfigVector3(tblConfig, "BlockSize", Vector3.new(4, 6, 1), Vector3.new(1, 2, 0.5), Vector3.new(8, 12, 4))
@@ -81,21 +81,21 @@ function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblCon
 			fldLeaderstats.Parent = player
 		end
 
-		local ivalGold = fldLeaderstats:FindFirstChild("Gold")
-		if not ivalGold then
-			ivalGold = Instance.new(ePhysical.INT_VALUE)
-			ivalGold.Name = "Gold"
-			ivalGold.Value = intStartGold
-			ivalGold.Parent = fldLeaderstats
+		local ivalCredit = fldLeaderstats:FindFirstChild("Credit")
+		if not ivalCredit then
+			ivalCredit = Instance.new(ePhysical.INT_VALUE)
+			ivalCredit.Name = "Credit"
+			ivalCredit.Value = intStartCredit
+			ivalCredit.Parent = fldLeaderstats
 		end
 	end
 
 	local function build_wall(player)
 		local fldLeaderstats = player:FindFirstChild(eLogical.RESERVED_LEADERSTATS)
-		local ivalGold = fldLeaderstats and fldLeaderstats:FindFirstChild("Gold")
-		if not ivalGold or ivalGold.Value < intWallCost then return end
+		local ivalCredit = fldLeaderstats and fldLeaderstats:FindFirstChild("Credit")
+		if not ivalCredit or ivalCredit.Value < intWallCost then return end
 
-		ivalGold.Value -= intWallCost
+		ivalCredit.Value -= intWallCost
 		intNextRow += 1
 
 		for index = 1, intBlockCount do
