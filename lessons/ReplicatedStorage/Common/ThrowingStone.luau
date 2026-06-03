@@ -78,7 +78,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-ThrowingStone.RockMaterial = {
+ThrowingStone.RealMaterial = {
 	Rock     = "Rock",
 	Iron     = "Iron",
 	Wood     = "Wood",
@@ -88,37 +88,37 @@ ThrowingStone.RockMaterial = {
 }
 
 local MaterialDatabase = {
-	[ThrowingStone.RockMaterial.Rock] = {
+	[ThrowingStone.RealMaterial.Rock] = {
 		Density = 1.0, -- 기준 밀도
 		Hardness = 1.0,
 		RobloxMaterial = Enum.Material.Slate,
 		DefaultColor = Color3.fromRGB(120, 120, 120)
 	},
-	[ThrowingStone.RockMaterial.Iron] = {
+	[ThrowingStone.RealMaterial.Iron] = {
 		Density = 2.8, -- 철: 매우 무거움
 		Hardness = 1.5,
 		RobloxMaterial = Enum.Material.Metal,
 		DefaultColor = Color3.fromRGB(190, 190, 195)
 	},
-	[ThrowingStone.RockMaterial.Wood] = {
+	[ThrowingStone.RealMaterial.Wood] = {
 		Density = 0.6, -- 나무: 가벼움
 		Hardness = 0.6,
 		RobloxMaterial = Enum.Material.Wood,
 		DefaultColor = Color3.fromRGB(130, 90, 60)
 	},
-	[ThrowingStone.RockMaterial.Ice] = {
+	[ThrowingStone.RealMaterial.Ice] = {
 		Density = 0.9, -- 얼음: 중간 질량
 		Hardness = 0.8,
 		RobloxMaterial = Enum.Material.Ice,
 		DefaultColor = Color3.fromRGB(180, 220, 255)
 	},
-	[ThrowingStone.RockMaterial.Rubber] = {
+	[ThrowingStone.RealMaterial.Rubber] = {
 		Density = 1.2, -- 고무: 질량 보통, 경도 낮음
 		Hardness = 0.4,
 		RobloxMaterial = Enum.Material.CorrodedMetal,
 		DefaultColor = Color3.fromRGB(85, 60, 60)
 	},
-	[ThrowingStone.RockMaterial.Obsidian] = {
+	[ThrowingStone.RealMaterial.Obsidian] = {
 		Density = 1.8, -- 흑요석: 단단하고 무거움
 		Hardness = 1.3,
 		RobloxMaterial = Enum.Material.Basalt,
