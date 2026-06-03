@@ -85,7 +85,7 @@ Workspace
 5. `TeacherSetup`은 매일 같은 파일을 사용합니다. Play마다 다시 실행되어도 기존 오브젝트를 지우지 않고 누락된 기준 구조만 보강합니다.
 6. 1회차 학생 답안은 `StudentRockDesigns`에, 2~12회차 학생 답안은 `StudentLessonConfigs`에 ModuleScript로 넣고, 수업에서 허용한 데이터 값만 바꿔 Play로 검증합니다.
 
-초기화가 꼭 필요한 예외 상황에서는 `common.resetNamedInstance()` 또는 `createOrReplaceInstance()`를 사용할 수 있지만, 기본 수업 운영은 누적 유지입니다.
+초기화가 꼭 필요한 예외 상황에서는 `common.resetNamedInstance()`를 사용할 수 있지만, 기본 수업 운영은 누적 유지입니다.
 
 ## 5. 학생 튜닝 장비 규칙
 

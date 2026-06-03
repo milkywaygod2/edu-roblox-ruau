@@ -230,12 +230,6 @@ end
 
 -- --------------------------------------------------------------------------------
 
-function common.createOrReplaceInstance(strClassName, strName, instanceParent, tblProperties) -- [의미/의도] 기존 인스턴스 대체 생성 호환 함수 정의 ➔ 삭제 재생성이 필요한 경우 기존 호출명을 계속 사용할 수 있게 하기 위함
-	return common.resetNamedInstance(strClassName, strName, instanceParent, tblProperties) -- [의미/의도] resetNamedInstance에 위임 ➔ 삭제 재생성 정책을 한곳에서 관리하기 위함
-end
-
--- --------------------------------------------------------------------------------
-
 function common.ensureNamedInstance(strClassName, strName, instanceParent, tblProperties) -- [의미/의도] 이름 있는 인스턴스 보장 함수 정의 ➔ 누적형 전초기지 월드에서 기존 오브젝트를 지우지 않고 재사용하기 위함
 	local instanceTarget = instanceParent:FindFirstChild(strName) -- [의미/의도] 부모 아래에서 같은 이름의 객체 검색 ➔ 이미 만든 콘텐츠를 다음 회차에서도 유지하기 위함
 	if instanceTarget and not instanceTarget:IsA(strClassName) then -- [의미/의도] 같은 이름이지만 타입이 다르다면 ➔ 잘못된 오브젝트가 학생 코드 참조를 막지 않게 하기 위함
@@ -255,22 +249,10 @@ end
 
 -- --------------------------------------------------------------------------------
 
-function common.createNamedInstance(strClassName, strName, instanceParent, tblProperties) -- [의미/의도] 이름 있는 인스턴스 보장 호환 함수 정의 ➔ 기존 helper 호출을 누적형 ensure 정책으로 연결하기 위함
-	return common.ensureNamedInstance(strClassName, strName, instanceParent, tblProperties) -- [의미/의도] ensureNamedInstance에 위임 ➔ 삭제 없이 기존 콘텐츠를 재사용하기 위함
-end
-
--- --------------------------------------------------------------------------------
-
 function common.ensureStaticPart(strName, instanceParent, tblProperties) -- [의미/의도] 고정 Part 보장 함수 정의 ➔ 바닥/버튼/마커가 회차마다 삭제되지 않고 누적 유지되도록 하기 위함
 	local tblPartProperties = tblProperties or {} -- [의미/의도] 속성 테이블 기본값 준비 ➔ 호출자가 속성을 생략해도 안전하게 처리하기 위함
 	tblPartProperties.Anchored = tblPartProperties.Anchored ~= false -- [의미/의도] 기본 Anchored=true 설정 ➔ 명시적으로 false를 준 경우를 제외하고 setup 오브젝트를 고정하기 위함
 	return common.ensureNamedInstance(common.eEnginePhysicalType.PART, strName, instanceParent, tblPartProperties) -- [의미/의도] Part 보장 실행 ➔ 기존 Part는 유지하고 필요한 속성만 보정하기 위함
-end
-
--- --------------------------------------------------------------------------------
-
-function common.createStaticPart(strName, instanceParent, tblProperties) -- [의미/의도] 고정 Part 생성 호환 함수 정의 ➔ 기존 helper 호출을 누적형 ensure 정책으로 연결하기 위함
-	return common.ensureStaticPart(strName, instanceParent, tblProperties) -- [의미/의도] ensureStaticPart에 위임 ➔ 같은 이름의 Part가 중복 생성되지 않게 하기 위함
 end
 
 -- --------------------------------------------------------------------------------
@@ -288,12 +270,6 @@ end
 
 -- --------------------------------------------------------------------------------
 
-function common.createClickDetector(partParent, intMaxActivationDistance) -- [의미/의도] ClickDetector 생성 호환 함수 정의 ➔ 기존 helper 호출을 누적형 ensure 정책으로 연결하기 위함
-	return common.ensureClickDetector(partParent, intMaxActivationDistance) -- [의미/의도] ensureClickDetector에 위임 ➔ 감지기 중복 생성을 막기 위함
-end
-
--- --------------------------------------------------------------------------------
-
 function common.ensureToolWithHandle(strToolName, strToolTip, instanceParent, tblHandleProperties) -- [의미/의도] Tool과 Handle 보장 함수 정의 ➔ 학생 스크립트나 커스터마이즈가 붙은 Tool을 삭제하지 않고 규격만 보정하기 위함
 	local toolTarget = common.ensureNamedInstance(common.eEnginePhysicalType.TOOL, strToolName, instanceParent) -- [의미/의도] Tool 보장 ➔ 기존 장비와 내부 Script를 유지하면서 없으면 생성하기 위함
 	toolTarget.RequiresHandle = true -- [의미/의도] Handle 필요 설정 ➔ Roblox 장착 규칙에 맞게 손잡이 파트를 사용하기 위함
@@ -302,12 +278,6 @@ function common.ensureToolWithHandle(strToolName, strToolTip, instanceParent, tb
 	local partHandle = common.ensureNamedInstance(common.eEnginePhysicalType.PART, common.eEngineLogicalType.RESERVED_HANDLE, toolTarget, tblHandleProperties) -- [의미/의도] Handle Part 보장 ➔ Tool이 캐릭터 손에 부착될 기준 파트를 유지 또는 생성하기 위함
 
 	return toolTarget, partHandle -- [의미/의도] Tool과 Handle 반환 ➔ 호출부가 필요한 경우 두 객체를 추가 조작할 수 있게 하기 위함
-end
-
--- --------------------------------------------------------------------------------
-
-function common.createToolWithHandle(strToolName, strToolTip, instanceParent, tblHandleProperties) -- [의미/의도] Tool과 Handle 생성 호환 함수 정의 ➔ 기존 helper 호출을 누적형 ensure 정책으로 연결하기 위함
-	return common.ensureToolWithHandle(strToolName, strToolTip, instanceParent, tblHandleProperties) -- [의미/의도] ensureToolWithHandle에 위임 ➔ Tool 내부 콘텐츠 삭제를 피하기 위함
 end
 
 -- --------------------------------------------------------------------------------
