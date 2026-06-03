@@ -99,17 +99,30 @@ end
 
 
 function ThrowingStone.getThrowingStoneTraitProfile(strTrait)
+	local numberTraitMass = 1.0
 	if strTrait == "Heavy" then
-		return {Mass = 1.35, Hardness = 1.1, Speed = 0.82, Cooldown = 1.18, Knockback = 1.25}
+		numberTraitMass = 1.45
 	elseif strTrait == "Light" then
-		return {Mass = 0.75, Hardness = 0.9, Speed = 1.18, Cooldown = 0.88, Knockback = 0.8}
+		numberTraitMass = 0.7
 	elseif strTrait == "Bouncy" then
-		return {Mass = 0.95, Hardness = 0.85, Speed = 1, Cooldown = 1, Knockback = 1.35}
+		numberTraitMass = 0.95
 	elseif strTrait == "Sharp" then
-		return {Mass = 1, Hardness = 1.25, Speed = 0.95, Cooldown = 1.12, Knockback = 0.95}
+		numberTraitMass = 1.15
 	end
 
-	return {Mass = 1, Hardness = 1, Speed = 1, Cooldown = 1, Knockback = 1}
+	-- 질량 가중치를 기반으로 속도(사거리), 쿨다운, 경도, 넉백 배율을 수식에 의해 동적으로 도출
+	local numberHardness = numberTraitMass * 0.1 + 0.9
+	local numberSpeed = 1 / math.sqrt(numberTraitMass)
+	local numberCooldown = numberTraitMass
+	local numberKnockback = math.sqrt(numberTraitMass)
+
+	return {
+		Mass = numberTraitMass,
+		Hardness = numberHardness,
+		Speed = numberSpeed,
+		Cooldown = numberCooldown,
+		Knockback = numberKnockback,
+	}
 end
 
 

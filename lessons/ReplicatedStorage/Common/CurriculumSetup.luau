@@ -744,15 +744,22 @@ function CurriculumSetup.installCurriculumTeamSpawnRouting(svcPlayers, svcTeams,
 		CurriculumSetup.assignPlayerToCurriculumTeam(svcPlayers, svcTeams, playerPlayer)
 		CurriculumSetup.applyCurriculumRespawnLocation(fldBattlefield, playerPlayer)
 
+		local function on_character_added(modelCharacter)
+			local humanoid = modelCharacter:WaitForChild("Humanoid", 10)
+			if humanoid and humanoid:IsA("Humanoid") then
+				humanoid.MaxHealth = 50
+				humanoid.Health = 50
+			end
+			task.defer(CurriculumSetup.movePlayerToCurriculumSpawn, fldBattlefield, playerPlayer, modelCharacter)
+		end
+
 		if not playerPlayer:GetAttribute("RuntimeInstalled_CurriculumSpawnRouting") then
 			playerPlayer:SetAttribute("RuntimeInstalled_CurriculumSpawnRouting", true)
-			playerPlayer.CharacterAdded:Connect(function(modelCharacter)
-				task.defer(CurriculumSetup.movePlayerToCurriculumSpawn, fldBattlefield, playerPlayer, modelCharacter)
-			end)
+			playerPlayer.CharacterAdded:Connect(on_character_added)
 		end
 
 		if playerPlayer.Character then
-			task.defer(CurriculumSetup.movePlayerToCurriculumSpawn, fldBattlefield, playerPlayer, playerPlayer.Character)
+			on_character_added(playerPlayer.Character)
 		end
 	end
 
