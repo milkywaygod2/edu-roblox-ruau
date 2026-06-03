@@ -120,7 +120,7 @@ function EngineEnsure.ensureOutpostBattleWorld(svcWorkspace) -- [의미/의도] 
 	local fldSiegeEngine = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.SIEGE_ENGINE, fldOutpostBattleWorld) -- [의미/의도] 중장비 폴더 보장 ➔ 발사 버튼과 기준점을 누적 관리하기 위함
 	local partBattlefieldBase = EngineEnsure.ensureStaticPart(eLogical.BATTLEFIELD_BASE, fldBattlefield, { -- [의미/의도] 공통 전장 바닥 보장 ➔ 1회차부터 12회차까지 같은 플레이 공간을 유지하기 위함
 		Size = Vector3.new(110, 1, 90),
-		Position = Vector3.new(0, -0.5, 0),
+		Position = Vector3.new(0, -0.45, 0), -- [Z-fighting 해결] 윗면 Y를 0.05로 살짝 띄워 기본 Baseplate(Y=0)와 겹침으로 인한 깜빡임 방지
 		Material = Enum.Material.Grass,
 	})
 

@@ -152,6 +152,7 @@ function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield)
 		Size = Vector3.new(8, 1, 8),
 		Position = Vector3.new(0, 0.5, 0),
 		BrickColor = BrickColor.new("Lime green"),
+		CanCollide = false, -- [스폰 끼임 방지] 기본 스폰 포인트(원점)와 겹칠 때 캐릭터가 물리적으로 끼는 현상 원천 예방 (ClickDetector는 작동함)
 	})
 	EngineEnsure.ensureClickDetector(partRoundStartButton, 30)
 
