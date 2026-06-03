@@ -579,6 +579,25 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end
 	end
 
+	local function is_magic_staff(toolTarget)
+		if not toolTarget:IsA(ePhysical.TOOL) then return false end
+
+		return toolTarget:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) == eLogical.MAGIC_STAFF
+			or toolTarget.Name:sub(1, #eLogical.MAGIC_STAFF) == eLogical.MAGIC_STAFF
+	end
+
+	local function connect_magic_staff(toolMagicStaff)
+		if tblConnectedTools[toolMagicStaff] or not is_magic_staff(toolMagicStaff) then return end
+
+		tblConnectedTools[toolMagicStaff] = true
+		toolMagicStaff.Activated:Connect(function()
+			local eventCastMagic = svcReplicatedStorage:FindFirstChild(eLogical.CAST_MAGIC)
+			if not eventCastMagic then return end
+
+			eventCastMagic:FireServer(get_camera_aim_position())
+		end)
+	end
+
 	local function connect_throwing_stone(toolThrowingStone)
 		if tblConnectedTools[toolThrowingStone] or not is_throwing_stone(toolThrowingStone) then return end
 
@@ -609,9 +628,13 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local function watch_container(instanceContainer)
 		for _, instanceChild in ipairs(instanceContainer:GetChildren()) do
 			connect_throwing_stone(instanceChild)
+			connect_magic_staff(instanceChild)
 		end
 
-		instanceContainer.ChildAdded:Connect(connect_throwing_stone)
+		instanceContainer.ChildAdded:Connect(function(instanceChild)
+			connect_throwing_stone(instanceChild)
+			connect_magic_staff(instanceChild)
+		end)
 	end
 
 	mousePlayer.Button1Down:Connect(function()

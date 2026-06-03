@@ -4,4 +4,3 @@
 local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common"))
 
 common.installPlayerCombatClientControls()
-common.installMagicClientSystem()
