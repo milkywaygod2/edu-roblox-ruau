@@ -78,26 +78,83 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function ThrowingStone.getThrowingStoneMaterialProfile(enumMaterial)
-	if enumMaterial == Enum.Material.Metal then
-		return {Mass = 1.45, Hardness = 1.2}
-	elseif enumMaterial == Enum.Material.Wood then
-		return {Mass = 0.7, Hardness = 0.75}
-	elseif enumMaterial == Enum.Material.Neon then
-		return {Mass = 0.85, Hardness = 0.8}
-	elseif enumMaterial == Enum.Material.Ice then
-		return {Mass = 0.8, Hardness = 1}
-	elseif enumMaterial == Enum.Material.Concrete then
-		return {Mass = 1.25, Hardness = 1.05}
+ThrowingStone.RockMaterial = {
+	Rock     = "Rock",
+	Iron     = "Iron",
+	Wood     = "Wood",
+	Ice      = "Ice",
+	Rubber   = "Rubber",
+	Obsidian = "Obsidian",
+}
+
+local MaterialDatabase = {
+	[ThrowingStone.RockMaterial.Rock] = {
+		Density = 1.0, -- 기준 밀도
+		Hardness = 1.0,
+		RobloxMaterial = Enum.Material.Slate,
+		DefaultColor = Color3.fromRGB(120, 120, 120)
+	},
+	[ThrowingStone.RockMaterial.Iron] = {
+		Density = 2.8, -- 철: 매우 무거움
+		Hardness = 1.5,
+		RobloxMaterial = Enum.Material.Metal,
+		DefaultColor = Color3.fromRGB(190, 190, 195)
+	},
+	[ThrowingStone.RockMaterial.Wood] = {
+		Density = 0.6, -- 나무: 가벼움
+		Hardness = 0.6,
+		RobloxMaterial = Enum.Material.Wood,
+		DefaultColor = Color3.fromRGB(130, 90, 60)
+	},
+	[ThrowingStone.RockMaterial.Ice] = {
+		Density = 0.9, -- 얼음: 중간 질량
+		Hardness = 0.8,
+		RobloxMaterial = Enum.Material.Ice,
+		DefaultColor = Color3.fromRGB(180, 220, 255)
+	},
+	[ThrowingStone.RockMaterial.Rubber] = {
+		Density = 1.2, -- 고무: 질량 보통, 경도 낮음
+		Hardness = 0.4,
+		RobloxMaterial = Enum.Material.CorrodedMetal,
+		DefaultColor = Color3.fromRGB(85, 60, 60)
+	},
+	[ThrowingStone.RockMaterial.Obsidian] = {
+		Density = 1.8, -- 흑요석: 단단하고 무거움
+		Hardness = 1.3,
+		RobloxMaterial = Enum.Material.Basalt,
+		DefaultColor = Color3.fromRGB(30, 30, 35)
+	},
+}
+
+
+-- --------------------------------------------------------------------------------
+function ThrowingStone.getThrowingStoneMaterialProfile(customMaterialNameOrEnum)
+	local strName = tostring(customMaterialNameOrEnum)
+	if typeof(customMaterialNameOrEnum) == "EnumItem" then
+		strName = customMaterialNameOrEnum.Name
 	end
 
-	return {Mass = 1, Hardness = 1}
+	-- 1. 커스텀 데이터베이스에서 이름 검사
+	for customKey, data in pairs(MaterialDatabase) do
+		if customKey:lower() == strName:lower() then
+			return data
+		end
+	end
+
+	-- 2. 로블록스 순정 재질에 따른 임시 하위 호환 매핑
+	if customMaterialNameOrEnum == Enum.Material.Metal then
+		return MaterialDatabase.Iron
+	elseif customMaterialNameOrEnum == Enum.Material.Wood then
+		return MaterialDatabase.Wood
+	elseif customMaterialNameOrEnum == Enum.Material.Ice then
+		return MaterialDatabase.Ice
+	end
+
+	return MaterialDatabase.Rock
 end
 
 
 -- --------------------------------------------------------------------------------
-
-
 function ThrowingStone.getThrowingStoneTraitProfile(strTrait)
 	local numberTraitMass = 1.0
 	if strTrait == "Heavy" then
@@ -110,7 +167,6 @@ function ThrowingStone.getThrowingStoneTraitProfile(strTrait)
 		numberTraitMass = 1.15
 	end
 
-	-- 질량 가중치를 기반으로 속도(사거리), 쿨다운, 경도, 넉백 배율을 수식에 의해 동적으로 도출
 	local numberHardness = numberTraitMass * 0.1 + 0.9
 	local numberSpeed = 1 / math.sqrt(numberTraitMass)
 	local numberCooldown = numberTraitMass
@@ -127,22 +183,36 @@ end
 
 
 -- --------------------------------------------------------------------------------
-
-
-function ThrowingStone.calculateThrowingStoneStats(vectorSize, enumMaterial, strTrait)
-	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(enumMaterial)
+function ThrowingStone.calculateThrowingStoneStats(vectorSize, customMaterialNameOrEnum, strTrait)
+	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(customMaterialNameOrEnum)
 	local tblTraitProfile = ThrowingStone.getThrowingStoneTraitProfile(strTrait)
+	
+	-- 부피 연산 (가로 * 세로 * 높이) -> 기준 부피인 1.728 대비 상대 비율
 	local numberVolume = vectorSize.X * vectorSize.Y * vectorSize.Z
-	local numberSizeMass = StudentConfig.clampNumber(numberVolume / 1.728, 0.25, 5)
-	local numberMass = numberSizeMass * tblMaterialProfile.Mass * tblTraitProfile.Mass
+	local numberRelativeVolume = numberVolume / 1.728
+	local numberSizeMass = StudentConfig.clampNumber(numberRelativeVolume, 0.25, 5)
+
+	-- [진짜 물리학 공식] 질량 = 부피 * 밀도 * Trait 질량 가중치
+	local numberMass = numberSizeMass * tblMaterialProfile.Density * tblTraitProfile.Mass
 	local numberHardness = tblMaterialProfile.Hardness * tblTraitProfile.Hardness
+
+	-- [진짜 물리학 공식] 속도(Speed): 발사 에너지가 일정할 때 속도는 sqrt(1/Mass)에 비례
+	local numberBaseSpeed = 90
+	local numberCalculatedSpeed = numberBaseSpeed / math.sqrt(numberMass)
+	local numberFinalSpeed = numberCalculatedSpeed * tblTraitProfile.Speed
+
+	-- [진짜 물리학 공식] 쿨다운(충전 시간): 무거울수록 비례해서 발사 준비가 오래 걸림
+	local numberFinalCooldown = (0.55 + numberMass * 0.22) * tblTraitProfile.Cooldown
+
+	-- [진짜 물리학 공식] 넉백: 운동량 변화(충격량 P = m * v)에 비례
+	local numberFinalKnockbackForward = (28 + numberMass * 10) * tblTraitProfile.Knockback * (numberFinalSpeed / numberBaseSpeed)
 
 	return {
 		Damage = StudentConfig.clampNumber(9 + numberMass * numberHardness * 5.5, 8, 30),
-		Cooldown = StudentConfig.clampNumber((0.55 + numberMass * 0.22) * tblTraitProfile.Cooldown, 0.45, 2.4),
-		Speed = StudentConfig.clampNumber((105 / math.sqrt(numberMass)) * tblTraitProfile.Speed, 45, 135),
+		Cooldown = StudentConfig.clampNumber(numberFinalCooldown, 0.45, 2.4),
+		Speed = StudentConfig.clampNumber(numberFinalSpeed, 45, 135),
 		Arc = StudentConfig.clampNumber(18 - numberMass * 1.8, 5, 35),
-		KnockbackForward = StudentConfig.clampNumber((28 + numberMass * 10) * tblTraitProfile.Knockback, 18, 80),
+		KnockbackForward = StudentConfig.clampNumber(numberFinalKnockbackForward, 18, 80),
 		KnockbackUp = StudentConfig.clampNumber(12 + numberMass * 3, 8, 35),
 		Lifetime = StudentConfig.clampNumber(4 + numberMass * 0.35, 3, 8),
 	}
@@ -150,8 +220,6 @@ end
 
 
 -- --------------------------------------------------------------------------------
-
-
 function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessages, strSourceName)
 	local strVariantId = tblConfig and tblConfig.VariantId
 	if type(strVariantId) ~= "string" or strVariantId == "" then
@@ -164,7 +232,12 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	if tblAppearanceConfig and tblAppearanceConfig.Size == nil and tblAppearanceConfig.CollisionSize ~= nil then
 		vectorSize = StudentConfig.readEquipmentSize(tblAppearanceConfig, "CollisionSize", "ThrowingStone", tblValidationMessages, strSourceName)
 	end
-	local enumMaterial = StudentConfig.readThrowingStoneMaterial(tblAppearanceConfig, "Material", Enum.Material.Slate, tblValidationMessages, strSourceName)
+	
+	-- 커스텀 및 기본 머티리얼 추출
+	local rawMaterialInput = tblAppearanceConfig and tblAppearanceConfig.Material
+	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(rawMaterialInput)
+	local enumMaterial = tblMaterialProfile.RobloxMaterial
+
 	local enumShape = StudentConfig.readConfigEnumItem(tblAppearanceConfig, "CollisionShape", Enum.PartType.Ball)
 	local valueShape = tblAppearanceConfig and tblAppearanceConfig.CollisionShape
 	if tblAppearanceConfig and tblAppearanceConfig.CollisionShape == nil and tblAppearanceConfig.Shape ~= nil then
@@ -180,6 +253,14 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		colorProjectile = StudentConfig.readConfigColor3(tblAppearanceConfig, "Color", colorProjectile, tblValidationMessages, strSourceName)
 		brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
 	end
+	
+	-- 만약 학생이 색상을 수동 지정하지 않았다면, 커스텀 머티리얼 고유의 멋진 기본 색상을 입힙니다.
+	if tblAppearanceConfig and tblAppearanceConfig.Color == nil and tblAppearanceConfig.BrickColor == nil and tblMaterialProfile.DefaultColor then
+		colorProjectile = tblMaterialProfile.DefaultColor
+		brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
+	end
+
+	local strLookShape = StudentConfig.readConfigString(tblConfig, "Trait", "Balanced")
 	local strTrait = StudentConfig.readConfigString(tblConfig, "Trait", "Balanced")
 	local strLookShape = StudentConfig.readConfigString(tblAppearanceConfig, "LookShape", "")
 	if strLookShape == "" then
@@ -194,7 +275,7 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 10으로 보정했습니다.")
 	end
-	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, enumMaterial, strTrait)
+	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, rawMaterialInput, strTrait)
 
 	return {
 		VariantId = strVariantId,
