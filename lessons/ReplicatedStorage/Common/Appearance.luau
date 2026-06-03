@@ -421,6 +421,12 @@ function Appearance.applyRockLook(partTarget, strLookShape)
 	end
 
 	instanceLook.Parent = partTarget
+
+	if instanceLook:IsA("SpecialMesh") then
+		partTarget.Transparency = 0
+		return
+	end
+
 	partTarget.Transparency = 1
 
 	if instanceLook:IsA(CoreEnums.eEnginePhysicalType.BASE_PART) then
