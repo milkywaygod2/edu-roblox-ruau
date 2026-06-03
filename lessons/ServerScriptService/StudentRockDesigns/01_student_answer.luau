@@ -9,7 +9,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Slate
 appearance.Size = Vector3.new(1.4, 1.1, 1.2)
 appearance.CollisionShape = Enum.PartType.Ball
-appearance.LookShape = "" -- 외형 모델 템플릿 이름 (예: "Meteor". 크리에이터 상점 링크: https://create.roblox.com/store/asset/17354921094 에서 무료 모델 팩을 받거나, 툴박스에서 '[edu-roblox-ruau] Rock Looks' 검색 후 ReplicatedStorage > OutpostAssets > RockLooks 폴더 안에 모델들을 넣고 이름 기입)
+appearance.LookShape = "" -- 외형 모델 템플릿 이름 또는 크리에이터 상점 에셋 ID (예: "17354921094". 크리에이터 상점 링크: https://create.roblox.com/store/asset/17354921094 에서 무료 모델 팩을 [획득(Get)]한 후 에셋 ID를 문자열로 기입하면 자동으로 겉모습을 가져옵니다. 또는 수동으로 ReplicatedStorage > OutpostAssets > RockLooks에 모델들을 넣고 해당 모델명을 기입해도 됩니다.)
 
 rock.DisplayName = "검은 운석"
 rock.Appearance = appearance

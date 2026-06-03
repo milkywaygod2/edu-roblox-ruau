@@ -29,7 +29,9 @@ end
 
 
 function Appearance.findRockLookTemplate(strLook)
-	if type(strLook) ~= "string" or strLook == "" then
+	if type(strLook) == "number" then
+		strLook = tostring(strLook)
+	elseif type(strLook) ~= "string" or strLook == "" then
 		return nil
 	end
 
@@ -41,7 +43,40 @@ function Appearance.findRockLookTemplate(strLook)
 		return nil
 	end
 
-	return fldRockLooks:FindFirstChild(strLook)
+	-- 1. 캐시된 기존 템플릿 검색 (이름 기반 또는 이미 로드된 에셋 ID 기반)
+	local instanceExisting = fldRockLooks:FindFirstChild(strLook)
+	if instanceExisting then
+		return instanceExisting
+	end
+
+	-- 2. 서버 환경일 경우, 입력값이 숫자 ID라면 InsertService로 에셋을 다운로드 시도
+	local assetId = tonumber(strLook)
+	local RunService = game:GetService("RunService")
+	if assetId and RunService:IsServer() then
+		local InsertService = game:GetService("InsertService")
+		local success, loadedModel = pcall(function()
+			return InsertService:LoadAsset(assetId)
+		end)
+
+		if success and loadedModel then
+			-- InsertService:LoadAsset은 단일 자식을 포함한 Model wrapper를 반환하므로 실물 에셋을 추출
+			local realAsset = loadedModel:GetChildren()[1]
+			if realAsset then
+				realAsset.Name = strLook
+				realAsset.Parent = fldRockLooks
+				loadedModel:Destroy()
+				return realAsset
+			else
+				loadedModel.Name = strLook
+				loadedModel.Parent = fldRockLooks
+				return loadedModel
+			end
+		else
+			warn("[Appearance] 에셋 ID '" .. strLook .. "' 동적 다운로드 실패: " .. tostring(loadedModel))
+		end
+	end
+
+	return nil
 end
 
 

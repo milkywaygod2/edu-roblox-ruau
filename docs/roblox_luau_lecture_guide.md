@@ -80,7 +80,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Slate
 appearance.Size = Vector3.new(1.4, 1.1, 1.2)
 appearance.CollisionShape = Enum.PartType.Ball
-appearance.LookShape = "" -- 공식 무료 에셋 팩 다운로드 링크: https://create.roblox.com/store/asset/17354921094
+appearance.LookShape = "" -- 외형 모델 이름 또는 크리에이터 상점 에셋 ID (예: "17354921094". 상점 링크: https://create.roblox.com/store/asset/17354921094)
 
 rock.DisplayName = "검은 운석"
 rock.Appearance = appearance
