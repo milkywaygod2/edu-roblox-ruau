@@ -65,12 +65,11 @@ function ThrowingStone.createRockDesign(strDisplayName) -- [의미/의도] 학�
 		SpawnRadius = 4,
 		Appearance = {
 			BrickColor = BrickColor.new("Dark stone grey"),
-			Material = Enum.Material.Slate,
+			Material = ThrowingStone.RealMaterial.Rock,
 			Size = Vector3.new(1.2, 1.2, 1.2),
 			CollisionShape = Enum.PartType.Ball,
 			LookShape = "",
 		},
-		Trait = "Balanced",
 	}
 end
 
@@ -193,57 +192,28 @@ end
 
 
 -- --------------------------------------------------------------------------------
-function ThrowingStone.getThrowingStoneTraitProfile(strTrait)
-	local numberTraitMass = 1.0
-	if strTrait == "Heavy" then
-		numberTraitMass = 1.45
-	elseif strTrait == "Light" then
-		numberTraitMass = 0.7
-	elseif strTrait == "Bouncy" then
-		numberTraitMass = 0.95
-	elseif strTrait == "Sharp" then
-		numberTraitMass = 1.15
-	end
-
-	local numberHardness = numberTraitMass * 0.1 + 0.9
-	local numberSpeed = 1 / math.sqrt(numberTraitMass)
-	local numberCooldown = numberTraitMass
-	local numberKnockback = math.sqrt(numberTraitMass)
-
-	return {
-		Mass = numberTraitMass,
-		Hardness = numberHardness,
-		Speed = numberSpeed,
-		Cooldown = numberCooldown,
-		Knockback = numberKnockback,
-	}
-end
-
-
 -- --------------------------------------------------------------------------------
-function ThrowingStone.calculateThrowingStoneStats(vectorSize, customMaterialNameOrEnum, strTrait)
+function ThrowingStone.calculateThrowingStoneStats(vectorSize, customMaterialNameOrEnum)
 	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(customMaterialNameOrEnum)
-	local tblTraitProfile = ThrowingStone.getThrowingStoneTraitProfile(strTrait)
 	
 	-- 부피 연산 (가로 * 세로 * 높이) -> 기준 부피인 1.728 대비 상대 비율
 	local numberVolume = vectorSize.X * vectorSize.Y * vectorSize.Z
 	local numberRelativeVolume = numberVolume / 1.728
 	local numberSizeMass = StudentConfig.clampNumber(numberRelativeVolume, 0.25, 5)
 
-	-- [진짜 물리학 공식] 질량 = 부피 * 밀도 * Trait 질량 가중치
-	local numberMass = numberSizeMass * tblMaterialProfile.Density * tblTraitProfile.Mass
-	local numberHardness = tblMaterialProfile.Hardness * tblTraitProfile.Hardness
+	-- [진짜 물리학 공식] 질량 = 부피 * 밀도
+	local numberMass = numberSizeMass * tblMaterialProfile.Density
+	local numberHardness = tblMaterialProfile.Hardness
 
 	-- [진짜 물리학 공식] 속도(Speed): 발사 에너지가 일정할 때 속도는 sqrt(1/Mass)에 비례
 	local numberBaseSpeed = 90
-	local numberCalculatedSpeed = numberBaseSpeed / math.sqrt(numberMass)
-	local numberFinalSpeed = numberCalculatedSpeed * tblTraitProfile.Speed
+	local numberFinalSpeed = numberBaseSpeed / math.sqrt(numberMass)
 
 	-- [진짜 물리학 공식] 쿨다운(충전 시간): 무거울수록 비례해서 발사 준비가 오래 걸림
-	local numberFinalCooldown = (0.55 + numberMass * 0.22) * tblTraitProfile.Cooldown
+	local numberFinalCooldown = 0.55 + numberMass * 0.22
 
 	-- [진짜 물리학 공식] 넉백: 운동량 변화(충격량 P = m * v)에 비례
-	local numberFinalKnockbackForward = (28 + numberMass * 10) * tblTraitProfile.Knockback * (numberFinalSpeed / numberBaseSpeed)
+	local numberFinalKnockbackForward = (28 + numberMass * 10) * (numberFinalSpeed / numberBaseSpeed)
 
 	return {
 		Damage = StudentConfig.clampNumber(9 + numberMass * numberHardness * 5.5, 8, 30),
@@ -298,7 +268,6 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		brickColor = StudentConfig.createBrickColorFromColor3(colorProjectile)
 	end
 
-	local strTrait = StudentConfig.readConfigString(tblConfig, "Trait", "Balanced")
 	local strLookShape = StudentConfig.readConfigString(tblAppearanceConfig, "LookShape", "")
 	if strLookShape == "" then
 		strLookShape = StudentConfig.readConfigString(tblAppearanceConfig, "Look", "")
@@ -312,7 +281,7 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 10으로 보정했습니다.")
 	end
-	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, strRealMaterial, strTrait)
+	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, strRealMaterial)
 
 	return {
 		VariantId = strVariantId,
@@ -320,6 +289,7 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		SpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", 10, 1, 10),
 		SpawnOffset = StudentConfig.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8)),
 		SpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 4, 0, 8),
+		RealMaterial = strRealMaterial,
 		Damage = tblStats.Damage,
 		Cooldown = tblStats.Cooldown,
 		Speed = tblStats.Speed,
@@ -365,7 +335,7 @@ function ThrowingStone.installThrowingStonePickups(svcWorkspace, tblConfig) -- [
 		or tblConfig.BrickColor
 		or tblConfig.Color
 		or tblConfig.Shape
-		or tblConfig.Trait
+		or tblConfig.RealMaterial
 	)
 	if boolLooksLikeStudentDesign and not boolAlreadyResolved then
 		tblThrowingStoneConfig = ThrowingStone.resolveThrowingStoneDesign(tblConfig)
@@ -389,10 +359,9 @@ end
 function ThrowingStone.createFallbackRockDesign(strSourceName)
 	local tblRockDesign = ThrowingStone.createRockDesign(strSourceName .. " 기본 돌")
 	tblRockDesign.Appearance.BrickColor = BrickColor.new("Medium stone grey")
-	tblRockDesign.Appearance.Material = Enum.Material.Slate
+	tblRockDesign.Appearance.Material = ThrowingStone.RealMaterial.Rock
 	tblRockDesign.Appearance.Size = Vector3.new(1.1, 1.1, 1.1)
 	tblRockDesign.Appearance.CollisionShape = Enum.PartType.Ball
-	tblRockDesign.Trait = "Balanced"
 	return tblRockDesign
 end
 
@@ -479,7 +448,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 
 	local numberDamage = StudentConfig.readConfigNumber(tblConfig, "Damage", 15, 1, 30)
 	toolThrowingStone:SetAttribute("Damage", math.floor(numberDamage + 0.5))
-	toolThrowingStone:SetAttribute("Trait", tblConfig and tblConfig.Trait or "Balanced")
+	toolThrowingStone:SetAttribute("RealMaterial", tblConfig and tblConfig.RealMaterial or "Rock")
 	local numberSpeed = StudentConfig.readConfigNumber(tblConfig, "Speed", 90, 20, 140)
 	local numberArc = StudentConfig.readConfigNumber(tblConfig, "Arc", 12, 0, 60)
 	local numberKnockbackForward = StudentConfig.readConfigNumber(tblConfig, "KnockbackForward", 45, 0, 80)

@@ -3,18 +3,22 @@
 -- 역할: 학생용 돌멩이 디자인 데이터입니다. 생성/획득/피해 판정은 Common 서버 시스템이 처리합니다.
 -- Script Sync 위치: ServerScriptService > StudentRockDesigns > ModuleScript 이름 01_student_answer
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Common = ReplicatedStorage:WaitForChild("Common")
+local ThrowingStone = require(Common:WaitForChild("ThrowingStone"))
+local RealMaterial = ThrowingStone.RealMaterial
+
 local rock = {}
 local appearance = {}
 
 appearance.BrickColor = BrickColor.new("Really black")
-appearance.Material = "Rock"
+appearance.Material = RealMaterial.Rock
 appearance.Size = Vector3.new(1.4, 1.1, 1.2)
 appearance.CollisionShape = Enum.PartType.Ball
 appearance.LookShape = ""
 
 rock.DisplayName = "검은 운석"
 rock.Appearance = appearance
-rock.Trait = "Heavy"
 rock.SpawnCount = 10
 
 return rock

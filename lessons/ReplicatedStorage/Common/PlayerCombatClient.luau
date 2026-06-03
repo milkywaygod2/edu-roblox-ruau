@@ -691,26 +691,36 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			labelWeaponName.Text = "장착: " .. toolEquipped.Name
 
 			local numberDamage = toolEquipped:GetAttribute("Damage") or toolEquipped:GetAttribute("DamageValue")
-			local strTrait = toolEquipped:GetAttribute("Trait") or ""
+			local strRealMaterial = toolEquipped:GetAttribute("RealMaterial")
 
 			-- 스탯 속성이 없는 경우 도메인 무기 기준 Fallback
 			if not numberDamage then
 				if is_throwing_stone(toolEquipped) then
 					numberDamage = 15
-					strTrait = "원거리 투척"
+					strRealMaterial = "Rock"
 				elseif toolEquipped.Name:find("Sword") or toolEquipped.Name:find("검") then
 					numberDamage = 25
-					strTrait = "근접 베기"
+					strRealMaterial = "Metal"
 				elseif toolEquipped.Name:find("Bow") or toolEquipped.Name:find("활") then
 					numberDamage = 20
-					strTrait = "원거리 궁사"
+					strRealMaterial = "Wood"
 				else
 					numberDamage = 15
-					strTrait = "일반 도구"
+					strRealMaterial = "Plastic"
+				end
+			else
+				if not strRealMaterial then
+					if toolEquipped.Name:find("Sword") or toolEquipped.Name:find("검") then
+						strRealMaterial = "Metal"
+					elseif toolEquipped.Name:find("Bow") or toolEquipped.Name:find("활") then
+						strRealMaterial = "Wood"
+					else
+						strRealMaterial = "Rock"
+					end
 				end
 			end
 
-			labelWeaponStats.Text = string.format("데미지: %d | 특성: %s", numberDamage, strTrait)
+			labelWeaponStats.Text = string.format("데미지: %d | 재질: %s", numberDamage, strRealMaterial)
 		else
 			labelWeaponName.Text = "장착: 주먹"
 			labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
