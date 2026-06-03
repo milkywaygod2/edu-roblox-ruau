@@ -109,13 +109,13 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			labelTitle.Parent = frameSpecSelect
 
 			local labelDesc = Instance.new("TextLabel")
-			labelDesc.Size = UDim2.new(1, 0, 0, 20)
+			labelDesc.Size = UDim2.new(1, 0, 0, 35)
 			labelDesc.Position = UDim2.fromOffset(0, 50)
 			labelDesc.BackgroundTransparency = 1
 			labelDesc.TextColor3 = Color3.fromRGB(180, 180, 200)
 			labelDesc.TextSize = 11
 			labelDesc.Font = Enum.Font.Gotham
-			labelDesc.Text = "처음 스폰 시 한 가지 특화를 선택하여 능력치를 20% 강화할 수 있습니다."
+			labelDesc.Text = "처음 스폰 시 한 가지 특화를 선택하여 능력치를 20% 강화할 수 있습니다.\n[키보드 1, 2, 3 키 입력으로도 선택 가능]"
 			labelDesc.Parent = frameSpecSelect
 
 			local frameButtons = Instance.new("Frame")
@@ -154,6 +154,25 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 					LayoutOrder = 3
 				}
 			}
+
+			local UserInputService = game:GetService("UserInputService")
+			local connectionInput
+
+			local function selectSpec(specName)
+				if connectionInput then
+					connectionInput:Disconnect()
+					connectionInput = nil
+				end
+				eventSpecializationSelect:FireServer(specName)
+				guiSpec:Destroy()
+			end
+
+			guiSpec.Destroying:Connect(function()
+				if connectionInput then
+					connectionInput:Disconnect()
+					connectionInput = nil
+				end
+			end)
 
 			for _, config in ipairs(tblButtonConfigs) do
 				local btn = Instance.new("TextButton")
@@ -198,10 +217,22 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 				textDesc.Parent = btn
 
 				btn.MouseButton1Click:Connect(function()
-					eventSpecializationSelect:FireServer(config.Name)
-					guiSpec:Destroy()
+					selectSpec(config.Name)
 				end)
 			end
+
+			connectionInput = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+				if gameProcessed then return end
+				if input.UserInputType == Enum.UserInputType.Keyboard then
+					if input.KeyCode == Enum.KeyCode.One or input.KeyCode == Enum.KeyCode.KeypadOne then
+						selectSpec("Strength")
+					elseif input.KeyCode == Enum.KeyCode.Two or input.KeyCode == Enum.KeyCode.KeypadTwo then
+						selectSpec("Agility")
+					elseif input.KeyCode == Enum.KeyCode.Three or input.KeyCode == Enum.KeyCode.KeypadThree then
+						selectSpec("Constitution")
+					end
+				end
+			end)
 		end)
 	end
 

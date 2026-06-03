@@ -49,31 +49,43 @@ function Appearance.findRockLookTemplate(strLook)
 		return instanceExisting
 	end
 
-	-- 2. 서버 환경일 경우, 입력값이 숫자 ID라면 InsertService로 에셋을 다운로드 시도
+	-- 2. 서버 환경일 경우, 입력값이 숫자 ID라면 InsertService로 비동기 다운로드 시도
 	local assetId = tonumber(strLook)
 	local RunService = game:GetService("RunService")
 	if assetId and RunService:IsServer() then
-		local InsertService = game:GetService("InsertService")
-		local success, loadedModel = pcall(function()
-			return InsertService:LoadAsset(assetId)
-		end)
+		local tblDownloadingAssets = _G.DownloadingAssets or {}
+		_G.DownloadingAssets = tblDownloadingAssets
 
-		if success and loadedModel then
-			-- InsertService:LoadAsset은 단일 자식을 포함한 Model wrapper를 반환하므로 실물 에셋을 추출
-			local realAsset = loadedModel:GetChildren()[1]
-			if realAsset then
-				realAsset.Name = strLook
-				realAsset.Parent = fldRockLooks
-				loadedModel:Destroy()
-				return realAsset
-			else
-				loadedModel.Name = strLook
-				loadedModel.Parent = fldRockLooks
-				return loadedModel
-			end
-		else
-			warn("[Appearance] 에셋 ID '" .. strLook .. "' 동적 다운로드 실패: " .. tostring(loadedModel))
+		-- 이미 다운로드 진행 중인 에셋이라면 중복 요청 방지
+		if tblDownloadingAssets[strLook] then
+			return nil
 		end
+
+		tblDownloadingAssets[strLook] = true
+
+		task.spawn(function()
+			local InsertService = game:GetService("InsertService")
+			local success, loadedModel = pcall(function()
+				return InsertService:LoadAsset(assetId)
+			end)
+
+			if success and loadedModel then
+				-- InsertService:LoadAsset은 단일 자식을 포함한 Model wrapper를 반환하므로 실물 에셋을 추출
+				local realAsset = loadedModel:GetChildren()[1]
+				if realAsset then
+					realAsset.Name = strLook
+					realAsset.Parent = fldRockLooks
+					loadedModel:Destroy()
+				else
+					loadedModel.Name = strLook
+					loadedModel.Parent = fldRockLooks
+				end
+			else
+				warn("[Appearance] 에셋 ID '" .. strLook .. "' 동적 다운로드 실패: " .. tostring(loadedModel))
+			end
+
+			tblDownloadingAssets[strLook] = nil
+		end)
 	end
 
 	return nil
