@@ -428,13 +428,34 @@ function FieldItem.installFieldToolPickupInArea(fldItemSpawnArea, strToolName, s
 			if not backpackPlayer or toolPickup.Parent ~= fldItemSpawnArea then return end
 			if toolPickup:GetAttribute(eAttrKey.BLOCK_IS_PROJECTILE) == true then return end
 
+			-- [소지 제한 검사] 배낭(Backpack)과 캐릭터(쥐고 있는 상태)의 총 도구 개수가 2개 이상이면 더 주울 수 없습니다.
+			local intToolCount = 0
+			for _, instanceItem in ipairs(backpackPlayer:GetChildren()) do
+				if instanceItem:IsA(ePhysical.TOOL) then
+					intToolCount += 1
+				end
+			end
+			local modelCharacter = player.Character
+			if modelCharacter then
+				for _, instanceItem in ipairs(modelCharacter:GetChildren()) do
+					if instanceItem:IsA(ePhysical.TOOL) then
+						intToolCount += 1
+					end
+				end
+			end
+
+			if intToolCount >= 2 then
+				return -- 획득 거부
+			end
+
 			FieldItem.applyFieldToolCarriedState(toolPickup, partHandle)
 			toolPickup.Name = strDisplayName
 			toolPickup.Parent = backpackPlayer
-			local modelCharacter = player.Character
-			local humanoidPlayer = modelCharacter and modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
-			if humanoidPlayer then
-				humanoidPlayer:EquipTool(toolPickup)
+			if modelCharacter then
+				local humanoidPlayer = modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
+				if humanoidPlayer then
+					humanoidPlayer:EquipTool(toolPickup)
+				end
 			end
 		end
 
