@@ -163,11 +163,16 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 					connectionInput:Disconnect()
 					connectionInput = nil
 				end
+				-- 클라이언트 측 속성을 선제적으로 적용하여 서버 복제(Replication) 지연 동안 리셋 덮어쓰기 현상을 예방합니다.
+				playerLocal:SetAttribute("Specialization", specName)
+
 				eventSpecializationSelect:FireServer(specName)
 				guiSpec:Destroy()
 
-				-- 특화 선택이 끝나면 비로소 조준 및 카메라 팔로우 시스템을 활성화합니다.
-				set_default_aim_control_enabled(true)
+				-- 프레임 통제 주기와의 꼬임 현상을 확실히 해결하기 위해 task.defer로 조준 제어 시스템을 안전하게 활성화합니다.
+				task.defer(function()
+					set_default_aim_control_enabled(true)
+				end)
 			end
 
 			guiSpec.Destroying:Connect(function()
