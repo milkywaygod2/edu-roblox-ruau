@@ -191,9 +191,38 @@ end
 function Appearance.applyRockLook(partTarget, strLookShape)
 	Appearance.clearRockLook(partTarget)
 
+	-- partTarget 자체의 표면을 Smooth로 강제하여 자동 웰딩 현상을 원천 방어합니다.
+	partTarget.TopSurface = Enum.SurfaceType.Smooth
+	partTarget.BottomSurface = Enum.SurfaceType.Smooth
+	partTarget.LeftSurface = Enum.SurfaceType.Smooth
+	partTarget.RightSurface = Enum.SurfaceType.Smooth
+	partTarget.FrontSurface = Enum.SurfaceType.Smooth
+	partTarget.BackSurface = Enum.SurfaceType.Smooth
+
 	local instanceTemplate = Appearance.findRockLookTemplate(strLookShape)
 	if not instanceTemplate then
 		partTarget.Transparency = 0
+		
+		-- [비동기 다운로드 완료 후 실시간 겉모습 변환 처리]
+		-- 처음 스폰 및 집었을 때 구체로 머물러있다가 다운로드가 완료되는 순간 즉시 상자(에셋) 모양으로 자동 갱신합니다.
+		if type(strLookShape) == "number" then
+			strLookShape = tostring(strLookShape)
+		end
+		if type(strLookShape) == "string" and strLookShape ~= "" then
+			task.spawn(function()
+				local svcReplicatedStorage = game:GetService(CoreEnums.eEngineServiceSingleton.REPLICATED_STORAGE)
+				local eLogical = CoreEnums.eEngineLogicalType
+				local fldOutpostAssets = svcReplicatedStorage:WaitForChild(eLogical.OUTPOST_ASSETS, 5)
+				local fldRockLooks = fldOutpostAssets and fldOutpostAssets:WaitForChild(eLogical.ROCK_LOOKS, 5)
+				if fldRockLooks then
+					local template = fldRockLooks:WaitForChild(strLookShape, 8) -- 최대 8초 대기
+					-- partTarget이 유효하고 아직 월드 상에 살아있는 경우에만 외형을 실시간으로 갱신
+					if template and partTarget and partTarget.Parent then
+						Appearance.applyRockLook(partTarget, strLookShape)
+					end
+				end
+			end)
+		end
 		return
 	end
 
@@ -202,9 +231,18 @@ function Appearance.applyRockLook(partTarget, strLookShape)
 	EngineEnsure.removeLuaSourceDescendants(instanceLook)
 
 	-- 에셋 팩 모델 내에 묻어있던 구식 물리 조인트(Weld, Snap 등)로 인해 벽/지형에 충돌 시 엉뚱하게 달라붙어 멈춰 서는 버그를 완전히 차단합니다.
+	-- 또한 모든 파트의 표면을 Smooth로 변경하여 Roblox 물리 엔진이 닿았을 때 자동으로 조인트를 맺는 현상을 막아줍니다.
 	for _, descendant in ipairs(instanceLook:GetDescendants()) do
 		if descendant:IsA("JointInstance") or descendant:IsA("WeldConstraint") then
 			descendant:Destroy()
+		end
+		if descendant:IsA("BasePart") then
+			descendant.TopSurface = Enum.SurfaceType.Smooth
+			descendant.BottomSurface = Enum.SurfaceType.Smooth
+			descendant.LeftSurface = Enum.SurfaceType.Smooth
+			descendant.RightSurface = Enum.SurfaceType.Smooth
+			descendant.FrontSurface = Enum.SurfaceType.Smooth
+			descendant.BackSurface = Enum.SurfaceType.Smooth
 		end
 	end
 

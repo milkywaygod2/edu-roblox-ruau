@@ -239,8 +239,15 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	if strLookShape == "" then
 		strLookShape = StudentConfig.readConfigString(tblAppearanceConfig, "Look", "")
 	end
-	if strLookShape ~= "" and not Appearance.findRockLookTemplate(strLookShape) then
-		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "LookShape '" .. strLookShape .. "'를 ReplicatedStorage/OutpostAssets/RockLooks에서 찾지 못해 기본 모양을 사용합니다.")
+	if strLookShape ~= "" then
+		local assetId = tonumber(strLookShape)
+		local RunService = game:GetService("RunService")
+		local boolIsServerAsset = assetId and RunService:IsServer()
+
+		local template = Appearance.findRockLookTemplate(strLookShape)
+		if not template and not boolIsServerAsset then
+			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "LookShape '" .. strLookShape .. "'를 ReplicatedStorage/OutpostAssets/RockLooks에서 찾지 못해 기본 모양을 사용합니다.")
+		end
 	end
 	local valueSpawnCount = tblConfig and tblConfig.SpawnCount
 	if type(valueSpawnCount) == "number" and (valueSpawnCount < 1 or valueSpawnCount > 10) then
@@ -497,9 +504,32 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		local boolLanded = false
 		local connectionTouched
 
-		local function finish_throw_after_delay(numberDelay)
+		local function finish_throw_after_delay(numberDelay, partHit)
 			if boolLanded then return end
 			boolLanded = true
+
+			-- [회수 시 충돌 조인트 완전 제거]
+			-- 회수 직전에 충돌했던 파트(partHit)와 partHandle 사이의 모든 물리 조인트를 제거하여 캐릭터에 달라붙는 현상을 차단합니다.
+			if partHit then
+				local function destroyJointsBetween(partA, partB)
+					if not partA or not partB then return end
+					for _, item in ipairs(partA:GetChildren()) do
+						if item:IsA("JointInstance") or item:IsA("WeldConstraint") then
+							if (item.Part0 == partA and item.Part1 == partB) or (item.Part0 == partB and item.Part1 == partA) then
+								item:Destroy()
+							end
+						end
+					end
+					for _, item in ipairs(partB:GetChildren()) do
+						if item:IsA("JointInstance") or item:IsA("WeldConstraint") then
+							if (item.Part0 == partA and item.Part1 == partB) or (item.Part0 == partB and item.Part1 == partA) then
+								item:Destroy()
+							end
+						end
+					end
+				end
+				destroyJointsBetween(partHandle, partHit)
+			end
 
 			task.delay(numberDelay, function()
 				if connectionTouched then
@@ -576,11 +606,11 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 				end
 
 				if not boolLanded then
-					finish_throw_after_delay(0.4)
+					finish_throw_after_delay(0, partHit)
 				end
 			elseif not humanoidTarget and not boolLanded then
 				-- 지형지물에 일반 충돌 시 비행 해제
-				finish_throw_after_delay(0.6)
+				finish_throw_after_delay(0.6, partHit)
 			end
 		end)
 
@@ -588,14 +618,14 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 			while not boolLanded and toolThrowingStone.Parent do
 				task.wait(0.25)
 				if not FieldItem.isFieldToolWorldPositionSafe(fldItemSpawnArea, partHandle.Position) then
-					finish_throw_after_delay(0)
+					finish_throw_after_delay(0, nil)
 					return
 				end
 			end
 		end)
 
 		task.delay(numberChargedLifetime, function()
-			finish_throw_after_delay(0)
+			finish_throw_after_delay(0, nil)
 		end)
 	end
 
