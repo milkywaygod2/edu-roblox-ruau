@@ -157,37 +157,17 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 			local UserInputService = game:GetService("UserInputService")
 			local connectionInput
-			local camera = workspace.CurrentCamera or workspace:WaitForChild("Camera", 5)
-			local originalCameraType = camera and camera.CameraType or Enum.CameraType.Custom
-
-			-- 4중 방어: 카메라 타입을 Scriptable로 전환하고 Modal 및 커서를 켜서 마우스 및 시선 고정을 강제 차단합니다.
-			if camera then
-				camera.CameraType = Enum.CameraType.Scriptable
-			end
-			UserInputService.ModalEnabled = true
-			UserInputService.MouseIconEnabled = true
-
-			-- 마우스 조작 도중 카메라 스크립트가 MouseBehavior를 강제 잠금하고 커서를 숨기는 것을 방어하는 50ms 주기 루프
-			task.spawn(function()
-				while guiSpec and guiSpec.Parent do
-					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-					UserInputService.MouseIconEnabled = true
-					task.wait(0.05)
-				end
-			end)
 
 			local function selectSpec(specName)
 				if connectionInput then
 					connectionInput:Disconnect()
 					connectionInput = nil
 				end
-				if camera then
-					camera.CameraType = originalCameraType
-				end
-				UserInputService.ModalEnabled = false
-				UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 				eventSpecializationSelect:FireServer(specName)
 				guiSpec:Destroy()
+
+				-- 특화 선택이 끝나면 비로소 조준 및 카메라 팔로우 시스템을 활성화합니다.
+				set_default_aim_control_enabled(true)
 			end
 
 			guiSpec.Destroying:Connect(function()
@@ -195,7 +175,6 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 					connectionInput:Disconnect()
 					connectionInput = nil
 				end
-				UserInputService.ModalEnabled = false
 			end)
 
 			for _, config in ipairs(tblButtonConfigs) do
@@ -733,7 +712,13 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 		if playerLocal.Character ~= modelCharacter then return end
 
-		set_default_aim_control_enabled(true)
+		-- 특화 선택이 이미 되어 있다면 즉시 조준 컨트롤을 활성화하고,
+		-- 그렇지 않은 최초 진입 상태라면 UI를 통해 특화를 고를 때까지 비활성화 상태(기본 마우스/카메라)를 유지합니다.
+		if playerLocal:GetAttribute("Specialization") then
+			set_default_aim_control_enabled(true)
+		else
+			set_default_aim_control_enabled(false)
+		end
 	end
 
 	local function get_charge()
