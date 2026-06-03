@@ -839,15 +839,49 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end)
 	end
 
+	local function connect_pickup_sensor(toolPickup)
+		if not toolPickup:IsA("Tool") then return end
+
+		local function check_and_notify_weight(player)
+			if player ~= playerLocal then return end
+
+			local mass = get_stone_mass(toolPickup)
+			local spec = playerLocal:GetAttribute("Specialization") or "None"
+			local maxWeight = (spec == "Strength") and 180 or 150
+
+			if mass > 180 then
+				show_warning_notification(string.format("너무 무거워서 들 수 없습니다!\n무게: %.1fkg (절대 한계: 180kg)", mass))
+			elseif mass > maxWeight then
+				show_warning_notification(string.format("힘 특화가 필요하여 들 수 없습니다!\n무게: %.1fkg (현재 한계: %dkg)", mass, maxWeight))
+			end
+		end
+
+		task.spawn(function()
+			local partHandle = toolPickup:WaitForChild("Handle", 5)
+			if partHandle then
+				local clickDetector = partHandle:WaitForChild("ClickDetector", 3)
+				if clickDetector then
+					clickDetector.MouseClick:Connect(check_and_notify_weight)
+				end
+				local proximityPrompt = partHandle:WaitForChild("ProximityPrompt", 3)
+				if proximityPrompt then
+					proximityPrompt.Triggered:Connect(check_and_notify_weight)
+				end
+			end
+		end)
+	end
+
 	local function watch_container(instanceContainer)
 		for _, instanceChild in ipairs(instanceContainer:GetChildren()) do
 			connect_throwing_stone(instanceChild)
 			connect_magic_staff(instanceChild)
+			connect_pickup_sensor(instanceChild)
 		end
 
 		instanceContainer.ChildAdded:Connect(function(instanceChild)
 			connect_throwing_stone(instanceChild)
 			connect_magic_staff(instanceChild)
+			connect_pickup_sensor(instanceChild)
 		end)
 	end
 
