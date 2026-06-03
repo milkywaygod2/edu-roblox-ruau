@@ -1,15 +1,15 @@
 -- [Module] SiegeEngine
-local module = {}
+local SiegeEngine = {}
 
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-function module.installSiegeEngineSystem(svcWorkspace, tblConfig) -- [의미/의도] 중장비 서버 시스템 설치 함수 정의 ➔ 발사 버튼/무거운 탄환/쿨타임 규칙을 공통 서버 코드가 책임지게 하기 위함
-	local eService = EngineNames.eEngineServiceSingleton
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function SiegeEngine.installSiegeEngineSystem(svcWorkspace, tblConfig) -- [의미/의도] 중장비 서버 시스템 설치 함수 정의 ➔ 발사 버튼/무거운 탄환/쿨타임 규칙을 공통 서버 코드가 책임지게 하기 위함
+	local eService = CoreEnums.eEngineServiceSingleton
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local svcDebris = game:GetService(eService.DEBRIS)
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local fldSiegeEngine = tblOutpostWorld.fldSiegeEngine
@@ -55,4 +55,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return SiegeEngine

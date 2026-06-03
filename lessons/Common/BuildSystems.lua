@@ -1,14 +1,14 @@
 -- [Module] BuildSystems
-local module = {}
+local BuildSystems = {}
 
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-function module.installStudentCoverDesign(svcWorkspace, tblConfig) -- [의미/의도] 학생 엄폐물 디자인 적용 함수 정의 ➔ 학생은 위치/재질/색 같은 에셋 설정만 바꾸고 생성 방식은 공통 코드가 관리하기 위함
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function BuildSystems.installStudentCoverDesign(svcWorkspace, tblConfig) -- [의미/의도] 학생 엄폐물 디자인 적용 함수 정의 ➔ 학생은 위치/재질/색 같은 에셋 설정만 바꾸고 생성 방식은 공통 코드가 관리하기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local fldBattlefield = tblOutpostWorld.fldBattlefield
 	local tblCovers = tblConfig and tblConfig.Covers or {}
@@ -44,9 +44,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installResourceWallSystem(svcWorkspace, svcPlayers, tblConfig) -- [의미/의도] 자원 방벽 서버 시스템 설치 함수 정의 ➔ 자원 지급/차감/방벽 생성 규칙을 학생 코드 밖의 공통 서버 코드로 관리하기 위함
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblConfig) -- [의미/의도] 자원 방벽 서버 시스템 설치 함수 정의 ➔ 자원 지급/차감/방벽 생성 규칙을 학생 코드 밖의 공통 서버 코드로 관리하기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local fldBuildArea = tblOutpostWorld.fldBuildArea
 	local partBuildButton = fldBuildArea:WaitForChild(eLogical.BUILD_BUTTON)
@@ -108,4 +108,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return BuildSystems

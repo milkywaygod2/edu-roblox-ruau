@@ -36,14 +36,14 @@
 lessons/
   Common.lua                ➔   Common.luau
   Common/
-    EngineNames.lua         ➔   EngineNames.luau
+    CoreEnums.lua         ➔   CoreEnums.luau
     EngineEnsure.lua        ➔   EngineEnsure.luau
     StudentConfig.lua       ➔   StudentConfig.luau
     ... (하위 15개 모듈)
   teacher_setup.server.lua  ➔   teacher_setup.server.luau
 ```
 
-*   **호환성 보장**: 하위 모듈 내에서 타 모듈을 호출하는 `require(script.Parent:WaitForChild("EngineNames"))` 등은 스튜디오 인스턴스 이름 기준(확장자 미포함)이므로, 파일 확장자만 `.luau`로 일제히 수정해도 내부 의존성 링크는 전혀 깨지지 않습니다.
+*   **호환성 보장**: 하위 모듈 내에서 타 모듈을 호출하는 `require(script.Parent:WaitForChild("CoreEnums"))` 등은 스튜디오 인스턴스 이름 기준(확장자 미포함)이므로, 파일 확장자만 `.luau`로 일제히 수정해도 내부 의존성 링크는 전혀 깨지지 않습니다.
 
 ---
 

@@ -1,11 +1,11 @@
 -- [Module] StudentConfig
-local module = {}
+local StudentConfig = {}
 
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
 
 -- --------------------------------------------------------------------------------
-function module.readConfigNumber(tblConfig, strKey, numberDefault, numberMin, numberMax) -- [의미/의도] 학생 설정 숫자 읽기 함수 정의 ➔ 학생이 바꾼 수치를 서버 기준 범위 안으로 제한하기 위함
+function StudentConfig.readConfigNumber(tblConfig, strKey, numberDefault, numberMin, numberMax) -- [의미/의도] 학생 설정 숫자 읽기 함수 정의 ➔ 학생이 바꾼 수치를 서버 기준 범위 안으로 제한하기 위함
 	local numberValue = tblConfig and tblConfig[strKey] -- [의미/의도] 설정 테이블에서 값 조회 ➔ 없는 값은 기본값으로 처리하기 위함
 	if type(numberValue) ~= "number" then -- [의미/의도] 숫자가 아니면 ➔ 잘못된 설정으로 서버 로직이 깨지지 않게 하기 위함
 		return numberDefault
@@ -26,15 +26,15 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigInteger(tblConfig, strKey, intDefault, intMin, intMax) -- [의미/의도] 학생 설정 정수 읽기 함수 정의 ➔ 반복 횟수와 개수 설정을 안전한 정수로 제한하기 위함
-	return math.floor(module.readConfigNumber(tblConfig, strKey, intDefault, intMin, intMax)) -- [의미/의도] 숫자 설정을 정수로 보정 ➔ for 반복문에 안전하게 넣기 위함
+function StudentConfig.readConfigInteger(tblConfig, strKey, intDefault, intMin, intMax) -- [의미/의도] 학생 설정 정수 읽기 함수 정의 ➔ 반복 횟수와 개수 설정을 안전한 정수로 제한하기 위함
+	return math.floor(StudentConfig.readConfigNumber(tblConfig, strKey, intDefault, intMin, intMax)) -- [의미/의도] 숫자 설정을 정수로 보정 ➔ for 반복문에 안전하게 넣기 위함
 end
 
 
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigString(tblConfig, strKey, strDefault) -- [의미/의도] 학생 설정 문자열 읽기 함수 정의 ➔ 이름/색상 같은 문자열 설정을 기본값과 함께 다루기 위함
+function StudentConfig.readConfigString(tblConfig, strKey, strDefault) -- [의미/의도] 학생 설정 문자열 읽기 함수 정의 ➔ 이름/색상 같은 문자열 설정을 기본값과 함께 다루기 위함
 	local strValue = tblConfig and tblConfig[strKey] -- [의미/의도] 설정 테이블에서 문자열 조회 ➔ 없는 값은 기본값으로 대체하기 위함
 	if type(strValue) ~= "string" or strValue == "" then -- [의미/의도] 문자열이 아니거나 비어 있다면 ➔ 잘못된 설정으로 이름이 깨지는 것을 막기 위함
 		return strDefault
@@ -47,7 +47,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax) -- [의미/의도] 학생 설정 Vector3 읽기 함수 정의 ➔ 위치와 크기 설정을 안전하게 받기 위함
+function StudentConfig.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax) -- [의미/의도] 학생 설정 Vector3 읽기 함수 정의 ➔ 위치와 크기 설정을 안전하게 받기 위함
 	local vectorValue = tblConfig and tblConfig[strKey] -- [의미/의도] 설정 테이블에서 Vector3 조회 ➔ 없는 값은 기본값으로 대체하기 위함
 	if typeof(vectorValue) ~= "Vector3" then -- [의미/의도] Vector3가 아니라면 ➔ 잘못된 값으로 Part 위치/크기 설정이 실패하지 않게 하기 위함
 		vectorValue = vectorDefault
@@ -76,7 +76,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigEnumItem(tblConfig, strKey, enumDefault) -- [의미/의도] 학생 설정 EnumItem 읽기 함수 정의 ➔ Material/Shape 같은 엔진 enum 설정을 안전하게 받기 위함
+function StudentConfig.readConfigEnumItem(tblConfig, strKey, enumDefault) -- [의미/의도] 학생 설정 EnumItem 읽기 함수 정의 ➔ Material/Shape 같은 엔진 enum 설정을 안전하게 받기 위함
 	local enumValue = tblConfig and tblConfig[strKey] -- [의미/의도] 설정 테이블에서 EnumItem 조회 ➔ 없는 값은 기본값으로 대체하기 위함
 	if typeof(enumValue) ~= "EnumItem" then -- [의미/의도] EnumItem이 아니라면 ➔ 잘못된 설정으로 속성 대입이 실패하지 않게 하기 위함
 		return enumDefault
@@ -99,13 +99,13 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigBrickColor(tblConfig, strKey, strDefaultColor) -- [의미/의도] 학생 설정 BrickColor 읽기 함수 정의 ➔ BrickColor 값 또는 색상 이름을 안전하게 받기 위함
+function StudentConfig.readConfigBrickColor(tblConfig, strKey, strDefaultColor) -- [의미/의도] 학생 설정 BrickColor 읽기 함수 정의 ➔ BrickColor 값 또는 색상 이름을 안전하게 받기 위함
 	local valueColor = tblConfig and tblConfig[strKey]
 	if typeof(valueColor) == "BrickColor" then
 		return valueColor
 	end
 
-	local strColorName = module.readConfigString(tblConfig, strKey, strDefaultColor) -- [의미/의도] 색상 이름 읽기 ➔ 비어 있거나 잘못된 문자열을 기본값으로 대체하기 위함
+	local strColorName = StudentConfig.readConfigString(tblConfig, strKey, strDefaultColor) -- [의미/의도] 색상 이름 읽기 ➔ 비어 있거나 잘못된 문자열을 기본값으로 대체하기 위함
 	local boolSuccess, brickColor = pcall(function()
 		return BrickColor.new(strColorName)
 	end)
@@ -121,7 +121,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigColor3(tblConfig, strKey, colorDefault, tblValidationMessages, strSourceName)
+function StudentConfig.readConfigColor3(tblConfig, strKey, colorDefault, tblValidationMessages, strSourceName)
 	local valueColor = tblConfig and tblConfig[strKey]
 	if valueColor == nil then
 		return colorDefault
@@ -144,7 +144,7 @@ function module.readConfigColor3(tblConfig, strKey, colorDefault, tblValidationM
 		end
 	end
 
-	module.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Color3.fromRGB(...), BrickColor.new(...), 또는 색상 이름 문자열이어야 해서 기본색으로 보정했습니다.")
+	StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Color3.fromRGB(...), BrickColor.new(...), 또는 색상 이름 문자열이어야 해서 기본색으로 보정했습니다.")
 	return colorDefault
 end
 
@@ -152,7 +152,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.createBrickColorFromColor3(colorValue, strDefaultColor)
+function StudentConfig.createBrickColorFromColor3(colorValue, strDefaultColor)
 	local boolSuccess, brickColor = pcall(function()
 		return BrickColor.new(colorValue)
 	end)
@@ -167,7 +167,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.clampNumber(numberValue, numberMin, numberMax)
+function StudentConfig.clampNumber(numberValue, numberMin, numberMax)
 	return math.min(math.max(numberValue, numberMin), numberMax)
 end
 
@@ -175,7 +175,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.addValidationMessage(tblValidationMessages, strSourceName, strMessage)
+function StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strMessage)
 	if not tblValidationMessages then
 		return
 	end
@@ -188,14 +188,14 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readConfigTable(tblConfig, strKey, tblDefault, tblValidationMessages, strSourceName)
+function StudentConfig.readConfigTable(tblConfig, strKey, tblDefault, tblValidationMessages, strSourceName)
 	local valueTable = tblConfig and tblConfig[strKey]
 	if valueTable == nil then
 		return tblDefault
 	end
 
 	if type(valueTable) ~= "table" then
-		module.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 table이어야 해서 기본 설정을 사용합니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 table이어야 해서 기본 설정을 사용합니다.")
 		return tblDefault
 	end
 
@@ -206,7 +206,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.mergeConfigTables(tblBase, tblOverride)
+function StudentConfig.mergeConfigTables(tblBase, tblOverride)
 	local tblMerged = {}
 	if type(tblBase) == "table" then
 		for keyConfig, valueConfig in pairs(tblBase) do
@@ -227,7 +227,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.isVector3OutsideRange(vectorValue, vectorMin, vectorMax)
+function StudentConfig.isVector3OutsideRange(vectorValue, vectorMin, vectorMax)
 	return vectorValue.X < vectorMin.X or vectorValue.Y < vectorMin.Y or vectorValue.Z < vectorMin.Z
 		or vectorValue.X > vectorMax.X or vectorValue.Y > vectorMax.Y or vectorValue.Z > vectorMax.Z
 end
@@ -239,18 +239,18 @@ end
 function common.readThrowingStoneMaterial(tblConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
 	local valueMaterial = tblConfig and tblConfig[strKey]
 	if valueMaterial ~= nil and typeof(valueMaterial) ~= "EnumItem" then
-		module.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Enum.Material 값을 써야 해서 기본 Slate로 보정했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Enum.Material 값을 써야 해서 기본 Slate로 보정했습니다.")
 		return enumDefault
 	end
 
-	local enumMaterial = module.readConfigEnumItem(tblConfig, strKey, enumDefault)
+	local enumMaterial = StudentConfig.readConfigEnumItem(tblConfig, strKey, enumDefault)
 	if valueMaterial ~= nil and enumMaterial == enumDefault and valueMaterial ~= enumDefault then
-		module.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Material 종류가 아니라 기본 Slate로 보정했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Material 종류가 아니라 기본 Slate로 보정했습니다.")
 		return enumDefault
 	end
 
 	if ThrowingStone.isThrowingStoneMaterialBlocked(enumMaterial) then
-		module.addValidationMessage(tblValidationMessages, strSourceName, tostring(enumMaterial) .. "는 돌 Part에 쓰지 않도록 막아서 기본 Slate로 보정했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, tostring(enumMaterial) .. "는 돌 Part에 쓰지 않도록 막아서 기본 Slate로 보정했습니다.")
 		return enumDefault
 	end
 
@@ -261,7 +261,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.formatStudentRockValidationText(tblValidationMessages)
+function StudentConfig.formatStudentRockValidationText(tblValidationMessages)
 	if #tblValidationMessages == 0 then
 		return "돌멩이 설정 검사 완료\n오류나 보정 항목이 없습니다."
 	end
@@ -283,9 +283,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function StudentConfig.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local partBoard = EngineEnsure.ensureStaticPart(eLogical.STUDENT_ROCK_VALIDATION_BOARD, tblOutpostWorld.fldBattlefield, {
 		Size = Vector3.new(36, 12, 1),
@@ -310,7 +310,7 @@ function module.showStudentRockValidationBoard(svcWorkspace, tblValidationMessag
 		TextSize = 24,
 		Font = Enum.Font.Gotham,
 	})
-	labelBoard.Text = module.formatStudentRockValidationText(tblValidationMessages)
+	labelBoard.Text = StudentConfig.formatStudentRockValidationText(tblValidationMessages)
 
 	for _, strMessage in ipairs(tblValidationMessages) do
 		warn("학생 돌멩이 설정 검사: " .. strMessage)
@@ -322,7 +322,7 @@ end
 
 
 
-module.tblEquipmentSizeRule = {
+StudentConfig.tblEquipmentSizeRule = {
 	ThrowingStone = {
 		Default = Vector3.new(1.2, 1.2, 1.2),
 		Min = Vector3.new(0.5, 0.5, 0.5),
@@ -335,29 +335,29 @@ module.tblEquipmentSizeRule = {
 	},
 }
 
-module.tblThrowingStoneMaterialBlockList = {
+StudentConfig.tblThrowingStoneMaterialBlockList = {
 	Enum.Material.Air,
 	Enum.Material.Water,
 	Enum.Material.ForceField,
 }
 
-function module.readEquipmentSize(tblConfig, strKey, strEquipmentRuleName, tblValidationMessages, strSourceName)
-	local tblSizeRule = module.tblEquipmentSizeRule[strEquipmentRuleName]
+function StudentConfig.readEquipmentSize(tblConfig, strKey, strEquipmentRuleName, tblValidationMessages, strSourceName)
+	local tblSizeRule = StudentConfig.tblEquipmentSizeRule[strEquipmentRuleName]
 	local vectorDefault = tblSizeRule.Default
 	local vectorMin = tblSizeRule.Min
 	local vectorMax = tblSizeRule.Max
 	local valueSize = tblConfig and tblConfig[strKey]
 
 	if valueSize ~= nil and typeof(valueSize) ~= "Vector3" then
-		module.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Vector3.new(...) 값이어야 해서 기본 크기로 보정했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Vector3.new(...) 값이어야 해서 기본 크기로 보정했습니다.")
 		return vectorDefault
 	end
 
-	if typeof(valueSize) == "Vector3" and module.isVector3OutsideRange(valueSize, vectorMin, vectorMax) then
-		module.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 장비 기준 범위를 벗어나 " .. tostring(vectorMin) .. " ~ " .. tostring(vectorMax) .. " 안으로 보정했습니다.")
+	if typeof(valueSize) == "Vector3" and StudentConfig.isVector3OutsideRange(valueSize, vectorMin, vectorMax) then
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 장비 기준 범위를 벗어나 " .. tostring(vectorMin) .. " ~ " .. tostring(vectorMax) .. " 안으로 보정했습니다.")
 	end
 
-	return module.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax)
+	return StudentConfig.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax)
 end
 
-return module
+return StudentConfig

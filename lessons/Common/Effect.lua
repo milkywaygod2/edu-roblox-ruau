@@ -1,34 +1,30 @@
 -- [Module] Effect
-local module = {}
+local Effect = {}
 
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-module.eParticleTexture = {
-	EXPLOSION01_CORE_MAIN = "rbxasset://textures/particles/explosion01_core_main.dds",
-	EXPLOSION01_IMPLOSION_MAIN = "rbxasset://textures/particles/explosion01_implosion_main.dds",
-	EXPLOSION01_SHOCKWAVE_MAIN = "rbxasset://textures/particles/explosion01_shockwave_main.dds",
-	EXPLOSION01_SMOKE_MAIN = "rbxasset://textures/particles/explosion01_smoke_main.dds",
-	FIRE_MAIN = "rbxasset://textures/particles/fire_main.dds",
-	FIRE_SPARKS_MAIN = "rbxasset://textures/particles/fire_sparks_main.dds",
-	FORCEFIELD_GLOW_MAIN = "rbxasset://textures/particles/forcefield_glow_main.dds",
-	FORCEFIELD_VORTEX_MAIN = "rbxasset://textures/particles/forcefield_vortex_main.dds",
-	SMOKE_MAIN = "rbxasset://textures/particles/smoke_main.dds",
-	SPARKLES_MAIN = "rbxasset://textures/particles/sparkles_main.dds",
-	SQUARE_PARTICLE = "rbxasset://textures/particles/SquareParticle.png",
-
-	SPARKLES = "rbxasset://textures/particles/sparkles_main.dds",
-	FIRE = "rbxasset://textures/particles/fire_main.dds",
-	SMOKE = "rbxasset://textures/particles/smoke_main.dds",
+Effect.eParticleTexture = {
+	EXPLOSION_CORE      = "rbxasset://textures/particles/explosion01_core_main.dds",
+	EXPLOSION_IMPLOSION = "rbxasset://textures/particles/explosion01_implosion_main.dds",
+	EXPLOSION_SHOCKWAVE = "rbxasset://textures/particles/explosion01_shockwave_main.dds",
+	EXPLOSION_SMOKE     = "rbxasset://textures/particles/explosion01_smoke_main.dds",
+	FIRE                = "rbxasset://textures/particles/fire_main.dds",
+	FIRE_SPARKS         = "rbxasset://textures/particles/fire_sparks_main.dds",
+	FORCEFIELD_GLOW     = "rbxasset://textures/particles/forcefield_glow_main.dds",
+	FORCEFIELD_VORTEX   = "rbxasset://textures/particles/forcefield_vortex_main.dds",
+	SMOKE               = "rbxasset://textures/particles/smoke_main.dds",
+	SPARKLES            = "rbxasset://textures/particles/sparkles_main.dds",
+	SQUARE_PARTICLE     = "rbxasset://textures/particles/SquareParticle.png", -- [의미/의도] Roblox 내장 파티클 텍스처 중 SquareParticle만 유일하게 PNG 확장자를 가집니다.
 }
 
 
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectNumber(tblEffectConfig, strKey, numberDefault, numberMin, numberMax, tblValidationMessages, strSourceName)
+function Effect.readEffectNumber(tblEffectConfig, strKey, numberDefault, numberMin, numberMax, tblValidationMessages, strSourceName)
 	local numberRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if numberRaw ~= nil and type(numberRaw) ~= "number" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 숫자여야 해서 기본값으로 보정했습니다.")
@@ -46,7 +42,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectColor(tblEffectConfig, strKey, colorDefault, tblValidationMessages, strSourceName)
+function Effect.readEffectColor(tblEffectConfig, strKey, colorDefault, tblValidationMessages, strSourceName)
 	local valueColor = tblEffectConfig and tblEffectConfig[strKey]
 	if valueColor == nil then
 		return colorDefault
@@ -68,8 +64,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.isAllowedParticleTexture(strTexture)
-	for _, strAllowedTexture in pairs(module.eParticleTexture) do
+function Effect.isAllowedParticleTexture(strTexture)
+	for _, strAllowedTexture in pairs(Effect.eParticleTexture) do
 		if strTexture == strAllowedTexture then
 			return true
 		end
@@ -82,13 +78,13 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectTexture(tblEffectConfig, strKey, strDefaultTexture, tblValidationMessages, strSourceName)
+function Effect.readEffectTexture(tblEffectConfig, strKey, strDefaultTexture, tblValidationMessages, strSourceName)
 	local strTexture = StudentConfig.readConfigString(tblEffectConfig, strKey, strDefaultTexture)
-	if module.isAllowedParticleTexture(strTexture) then
+	if Effect.isAllowedParticleTexture(strTexture) then
 		return strTexture
 	end
 
-	StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 module.eParticleTexture 값만 사용할 수 있어 기본 Sparkles로 보정했습니다.")
+	StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 Effect.eParticleTexture 값만 사용할 수 있어 기본 Sparkles로 보정했습니다.")
 	return strDefaultTexture
 end
 
@@ -96,7 +92,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectBoolean(tblEffectConfig, strKey, boolDefault, tblValidationMessages, strSourceName)
+function Effect.readEffectBoolean(tblEffectConfig, strKey, boolDefault, tblValidationMessages, strSourceName)
 	local boolRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if boolRaw == nil then
 		return boolDefault
@@ -114,7 +110,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectEnumItem(tblEffectConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
+function Effect.readEffectEnumItem(tblEffectConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
 	local enumRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if enumRaw == nil then
 		return enumDefault
@@ -132,7 +128,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectVector2(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax, tblValidationMessages, strSourceName)
+function Effect.readEffectVector2(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax, tblValidationMessages, strSourceName)
 	local vectorRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if vectorRaw == nil then
 		return vectorDefault
@@ -160,7 +156,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectVector3(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax, tblValidationMessages, strSourceName)
+function Effect.readEffectVector3(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax, tblValidationMessages, strSourceName)
 	local vectorRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if vectorRaw ~= nil and typeof(vectorRaw) ~= "Vector3" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 Vector3.new(...) 값이어야 해서 기본값으로 보정했습니다.")
@@ -174,7 +170,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.createOrderedNumberRange(numberMin, numberMax, strLabel, tblValidationMessages, strSourceName)
+function Effect.createOrderedNumberRange(numberMin, numberMax, strLabel, tblValidationMessages, strSourceName)
 	if numberMin <= numberMax then
 		return NumberRange.new(numberMin, numberMax)
 	end
@@ -187,7 +183,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectNumberRange(tblEffectConfig, strKey, strMinKey, strMaxKey, numberDefaultMin, numberDefaultMax, numberMin, numberMax, tblValidationMessages, strSourceName)
+function Effect.readEffectNumberRange(tblEffectConfig, strKey, strMinKey, strMaxKey, numberDefaultMin, numberDefaultMax, numberMin, numberMax, tblValidationMessages, strSourceName)
 	local rangeRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if rangeRaw ~= nil then
 		if typeof(rangeRaw) ~= "NumberRange" then
@@ -199,7 +195,7 @@ function module.readEffectNumberRange(tblEffectConfig, strKey, strMinKey, strMax
 			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 " .. numberMin .. "~" .. numberMax .. " 범위로 보정했습니다.")
 		end
 
-		return module.createOrderedNumberRange(
+		return Effect.createOrderedNumberRange(
 			StudentConfig.clampNumber(rangeRaw.Min, numberMin, numberMax),
 			StudentConfig.clampNumber(rangeRaw.Max, numberMin, numberMax),
 			strKey,
@@ -208,16 +204,16 @@ function module.readEffectNumberRange(tblEffectConfig, strKey, strMinKey, strMax
 		)
 	end
 
-	local numberRangeMin = module.readEffectNumber(tblEffectConfig, strMinKey, numberDefaultMin, numberMin, numberMax, tblValidationMessages, strSourceName)
-	local numberRangeMax = module.readEffectNumber(tblEffectConfig, strMaxKey, numberDefaultMax, numberMin, numberMax, tblValidationMessages, strSourceName)
-	return module.createOrderedNumberRange(numberRangeMin, numberRangeMax, strKey, tblValidationMessages, strSourceName)
+	local numberRangeMin = Effect.readEffectNumber(tblEffectConfig, strMinKey, numberDefaultMin, numberMin, numberMax, tblValidationMessages, strSourceName)
+	local numberRangeMax = Effect.readEffectNumber(tblEffectConfig, strMaxKey, numberDefaultMax, numberMin, numberMax, tblValidationMessages, strSourceName)
+	return Effect.createOrderedNumberRange(numberRangeMin, numberRangeMax, strKey, tblValidationMessages, strSourceName)
 end
 
 
 -- --------------------------------------------------------------------------------
 
 
-function module.readEffectNumberSequence(tblEffectConfig, strKey, numberDefault, numberMin, numberMax, tblValidationMessages, strSourceName)
+function Effect.readEffectNumberSequence(tblEffectConfig, strKey, numberDefault, numberMin, numberMax, tblValidationMessages, strSourceName)
 	local sequenceRaw = tblEffectConfig and tblEffectConfig[strKey]
 	if sequenceRaw == nil then
 		return NumberSequence.new(numberDefault)
@@ -257,7 +253,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readParticleEffectConfig(tblConfig, strKey, tblValidationMessages, strSourceName)
+function Effect.readParticleEffectConfig(tblConfig, strKey, tblValidationMessages, strSourceName)
 	local valueEffect = tblConfig and tblConfig[strKey]
 	if valueEffect == nil or valueEffect == false then
 		return nil
@@ -269,34 +265,34 @@ function module.readParticleEffectConfig(tblConfig, strKey, tblValidationMessage
 	end
 
 	return {
-		Texture = module.readEffectTexture(valueEffect, "Texture", module.eParticleTexture.SPARKLES, tblValidationMessages, strSourceName),
-		Rate = module.readEffectNumber(valueEffect, "Rate", 24, 0, 60, tblValidationMessages, strSourceName),
-		LightEmission = module.readEffectNumber(valueEffect, "LightEmission", 0.4, 0, 1, tblValidationMessages, strSourceName),
-		LightInfluence = module.readEffectNumber(valueEffect, "LightInfluence", 0, 0, 1, tblValidationMessages, strSourceName),
-		Brightness = module.readEffectNumber(valueEffect, "Brightness", 1, 0, 10, tblValidationMessages, strSourceName),
-		Color = module.readEffectColor(valueEffect, "Color", ColorSequence.new(Color3.fromRGB(255, 112, 36)), tblValidationMessages, strSourceName),
-		Transparency = module.readEffectNumberSequence(valueEffect, "Transparency", 0, 0, 1, tblValidationMessages, strSourceName),
-		Lifetime = module.readEffectNumberRange(valueEffect, "Lifetime", "LifetimeMin", "LifetimeMax", 0.25, 0.7, 0.05, 3, tblValidationMessages, strSourceName),
-		Speed = module.readEffectNumberRange(valueEffect, "Speed", "SpeedMin", "SpeedMax", 0.5, 2, 0, 20, tblValidationMessages, strSourceName),
-		Size = module.readEffectNumberSequence(valueEffect, "Size", 0.35, 0.05, 3, tblValidationMessages, strSourceName),
-		SpreadAngle = module.readEffectVector2(valueEffect, "SpreadAngle", Vector2.new(
-			module.readEffectNumber(valueEffect, "SpreadX", 20, 0, 180, tblValidationMessages, strSourceName),
-			module.readEffectNumber(valueEffect, "SpreadY", 20, 0, 180, tblValidationMessages, strSourceName)
+		Texture = Effect.readEffectTexture(valueEffect, "Texture", Effect.eParticleTexture.SPARKLES, tblValidationMessages, strSourceName),
+		Rate = Effect.readEffectNumber(valueEffect, "Rate", 24, 0, 60, tblValidationMessages, strSourceName),
+		LightEmission = Effect.readEffectNumber(valueEffect, "LightEmission", 0.4, 0, 1, tblValidationMessages, strSourceName),
+		LightInfluence = Effect.readEffectNumber(valueEffect, "LightInfluence", 0, 0, 1, tblValidationMessages, strSourceName),
+		Brightness = Effect.readEffectNumber(valueEffect, "Brightness", 1, 0, 10, tblValidationMessages, strSourceName),
+		Color = Effect.readEffectColor(valueEffect, "Color", ColorSequence.new(Color3.fromRGB(255, 112, 36)), tblValidationMessages, strSourceName),
+		Transparency = Effect.readEffectNumberSequence(valueEffect, "Transparency", 0, 0, 1, tblValidationMessages, strSourceName),
+		Lifetime = Effect.readEffectNumberRange(valueEffect, "Lifetime", "LifetimeMin", "LifetimeMax", 0.25, 0.7, 0.05, 3, tblValidationMessages, strSourceName),
+		Speed = Effect.readEffectNumberRange(valueEffect, "Speed", "SpeedMin", "SpeedMax", 0.5, 2, 0, 20, tblValidationMessages, strSourceName),
+		Size = Effect.readEffectNumberSequence(valueEffect, "Size", 0.35, 0.05, 3, tblValidationMessages, strSourceName),
+		SpreadAngle = Effect.readEffectVector2(valueEffect, "SpreadAngle", Vector2.new(
+			Effect.readEffectNumber(valueEffect, "SpreadX", 20, 0, 180, tblValidationMessages, strSourceName),
+			Effect.readEffectNumber(valueEffect, "SpreadY", 20, 0, 180, tblValidationMessages, strSourceName)
 		), Vector2.new(0, 0), Vector2.new(180, 180), tblValidationMessages, strSourceName),
-		Acceleration = module.readEffectVector3(valueEffect, "Acceleration", Vector3.new(0, 0, 0), Vector3.new(-50, -50, -50), Vector3.new(50, 50, 50), tblValidationMessages, strSourceName),
-		Drag = module.readEffectNumber(valueEffect, "Drag", 0, 0, 20, tblValidationMessages, strSourceName),
-		Rotation = module.readEffectNumberRange(valueEffect, "Rotation", "RotationMin", "RotationMax", 0, 0, -360, 360, tblValidationMessages, strSourceName),
-		RotSpeed = module.readEffectNumberRange(valueEffect, "RotSpeed", "RotSpeedMin", "RotSpeedMax", 0, 0, -360, 360, tblValidationMessages, strSourceName),
-		VelocityInheritance = module.readEffectNumber(valueEffect, "VelocityInheritance", 0, 0, 1, tblValidationMessages, strSourceName),
-		ZOffset = module.readEffectNumber(valueEffect, "ZOffset", 0, -5, 5, tblValidationMessages, strSourceName),
-		TimeScale = module.readEffectNumber(valueEffect, "TimeScale", 1, 0, 2, tblValidationMessages, strSourceName),
-		Shape = module.readEffectEnumItem(valueEffect, "Shape", Enum.ParticleEmitterShape.Sphere, tblValidationMessages, strSourceName),
-		ShapeStyle = module.readEffectEnumItem(valueEffect, "ShapeStyle", Enum.ParticleEmitterShapeStyle.Surface, tblValidationMessages, strSourceName),
-		ShapeInOut = module.readEffectEnumItem(valueEffect, "ShapeInOut", Enum.ParticleEmitterShapeInOut.Outward, tblValidationMessages, strSourceName),
-		ShapePartial = module.readEffectNumber(valueEffect, "ShapePartial", 1, 0, 1, tblValidationMessages, strSourceName),
-		EmissionDirection = module.readEffectEnumItem(valueEffect, "EmissionDirection", Enum.NormalId.Top, tblValidationMessages, strSourceName),
-		Orientation = module.readEffectEnumItem(valueEffect, "Orientation", Enum.ParticleOrientation.FacingCamera, tblValidationMessages, strSourceName),
-		LockedToPart = module.readEffectBoolean(valueEffect, "LockedToPart", false, tblValidationMessages, strSourceName),
+		Acceleration = Effect.readEffectVector3(valueEffect, "Acceleration", Vector3.new(0, 0, 0), Vector3.new(-50, -50, -50), Vector3.new(50, 50, 50), tblValidationMessages, strSourceName),
+		Drag = Effect.readEffectNumber(valueEffect, "Drag", 0, 0, 20, tblValidationMessages, strSourceName),
+		Rotation = Effect.readEffectNumberRange(valueEffect, "Rotation", "RotationMin", "RotationMax", 0, 0, -360, 360, tblValidationMessages, strSourceName),
+		RotSpeed = Effect.readEffectNumberRange(valueEffect, "RotSpeed", "RotSpeedMin", "RotSpeedMax", 0, 0, -360, 360, tblValidationMessages, strSourceName),
+		VelocityInheritance = Effect.readEffectNumber(valueEffect, "VelocityInheritance", 0, 0, 1, tblValidationMessages, strSourceName),
+		ZOffset = Effect.readEffectNumber(valueEffect, "ZOffset", 0, -5, 5, tblValidationMessages, strSourceName),
+		TimeScale = Effect.readEffectNumber(valueEffect, "TimeScale", 1, 0, 2, tblValidationMessages, strSourceName),
+		Shape = Effect.readEffectEnumItem(valueEffect, "Shape", Enum.ParticleEmitterShape.Sphere, tblValidationMessages, strSourceName),
+		ShapeStyle = Effect.readEffectEnumItem(valueEffect, "ShapeStyle", Enum.ParticleEmitterShapeStyle.Surface, tblValidationMessages, strSourceName),
+		ShapeInOut = Effect.readEffectEnumItem(valueEffect, "ShapeInOut", Enum.ParticleEmitterShapeInOut.Outward, tblValidationMessages, strSourceName),
+		ShapePartial = Effect.readEffectNumber(valueEffect, "ShapePartial", 1, 0, 1, tblValidationMessages, strSourceName),
+		EmissionDirection = Effect.readEffectEnumItem(valueEffect, "EmissionDirection", Enum.NormalId.Top, tblValidationMessages, strSourceName),
+		Orientation = Effect.readEffectEnumItem(valueEffect, "Orientation", Enum.ParticleOrientation.FacingCamera, tblValidationMessages, strSourceName),
+		LockedToPart = Effect.readEffectBoolean(valueEffect, "LockedToPart", false, tblValidationMessages, strSourceName),
 	}
 end
 
@@ -310,8 +306,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.applyParticleEffect(partTarget, tblEffectConfig)
-	local emitEffect = partTarget:FindFirstChild(EngineNames.eEngineLogicalType.PARTICLE_EFFECT)
+function Effect.applyParticleEffect(partTarget, tblEffectConfig)
+	local emitEffect = partTarget:FindFirstChild(CoreEnums.eEngineLogicalType.PARTICLE_EFFECT)
 	if not tblEffectConfig then
 		if emitEffect then
 			emitEffect:Destroy()
@@ -319,7 +315,7 @@ function module.applyParticleEffect(partTarget, tblEffectConfig)
 		return
 	end
 
-	emitEffect = EngineEnsure.ensureNamedInstance(EngineNames.eEnginePhysicalType.PARTICLE_EMITTER, EngineNames.eEngineLogicalType.PARTICLE_EFFECT, partTarget)
+	emitEffect = EngineEnsure.ensureNamedInstance(CoreEnums.eEnginePhysicalType.PARTICLE_EMITTER, CoreEnums.eEngineLogicalType.PARTICLE_EFFECT, partTarget)
 	emitEffect.Enabled = true
 	emitEffect.Texture = tblEffectConfig.Texture
 	emitEffect.LockedToPart = tblEffectConfig.LockedToPart
@@ -350,4 +346,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return Effect

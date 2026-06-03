@@ -1,22 +1,22 @@
 -- [Module] CurriculumSetup
-local module = {}
+local CurriculumSetup = {}
 
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local FieldItem = require(script.Parent:WaitForChild("FieldItem"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
-local ThrowingStone = require(script.Parent:WaitForChild("ThrowingStone"))
-local BuildSystems = require(script.Parent:WaitForChild("BuildSystems"))
-local WeaponSystems = require(script.Parent:WaitForChild("WeaponSystems"))
-local Fortification = require(script.Parent:WaitForChild("Fortification"))
-local SiegeEngine = require(script.Parent:WaitForChild("SiegeEngine"))
-local MagicSystem = require(script.Parent:WaitForChild("MagicSystem"))
-local FinalBattle = require(script.Parent:WaitForChild("FinalBattle"))
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local FieldItem = require(script.Parent.FieldItem)
+local StudentConfig = require(script.Parent.StudentConfig)
+local ThrowingStone = require(script.Parent.ThrowingStone)
+local BuildSystems = require(script.Parent.BuildSystems)
+local WeaponSystems = require(script.Parent.WeaponSystems)
+local Fortification = require(script.Parent.Fortification)
+local SiegeEngine = require(script.Parent.SiegeEngine)
+local MagicSystem = require(script.Parent.MagicSystem)
+local FinalBattle = require(script.Parent.FinalBattle)
 
 -- --------------------------------------------------------------------------------
-function module.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	local fldOutpostAssets = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.OUTPOST_ASSETS, svcReplicatedStorage)
 	local fldRockLooks = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.ROCK_LOOKS, fldOutpostAssets)
@@ -35,8 +35,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumCoreTargets(fldObjectiveArea)
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumCoreTargets(fldObjectiveArea)
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	for _, tblCoreConfig in ipairs({
 		{Name = eLogical.TEAM_BLUE, Position = Vector3.new(0, 3, 32), Color = "Bright blue"},
@@ -57,8 +57,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumPracticeTargets(fldObjectiveArea)
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumPracticeTargets(fldObjectiveArea)
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	for index, vectorPosition in ipairs({
 		Vector3.new(-16, 2.5, 24),
@@ -131,8 +131,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumBattlefieldMarkers(fldBattlefield)
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield)
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	for index, vectorPosition in ipairs({
 		Vector3.new(-28, 0.1, 0),
@@ -172,8 +172,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumBuildArea(fldBuildArea)
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumBuildArea(fldBuildArea)
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	local partBuildButton = EngineEnsure.ensureStaticPart(eLogical.BUILD_BUTTON, fldBuildArea, {
 		Size = Vector3.new(6, 1, 6),
@@ -194,8 +194,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumItemSpawnMarkers(fldItemSpawnArea)
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumItemSpawnMarkers(fldItemSpawnArea)
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.THROWING_STONE, {
 		Vector3.new(-24, 0.1, 8),
@@ -233,9 +233,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumFortification(fldFortification)
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumFortification(fldFortification)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local modelGate = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.GATE, fldFortification)
 
 	for index = 1, 5 do
@@ -265,8 +265,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumSiegeEngine(fldSiegeEngine)
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumSiegeEngine(fldSiegeEngine)
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	local partLaunchButton = EngineEnsure.ensureStaticPart(eLogical.LAUNCH_BUTTON, fldSiegeEngine, {
 		Size = Vector3.new(6, 1, 6),
@@ -293,9 +293,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumRemoteEvents(svcReplicatedStorage)
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage)
 end
 
@@ -303,9 +303,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.ensureCurriculumTeams(svcTeams)
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function CurriculumSetup.ensureCurriculumTeams(svcTeams)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 
 	for _, tblTeamConfig in ipairs({
 		{Name = eLogical.TEAM_BLUE, Color = "Bright blue"},
@@ -322,8 +322,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.setupCurriculumWorld(gameRoot, tblConfig)
-	local eService = EngineNames.eEngineServiceSingleton
+function CurriculumSetup.setupCurriculumWorld(gameRoot, tblConfig)
+	local eService = CoreEnums.eEngineServiceSingleton
 	local dataModel = gameRoot or game
 	local svcWorkspace = dataModel:GetService(eService.WORKSPACE)
 	local svcPlayers = dataModel:GetService(eService.PLAYERS)
@@ -331,26 +331,26 @@ function module.setupCurriculumWorld(gameRoot, tblConfig)
 	local svcServerScriptService = dataModel:GetService(eService.SERVER_SCRIPT_SERVICE)
 	local svcTeams = dataModel:GetService(eService.TEAMS)
 	local tblOutpostWorld = EngineEnsure.ensureOutpostBattleWorld(svcWorkspace)
-	local tblSharedAssets = module.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
+	local tblSharedAssets = CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
 	local boolInstallStudentThrowingStones = tblConfig == nil or tblConfig.InstallStudentThrowingStones ~= false
 	local boolInstallStudentLessonConfigs = tblConfig == nil or tblConfig.InstallStudentLessonConfigs ~= false
 
-	module.ensureCurriculumRemoteEvents(svcReplicatedStorage)
-	module.ensureCurriculumTeams(svcTeams)
-	module.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
-	module.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea)
-	module.ensureCurriculumBattlefieldMarkers(tblOutpostWorld.fldBattlefield)
-	module.ensureCurriculumBuildArea(tblOutpostWorld.fldBuildArea)
-	module.ensureCurriculumItemSpawnMarkers(tblOutpostWorld.fldItemSpawnArea)
-	module.ensureCurriculumFortification(tblOutpostWorld.fldFortification)
-	module.ensureCurriculumSiegeEngine(tblOutpostWorld.fldSiegeEngine)
+	CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
+	CurriculumSetup.ensureCurriculumTeams(svcTeams)
+	CurriculumSetup.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
+	CurriculumSetup.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea)
+	CurriculumSetup.ensureCurriculumBattlefieldMarkers(tblOutpostWorld.fldBattlefield)
+	CurriculumSetup.ensureCurriculumBuildArea(tblOutpostWorld.fldBuildArea)
+	CurriculumSetup.ensureCurriculumItemSpawnMarkers(tblOutpostWorld.fldItemSpawnArea)
+	CurriculumSetup.ensureCurriculumFortification(tblOutpostWorld.fldFortification)
+	CurriculumSetup.ensureCurriculumSiegeEngine(tblOutpostWorld.fldSiegeEngine)
 
 	if boolInstallStudentThrowingStones then
 		ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, tblSharedAssets.fldStudentRockDesigns)
 	end
 
 	if boolInstallStudentLessonConfigs then
-		module.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs)
+		CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs)
 	end
 
 	print("수업 월드 준비 완료")
@@ -366,8 +366,8 @@ end
 -- Student Config Installation Services (Moved to resolve circular dependencies)
 -- --------------------------------------------------------------------------------
 
-function module.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
-	if not moduleLessonConfig:IsA(EngineNames.eEnginePhysicalType.MODULE_SCRIPT) then
+function CurriculumSetup.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+	if not moduleLessonConfig:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
 		return nil
 	end
 
@@ -389,7 +389,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+function CurriculumSetup.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
 	local strModuleName = moduleLessonConfig.Name
 	local valueDayNumber = tonumber(strModuleName:match("^(%d+)") or strModuleName:match("(%d+)$"))
 	if type(valueDayNumber) ~= "number" then
@@ -404,7 +404,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.readStudentLessonConceptConfig(tblLessonConfig, strConceptKey)
+function CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, strConceptKey)
 	local tblConceptConfig = tblLessonConfig[strConceptKey]
 	if type(tblConceptConfig) == "table" then
 		return tblConceptConfig
@@ -417,32 +417,32 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, strSourceName)
-	local eConfigKey = EngineNames.eStudentLessonConfigKey
+function CurriculumSetup.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, strSourceName)
+	local eConfigKey = CoreEnums.eStudentLessonConfigKey
 
 	if intDayNumber == 2 then
-		BuildSystems.installStudentCoverDesign(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.COVER_DESIGN))
+		BuildSystems.installStudentCoverDesign(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.COVER_DESIGN))
 	elseif intDayNumber == 3 then
-		BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.RESOURCE_WALL))
+		BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.RESOURCE_WALL))
 	elseif intDayNumber == 4 then
-		FieldItem.installFieldSwordPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
+		FieldItem.installFieldSwordPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
 	elseif intDayNumber == 5 then
-		FieldItem.installFieldBowPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.BOW))
+		FieldItem.installFieldBowPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.BOW))
 	elseif intDayNumber == 6 then
-		FieldItem.installFieldShieldPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SHIELD))
+		FieldItem.installFieldShieldPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SHIELD))
 	elseif intDayNumber == 7 then
-		FieldItem.installFieldArmorPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.ARMOR))
+		FieldItem.installFieldArmorPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.ARMOR))
 	elseif intDayNumber == 8 then
-		Fortification.installGateDamageSystem(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.GATE))
+		Fortification.installGateDamageSystem(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.GATE))
 	elseif intDayNumber == 9 then
-		Fortification.installStoneWallDamageSystem(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STONE_WALL))
+		Fortification.installStoneWallDamageSystem(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STONE_WALL))
 	elseif intDayNumber == 10 then
-		SiegeEngine.installSiegeEngineSystem(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SIEGE_ENGINE))
+		SiegeEngine.installSiegeEngineSystem(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SIEGE_ENGINE))
 	elseif intDayNumber == 11 then
-		FieldItem.installMagicStaffPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STAFF))
-		MagicSystem.installMagicServerSystem(svcReplicatedStorage, svcPlayers, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.MAGIC))
+		FieldItem.installMagicStaffPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STAFF))
+		MagicSystem.installMagicServerSystem(svcReplicatedStorage, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.MAGIC))
 	elseif intDayNumber == 12 then
-		FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.FINAL_BATTLE))
+		FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.FINAL_BATTLE))
 	else
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "지원하지 않는 " .. tostring(intDayNumber) .. "회차 설정이라 건너뜁니다.")
 		return false
@@ -455,30 +455,30 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages)
-	local tblLessonConfig = module.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+function CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages)
+	local tblLessonConfig = CurriculumSetup.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
 	if not tblLessonConfig then
 		return false
 	end
 
-	local intDayNumber = module.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+	local intDayNumber = CurriculumSetup.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
 	if not intDayNumber then
 		return false
 	end
 
-	return module.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, moduleLessonConfig.Name)
+	return CurriculumSetup.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, moduleLessonConfig.Name)
 end
 
 
 -- --------------------------------------------------------------------------------
 
 
-function module.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs)
+function CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs)
 	local tblModules = {}
 	local tblValidationMessages = {}
 	if fldStudentLessonConfigs then
 		for _, instanceChild in ipairs(fldStudentLessonConfigs:GetChildren()) do
-			if instanceChild:IsA(EngineNames.eEnginePhysicalType.MODULE_SCRIPT) then
+			if instanceChild:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
 				table.insert(tblModules, instanceChild)
 			end
 		end
@@ -490,7 +490,7 @@ function module.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplica
 
 	local intInstalledCount = 0
 	for _, moduleLessonConfig in ipairs(tblModules) do
-		if module.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages) then
+		if CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages) then
 			intInstalledCount += 1
 		end
 	end
@@ -504,4 +504,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return CurriculumSetup

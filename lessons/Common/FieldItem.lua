@@ -1,17 +1,17 @@
 -- [Module] FieldItem
-local module = {}
+local FieldItem = {}
 
-local Appearance = require(script.Parent:WaitForChild("Appearance"))
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local MagicSystem = require(script.Parent:WaitForChild("MagicSystem"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
-local ThrowingStone = require(script.Parent:WaitForChild("ThrowingStone"))
-local WeaponSystems = require(script.Parent:WaitForChild("WeaponSystems"))
+local Appearance = require(script.Parent.Appearance)
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local MagicSystem = require(script.Parent.MagicSystem)
+local StudentConfig = require(script.Parent.StudentConfig)
+local ThrowingStone = require(script.Parent.ThrowingStone)
+local WeaponSystems = require(script.Parent.WeaponSystems)
 
 -- --------------------------------------------------------------------------------
-function module.ensureFieldItemSpawnMarkers(fldItemSpawnArea, strToolName, tblSpawnPositions, strColorName) -- [의미/의도] 전장 아이템 스폰 마커 보장 함수 정의 ➔ 학생 튜닝 장비가 어디에 나타날지 선생 코드에서 지도처럼 배치하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
+function FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, strToolName, tblSpawnPositions, strColorName) -- [의미/의도] 전장 아이템 스폰 마커 보장 함수 정의 ➔ 학생 튜닝 장비가 어디에 나타날지 선생 코드에서 지도처럼 배치하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
 	local brickColor = BrickColor.new(strColorName or "Bright yellow")
 
 	for index, vectorPosition in ipairs(tblSpawnPositions) do
@@ -28,8 +28,8 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.getFieldItemSpawnPositions(fldItemSpawnArea, strToolName, tblDefaultSpawnPositions) -- [의미/의도] 전장 아이템 스폰 위치 조회 함수 정의 ➔ 선생 setup 마커가 있으면 그 위치를 쓰고 없으면 기본 위치를 사용하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
+function FieldItem.getFieldItemSpawnPositions(fldItemSpawnArea, strToolName, tblDefaultSpawnPositions) -- [의미/의도] 전장 아이템 스폰 위치 조회 함수 정의 ➔ 선생 setup 마커가 있으면 그 위치를 쓰고 없으면 기본 위치를 사용하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
 	local tblSpawnPositions = {}
 
 	for index, vectorDefaultPosition in ipairs(tblDefaultSpawnPositions) do
@@ -44,13 +44,13 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldToolPickups(svcWorkspace, strToolName, strToolTip, tblConfig, tblDefaultSpawnPositions, tblDefaultHandleProperties, fnInstallToolSystem) -- [의미/의도] 파밍 Tool 묶음 설치 함수 정의 ➔ 직접 지급하지 않고 맵에 놓인 장비를 플레이어가 찾아서 줍게 하기 위함
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
-	local eAttrKey = EngineNames.eEngineAttributeKey
+function FieldItem.installFieldToolPickups(svcWorkspace, strToolName, strToolTip, tblConfig, tblDefaultSpawnPositions, tblDefaultHandleProperties, fnInstallToolSystem) -- [의미/의도] 파밍 Tool 묶음 설치 함수 정의 ➔ 직접 지급하지 않고 맵에 놓인 장비를 플레이어가 찾아서 줍게 하기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local fldItemSpawnArea = tblOutpostWorld.fldItemSpawnArea
-	local tblSpawnPositions = module.getFieldItemSpawnPositions(fldItemSpawnArea, strToolName, tblDefaultSpawnPositions)
+	local tblSpawnPositions = FieldItem.getFieldItemSpawnPositions(fldItemSpawnArea, strToolName, tblDefaultSpawnPositions)
 	local intSpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", #tblSpawnPositions, 1, 12)
 	local strDisplayName = StudentConfig.readConfigString(tblConfig, "DisplayName", strToolName)
 	local strVariantId = StudentConfig.readConfigString(tblConfig, "VariantId", strToolName)
@@ -96,10 +96,10 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.resetFieldToolPickupsToWorld(svcPlayers, fldItemSpawnArea) -- [의미/의도] 플레이어가 들고 있는 파밍 Tool을 전장 스폰 위치로 되돌리는 함수 정의 ➔ 새 라운드가 시작될 때 다시 찾아 줍는 흐름을 유지하기 위함
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
-	local eAttrKey = EngineNames.eEngineAttributeKey
+function FieldItem.resetFieldToolPickupsToWorld(svcPlayers, fldItemSpawnArea) -- [의미/의도] 플레이어가 들고 있는 파밍 Tool을 전장 스폰 위치로 되돌리는 함수 정의 ➔ 새 라운드가 시작될 때 다시 찾아 줍는 흐름을 유지하기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
 
 	local function reset_tool(toolPickup)
 		if not toolPickup:IsA(ePhysical.TOOL) or not toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) then return end
@@ -138,9 +138,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldSwordPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 검 파밍 설치 함수 정의 ➔ 근접 무기를 직접 지급하지 않고 중앙 교전 지역에서 획득하게 하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
-	return module.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SWORD, "클릭해서 주운 뒤 근접 교전에 사용합니다", tblConfig, {
+function FieldItem.installFieldSwordPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 검 파밍 설치 함수 정의 ➔ 근접 무기를 직접 지급하지 않고 중앙 교전 지역에서 획득하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SWORD, "클릭해서 주운 뒤 근접 교전에 사용합니다", tblConfig, {
 		Vector3.new(-18, 0.1, -2),
 		Vector3.new(18, 0.1, -2),
 	}, {
@@ -154,9 +154,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldBowPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 활 파밍 설치 함수 정의 ➔ 원거리 무기를 전장 측면에서 찾아 쓰게 하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
-	return module.installFieldToolPickups(svcWorkspace, eLogical.FIELD_BOW, "클릭해서 주운 뒤 원거리 견제에 사용합니다", tblConfig, {
+function FieldItem.installFieldBowPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 활 파밍 설치 함수 정의 ➔ 원거리 무기를 전장 측면에서 찾아 쓰게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_BOW, "클릭해서 주운 뒤 원거리 견제에 사용합니다", tblConfig, {
 		Vector3.new(-34, 0.1, -6),
 		Vector3.new(34, 0.1, -6),
 	}, {
@@ -170,9 +170,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldShieldPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 방패 파밍 설치 함수 정의 ➔ 방어 장비를 목표물 주변에서 찾아 선택하게 하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
-	return module.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SHIELD, "클릭해서 주운 뒤 투사체를 막습니다", tblConfig, {
+function FieldItem.installFieldShieldPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 방패 파밍 설치 함수 정의 ➔ 방어 장비를 목표물 주변에서 찾아 선택하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SHIELD, "클릭해서 주운 뒤 투사체를 막습니다", tblConfig, {
 		Vector3.new(-12, 0.1, 18),
 		Vector3.new(12, 0.1, -18),
 	}, {
@@ -186,9 +186,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldArmorPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 갑옷 파밍 설치 함수 정의 ➔ 강한 방어 장비를 느린 이동이라는 선택지와 함께 맵에 배치하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
-	return module.installFieldToolPickups(svcWorkspace, eLogical.FIELD_ARMOR, "클릭해서 주운 뒤 장착 능력치를 적용합니다", tblConfig, {
+function FieldItem.installFieldArmorPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 갑옷 파밍 설치 함수 정의 ➔ 강한 방어 장비를 느린 이동이라는 선택지와 함께 맵에 배치하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_ARMOR, "클릭해서 주운 뒤 장착 능력치를 적용합니다", tblConfig, {
 		Vector3.new(-30, 0.1, 22),
 		Vector3.new(30, 0.1, -22),
 	}, {
@@ -202,9 +202,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installMagicStaffPickups(svcWorkspace, tblConfig) -- [의미/의도] 마법 지팡이 파밍 설치 함수 정의 ➔ 클라이언트 입력 장비도 직접 지급하지 않고 전장에서 획득하게 하기 위함
-	local eLogical = EngineNames.eEngineLogicalType
-	return module.installFieldToolPickups(svcWorkspace, eLogical.MAGIC_STAFF, "클릭해서 주운 뒤 조준 지점에 마법을 시전합니다", tblConfig, {
+function FieldItem.installMagicStaffPickups(svcWorkspace, tblConfig) -- [의미/의도] 마법 지팡이 파밍 설치 함수 정의 ➔ 클라이언트 입력 장비도 직접 지급하지 않고 전장에서 획득하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.MAGIC_STAFF, "클릭해서 주운 뒤 조준 지점에 마법을 시전합니다", tblConfig, {
 		Vector3.new(-8, 0.1, -30),
 		Vector3.new(8, 0.1, -30),
 	}, {
@@ -216,4 +216,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return FieldItem

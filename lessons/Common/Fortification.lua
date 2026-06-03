@@ -1,15 +1,15 @@
 -- [Module] Fortification
-local module = {}
+local Fortification = {}
 
-local CombatRules = require(script.Parent:WaitForChild("CombatRules"))
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local CombatRules = require(script.Parent.CombatRules)
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-function module.installGateDamageSystem(svcWorkspace, tblConfig) -- [의미/의도] 전초기지 문 피해 서버 시스템 설치 함수 정의 ➔ 문 체력/피격/붕괴 규칙을 공통 서버 코드가 책임지게 하기 위함
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function Fortification.installGateDamageSystem(svcWorkspace, tblConfig) -- [의미/의도] 전초기지 문 피해 서버 시스템 설치 함수 정의 ➔ 문 체력/피격/붕괴 규칙을 공통 서버 코드가 책임지게 하기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local modelGate = tblOutpostWorld.fldFortification:WaitForChild(eLogical.GATE)
 	if not EngineEnsure.markRuntimeInstalled(modelGate, "RuntimeInstalled_GateDamage") then
@@ -64,9 +64,9 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installStoneWallDamageSystem(svcWorkspace, tblConfig) -- [의미/의도] 석조 벽 피해 서버 시스템 설치 함수 정의 ➔ 구역별 체력/부분 붕괴 규칙을 공통 서버 코드가 책임지게 하기 위함
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function Fortification.installStoneWallDamageSystem(svcWorkspace, tblConfig) -- [의미/의도] 석조 벽 피해 서버 시스템 설치 함수 정의 ➔ 구역별 체력/부분 붕괴 규칙을 공통 서버 코드가 책임지게 하기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local modelStoneWall = tblOutpostWorld.fldFortification:WaitForChild(eLogical.STONE_WALL)
 	if not EngineEnsure.markRuntimeInstalled(modelStoneWall, "RuntimeInstalled_StoneWallDamage") then
@@ -118,4 +118,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return Fortification

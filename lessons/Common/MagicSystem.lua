@@ -1,15 +1,15 @@
 -- [Module] MagicSystem
-local module = {}
+local MagicSystem = {}
 
-local Appearance = require(script.Parent:WaitForChild("Appearance"))
-local CombatRules = require(script.Parent:WaitForChild("CombatRules"))
-local Effect = require(script.Parent:WaitForChild("Effect"))
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local Appearance = require(script.Parent.Appearance)
+local CombatRules = require(script.Parent.CombatRules)
+local Effect = require(script.Parent.Effect)
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-function module.installMagicStaffTool(toolMagicStaff, tblConfig) -- [의미/의도] 마법 지팡이 Tool 외형 설치 함수 정의 ➔ 입력/피해 판정은 클라이언트 요청과 서버 시스템에 맡기고 장비 외형만 제한적으로 반영하기 위함
+function MagicSystem.installMagicStaffTool(toolMagicStaff, tblConfig) -- [의미/의도] 마법 지팡이 Tool 외형 설치 함수 정의 ➔ 입력/피해 판정은 클라이언트 요청과 서버 시스템에 맡기고 장비 외형만 제한적으로 반영하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolMagicStaff, "RuntimeInstalled_MagicStaffTool") then
 		return
 	end
@@ -21,10 +21,10 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installMagicServerSystem(svcReplicatedStorage, svcPlayers, tblConfig) -- [의미/의도] 마법 서버 시스템 설치 함수 정의 ➔ 클라이언트 입력은 요청으로만 받고 거리/쿨타임/피해는 서버가 판정하기 위함
-	local eService = EngineNames.eEngineServiceSingleton
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+function MagicSystem.installMagicServerSystem(svcReplicatedStorage, svcPlayers, tblConfig) -- [의미/의도] 마법 서버 시스템 설치 함수 정의 ➔ 클라이언트 입력은 요청으로만 받고 거리/쿨타임/피해는 서버가 판정하기 위함
+	local eService = CoreEnums.eEngineServiceSingleton
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local svcDebris = game:GetService(eService.DEBRIS)
 	local svcWorkspace = game:GetService(eService.WORKSPACE)
 	local eventCastMagic = svcReplicatedStorage:WaitForChild(eLogical.CAST_MAGIC)
@@ -111,4 +111,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return MagicSystem

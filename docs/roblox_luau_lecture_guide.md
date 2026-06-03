@@ -422,7 +422,7 @@ local effect = {
 }
 ```
 
-`Texture`는 Roblox Enum이 아니라 ContentId 리소스입니다. 수업에서는 Studio 기본 `content/textures/particles` 중 단독 사용하기 좋은 완성형 파츠 11개만 `common.eParticleTexture`에 모아 검증 가능한 리소스 목록으로 사용합니다. `*_COLOR`, `*_ALPHA` 같은 재료 레이어는 제외하고, `SPARKLES`, `FIRE`, `SMOKE`는 자주 쓰는 `*_MAIN` 텍스처 별칭으로 유지합니다. `Rate`는 초당 입자 생성 빈도입니다. 수업 코드에서는 `Rate` 0~60, `Lifetime` 0.05~3, `Speed` 0~20, `Size` 0.05~3, `SpreadAngle` 0~180처럼 성능과 플레이를 해치지 않는 범위로 제한합니다.
+`Texture`는 Roblox Enum이 아니라 ContentId 리소스입니다. 수업에서는 Studio 기본 `content/textures/particles` 중 단독 사용하기 좋은 완성형 파츠 11개만 `common.eParticleTexture`에 모아 검증 가능한 리소스 목록으로 사용합니다. `*_COLOR`, `*_ALPHA` 같은 재료 레이어와 불필요한 접미사(`_MAIN`)는 제외하고 직관적인 이름으로 제공합니다. `Rate`는 초당 입자 생성 빈도입니다. 수업 코드에서는 `Rate` 0~60, `Lifetime` 0.05~3, `Speed` 0~20, `Size` 0.05~3, `SpreadAngle` 0~180처럼 성능과 플레이를 해치지 않는 범위로 제한합니다.
 
 ---
 

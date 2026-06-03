@@ -1,18 +1,18 @@
 -- [Module] FinalBattle
-local module = {}
+local FinalBattle = {}
 
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local FieldItem = require(script.Parent:WaitForChild("FieldItem"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local FieldItem = require(script.Parent.FieldItem)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-function module.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) -- [의미/의도] 최종 라운드 서버 시스템 설치 함수 정의 ➔ 팀 스폰/라운드 타이머/상태 Attribute를 공통 서버 코드가 책임지게 하기 위함
-	local eService = EngineNames.eEngineServiceSingleton
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
-	local eAttrKey = EngineNames.eEngineAttributeKey
-	local eRoundState = EngineNames.eRoundStateValue
+function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) -- [의미/의도] 최종 라운드 서버 시스템 설치 함수 정의 ➔ 팀 스폰/라운드 타이머/상태 Attribute를 공통 서버 코드가 책임지게 하기 위함
+	local eService = CoreEnums.eEngineServiceSingleton
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
+	local eRoundState = CoreEnums.eRoundStateValue
 	local svcTeams = game:GetService(eService.TEAMS)
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local fldBattlefield = tblOutpostWorld.fldBattlefield
@@ -229,8 +229,4 @@ end
 -- --------------------------------------------------------------------------------
 
 
-return common -- [의미/의도] 공통 모듈 반환 ➔ 외부 스크립트에서 require()로 이 모듈을 로드하여 사용하도록 하기 위함
-
--- --------------------------------------------------------------------------------
-
-return module
+return FinalBattle

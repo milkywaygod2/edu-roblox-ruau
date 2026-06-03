@@ -1,20 +1,20 @@
 -- [Module] WeaponSystems
-local module = {}
+local WeaponSystems = {}
 
-local Appearance = require(script.Parent:WaitForChild("Appearance"))
-local CombatRules = require(script.Parent:WaitForChild("CombatRules"))
-local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
-local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
-local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
+local Appearance = require(script.Parent.Appearance)
+local CombatRules = require(script.Parent.CombatRules)
+local EngineEnsure = require(script.Parent.EngineEnsure)
+local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
-function module.installFieldSwordTool(toolFieldSword, tblConfig) -- [의미/의도] 전장 검 서버 시스템 설치 함수 정의 ➔ 근접 타격 판정과 쿨타임을 공통 서버 코드가 책임지게 하기 위함
+function WeaponSystems.installFieldSwordTool(toolFieldSword, tblConfig) -- [의미/의도] 전장 검 서버 시스템 설치 함수 정의 ➔ 근접 타격 판정과 쿨타임을 공통 서버 코드가 책임지게 하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolFieldSword, "RuntimeInstalled_FieldSword") then
 		return
 	end
 
-	local eService = EngineNames.eEngineServiceSingleton
-	local ePhysical = EngineNames.eEnginePhysicalType
+	local eService = CoreEnums.eEngineServiceSingleton
+	local ePhysical = CoreEnums.eEnginePhysicalType
 	local svcPlayers = game:GetService(eService.PLAYERS)
 	local partHandle = Appearance.applyToolHandleStudentStyle(toolFieldSword, tblConfig)
 	local numberDamage = StudentConfig.readConfigNumber(tblConfig, "Damage", 20, 1, 45)
@@ -54,14 +54,14 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldBowTool(toolFieldBow, tblConfig) -- [의미/의도] 전장 활 서버 시스템 설치 함수 정의 ➔ 발사체 생성/피해/자동 삭제를 공통 서버 코드가 책임지게 하기 위함
+function WeaponSystems.installFieldBowTool(toolFieldBow, tblConfig) -- [의미/의도] 전장 활 서버 시스템 설치 함수 정의 ➔ 발사체 생성/피해/자동 삭제를 공통 서버 코드가 책임지게 하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolFieldBow, "RuntimeInstalled_FieldBow") then
 		return
 	end
 
-	local eService = EngineNames.eEngineServiceSingleton
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+	local eService = CoreEnums.eEngineServiceSingleton
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local svcDebris = game:GetService(eService.DEBRIS)
 	local svcPlayers = game:GetService(eService.PLAYERS)
 	Appearance.applyToolHandleStudentStyle(toolFieldBow, tblConfig)
@@ -103,7 +103,7 @@ function module.installFieldBowTool(toolFieldBow, tblConfig) -- [의미/의도] 
 			local modelTarget = partHit:FindFirstAncestorOfClass(ePhysical.MODEL)
 			local humTarget = modelTarget and modelTarget:FindFirstChildOfClass(ePhysical.HUMANOID)
 			if humTarget and CombatRules.canPlayerDamageModel(playerAttacker, modelTarget) then humTarget:TakeDamage(numberDamage) end
-			if EngineNames.hasEngineLogicalNamePrefix(partHit.Name, eLogical.RANGE_TARGET_PREFIX) then
+			if CoreEnums.hasEngineLogicalNamePrefix(partHit.Name, eLogical.RANGE_TARGET_PREFIX) then
 				partHit.BrickColor = brickTargetHitColor
 			end
 			partArrow:Destroy()
@@ -118,13 +118,13 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldShieldTool(toolFieldShield, tblConfig) -- [의미/의도] 전장 방패 서버 시스템 설치 함수 정의 ➔ 방어 스탯과 투사체 차단 규칙을 공통 서버 코드가 책임지게 하기 위함
+function WeaponSystems.installFieldShieldTool(toolFieldShield, tblConfig) -- [의미/의도] 전장 방패 서버 시스템 설치 함수 정의 ➔ 방어 스탯과 투사체 차단 규칙을 공통 서버 코드가 책임지게 하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolFieldShield, "RuntimeInstalled_FieldShield") then
 		return
 	end
 
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	local partHandle = Appearance.applyToolHandleStudentStyle(toolFieldShield, tblConfig)
 	local numberBonusHealth = StudentConfig.readConfigNumber(tblConfig, "BonusHealth", 60, 0, 100)
 	local numberBlockHeal = StudentConfig.readConfigNumber(tblConfig, "BlockHeal", 5, 0, 20)
@@ -175,13 +175,13 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function module.installFieldArmorTool(toolFieldArmor, tblConfig) -- [의미/의도] 전장 갑옷 서버 시스템 설치 함수 정의 ➔ 장착 스탯과 장식 이펙트 규칙을 공통 서버 코드가 책임지게 하기 위함
+function WeaponSystems.installFieldArmorTool(toolFieldArmor, tblConfig) -- [의미/의도] 전장 갑옷 서버 시스템 설치 함수 정의 ➔ 장착 스탯과 장식 이펙트 규칙을 공통 서버 코드가 책임지게 하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolFieldArmor, "RuntimeInstalled_FieldArmor") then
 		return
 	end
 
-	local ePhysical = EngineNames.eEnginePhysicalType
-	local eLogical = EngineNames.eEngineLogicalType
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
 	Appearance.applyToolHandleStudentStyle(toolFieldArmor, tblConfig)
 
 	local numberMaxHealth = StudentConfig.readConfigNumber(tblConfig, "MaxHealth", 180, 100, 240)
@@ -240,4 +240,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return module
+return WeaponSystems
