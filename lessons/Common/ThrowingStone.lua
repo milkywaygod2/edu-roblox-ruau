@@ -9,35 +9,18 @@ local FieldItem = require(script.Parent:WaitForChild("FieldItem"))
 local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
 
 -- --------------------------------------------------------------------------------
-module.tblEquipmentSizeRule = {
-	ThrowingStone = {
-		Default = Vector3.new(1.2, 1.2, 1.2),
-		Min = Vector3.new(0.5, 0.5, 0.5),
-		Max = Vector3.new(2.6, 2.6, 2.6),
-	},
-	SiegeStone = {
-		Default = Vector3.new(4, 4, 4),
-		Min = Vector3.new(1.5, 1.5, 1.5),
-		Max = Vector3.new(10, 10, 10),
-	},
-}
 
 
 -- --------------------------------------------------------------------------------
 
 
-module.tblThrowingStoneMaterialBlockList = {
-	Enum.Material.Air,
-	Enum.Material.Water,
-	Enum.Material.ForceField,
-}
 
 
 -- --------------------------------------------------------------------------------
 
 
 function module.isThrowingStoneMaterialBlocked(enumMaterial)
-	for _, enumBlockedMaterial in ipairs(module.tblThrowingStoneMaterialBlockList) do
+	for _, enumBlockedMaterial in ipairs(StudentConfig.tblThrowingStoneMaterialBlockList) do
 		if enumMaterial == enumBlockedMaterial then
 			return true
 		end

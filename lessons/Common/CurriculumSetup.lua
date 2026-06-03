@@ -6,6 +6,12 @@ local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
 local FieldItem = require(script.Parent:WaitForChild("FieldItem"))
 local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
 local ThrowingStone = require(script.Parent:WaitForChild("ThrowingStone"))
+local BuildSystems = require(script.Parent:WaitForChild("BuildSystems"))
+local WeaponSystems = require(script.Parent:WaitForChild("WeaponSystems"))
+local Fortification = require(script.Parent:WaitForChild("Fortification"))
+local SiegeEngine = require(script.Parent:WaitForChild("SiegeEngine"))
+local MagicSystem = require(script.Parent:WaitForChild("MagicSystem"))
+local FinalBattle = require(script.Parent:WaitForChild("FinalBattle"))
 
 -- --------------------------------------------------------------------------------
 function module.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
@@ -344,7 +350,7 @@ function module.setupCurriculumWorld(gameRoot, tblConfig)
 	end
 
 	if boolInstallStudentLessonConfigs then
-		StudentConfig.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs)
+		module.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs)
 	end
 
 	print("수업 월드 준비 완료")
@@ -352,6 +358,148 @@ function module.setupCurriculumWorld(gameRoot, tblConfig)
 		tblOutpostWorld = tblOutpostWorld,
 		tblSharedAssets = tblSharedAssets,
 	}
+end
+
+-- --------------------------------------------------------------------------------
+
+-- --------------------------------------------------------------------------------
+-- Student Config Installation Services (Moved to resolve circular dependencies)
+-- --------------------------------------------------------------------------------
+
+function module.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+	if not moduleLessonConfig:IsA(EngineNames.eEnginePhysicalType.MODULE_SCRIPT) then
+		return nil
+	end
+
+	local boolSuccess, tblLessonConfig = pcall(require, moduleLessonConfig)
+	if not boolSuccess then
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "코드 실행 오류가 있어 이 설정을 건너뜁니다. " .. tostring(tblLessonConfig))
+		return nil
+	end
+
+	if type(tblLessonConfig) ~= "table" then
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "마지막 줄에서 table을 return해야 해서 이 설정을 건너뜁니다.")
+		return nil
+	end
+
+	return tblLessonConfig
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function module.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+	local strModuleName = moduleLessonConfig.Name
+	local valueDayNumber = tonumber(strModuleName:match("^(%d+)") or strModuleName:match("(%d+)$"))
+	if type(valueDayNumber) ~= "number" then
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "파일명 앞이나 뒤에 회차 숫자가 없어 건너뜁니다. 예: 02_student_answer 또는 StudentAnswer02")
+		return nil
+	end
+
+	return math.floor(valueDayNumber)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function module.readStudentLessonConceptConfig(tblLessonConfig, strConceptKey)
+	local tblConceptConfig = tblLessonConfig[strConceptKey]
+	if type(tblConceptConfig) == "table" then
+		return tblConceptConfig
+	end
+
+	return tblLessonConfig
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function module.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, strSourceName)
+	local eConfigKey = EngineNames.eStudentLessonConfigKey
+
+	if intDayNumber == 2 then
+		BuildSystems.installStudentCoverDesign(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.COVER_DESIGN))
+	elseif intDayNumber == 3 then
+		BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.RESOURCE_WALL))
+	elseif intDayNumber == 4 then
+		FieldItem.installFieldSwordPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
+	elseif intDayNumber == 5 then
+		FieldItem.installFieldBowPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.BOW))
+	elseif intDayNumber == 6 then
+		FieldItem.installFieldShieldPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SHIELD))
+	elseif intDayNumber == 7 then
+		FieldItem.installFieldArmorPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.ARMOR))
+	elseif intDayNumber == 8 then
+		Fortification.installGateDamageSystem(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.GATE))
+	elseif intDayNumber == 9 then
+		Fortification.installStoneWallDamageSystem(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STONE_WALL))
+	elseif intDayNumber == 10 then
+		SiegeEngine.installSiegeEngineSystem(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SIEGE_ENGINE))
+	elseif intDayNumber == 11 then
+		FieldItem.installMagicStaffPickups(svcWorkspace, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STAFF))
+		MagicSystem.installMagicServerSystem(svcReplicatedStorage, svcPlayers, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.MAGIC))
+	elseif intDayNumber == 12 then
+		FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, module.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.FINAL_BATTLE))
+	else
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "지원하지 않는 " .. tostring(intDayNumber) .. "회차 설정이라 건너뜁니다.")
+		return false
+	end
+
+	return true
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function module.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages)
+	local tblLessonConfig = module.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+	if not tblLessonConfig then
+		return false
+	end
+
+	local intDayNumber = module.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+	if not intDayNumber then
+		return false
+	end
+
+	return module.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, moduleLessonConfig.Name)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function module.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs)
+	local tblModules = {}
+	local tblValidationMessages = {}
+	if fldStudentLessonConfigs then
+		for _, instanceChild in ipairs(fldStudentLessonConfigs:GetChildren()) do
+			if instanceChild:IsA(EngineNames.eEnginePhysicalType.MODULE_SCRIPT) then
+				table.insert(tblModules, instanceChild)
+			end
+		end
+	end
+
+	table.sort(tblModules, function(moduleLeft, moduleRight)
+		return moduleLeft.Name < moduleRight.Name
+	end)
+
+	local intInstalledCount = 0
+	for _, moduleLessonConfig in ipairs(tblModules) do
+		if module.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages) then
+			intInstalledCount += 1
+		end
+	end
+
+	for _, strMessage in ipairs(tblValidationMessages) do
+		warn("학생 수업 설정 검사: " .. strMessage)
+	end
+
+	return intInstalledCount
 end
 
 -- --------------------------------------------------------------------------------

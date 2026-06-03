@@ -4,7 +4,6 @@ local module = {}
 local EngineEnsure = require(script.Parent:WaitForChild("EngineEnsure"))
 local EngineNames = require(script.Parent:WaitForChild("EngineNames"))
 local StudentConfig = require(script.Parent:WaitForChild("StudentConfig"))
-local ThrowingStone = require(script.Parent:WaitForChild("ThrowingStone"))
 
 -- --------------------------------------------------------------------------------
 module.eParticleTexture = {
@@ -305,24 +304,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function common.readEquipmentSize(tblConfig, strKey, strEquipmentRuleName, tblValidationMessages, strSourceName)
-	local tblSizeRule = ThrowingStone.tblEquipmentSizeRule[strEquipmentRuleName]
-	local vectorDefault = tblSizeRule.Default
-	local vectorMin = tblSizeRule.Min
-	local vectorMax = tblSizeRule.Max
-	local valueSize = tblConfig and tblConfig[strKey]
 
-	if valueSize ~= nil and typeof(valueSize) ~= "Vector3" then
-		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Vector3.new(...) 값이어야 해서 기본 크기로 보정했습니다.")
-		return vectorDefault
-	end
-
-	if typeof(valueSize) == "Vector3" and StudentConfig.isVector3OutsideRange(valueSize, vectorMin, vectorMax) then
-		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 장비 기준 범위를 벗어나 " .. tostring(vectorMin) .. " ~ " .. tostring(vectorMax) .. " 안으로 보정했습니다.")
-	end
-
-	return StudentConfig.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax)
-end
 
 
 -- --------------------------------------------------------------------------------
