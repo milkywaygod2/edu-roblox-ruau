@@ -18,7 +18,6 @@ local svcPlayers = game:GetService(eService.PLAYERS)
 local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)
 
 local playerLocal = svcPlayers.LocalPlayer
-local eventCastMagic = svcReplicatedStorage:WaitForChild(eLogical.CAST_MAGIC)
 local mousePlayer = playerLocal:GetMouse()
 local tblConnectedTools = {}
 
@@ -34,6 +33,9 @@ local function connect_magic_staff(toolMagicStaff)
 
     tblConnectedTools[toolMagicStaff] = true
     toolMagicStaff.Activated:Connect(function()
+        local eventCastMagic = svcReplicatedStorage:FindFirstChild(eLogical.CAST_MAGIC)
+        if not eventCastMagic then return end
+
         eventCastMagic:FireServer(mousePlayer.Hit.Position)
     end)
 end

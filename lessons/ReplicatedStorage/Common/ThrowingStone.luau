@@ -2,6 +2,7 @@
 local ThrowingStone = {}
 
 local Appearance = require(script.Parent.Appearance)
+local BattlefieldLayout = require(script.Parent.BattlefieldLayout)
 local CombatRules = require(script.Parent.CombatRules)
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
@@ -60,7 +61,7 @@ function ThrowingStone.createRockDesign(strDisplayName) -- [의미/의도] 학�
 		DesignKind = "ThrowingStone",
 		VariantId = ThrowingStone.createAutoRockVariantId(),
 		DisplayName = strSafeDisplayName,
-		SpawnCount = 3,
+		SpawnCount = 10,
 		SpawnRadius = 4,
 		Appearance = {
 			BrickColor = BrickColor.new("Dark stone grey"),
@@ -178,14 +179,14 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	if type(valueSpawnCount) == "number" and (valueSpawnCount < 1 or valueSpawnCount > 10) then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 1~10 범위로 보정했습니다.")
 	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
-		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 3으로 보정했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 10으로 보정했습니다.")
 	end
 	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, enumMaterial, strTrait)
 
 	return {
 		VariantId = strVariantId,
 		DisplayName = StudentConfig.readConfigString(tblConfig, "DisplayName", "전장 돌멩이"),
-		SpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", 3, 1, 10),
+		SpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", 10, 1, 10),
 		SpawnOffset = StudentConfig.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8)),
 		SpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 4, 0, 8),
 		Damage = tblStats.Damage,
@@ -237,11 +238,10 @@ function ThrowingStone.installThrowingStonePickups(svcWorkspace, tblConfig) -- [
 		tblThrowingStoneConfig = ThrowingStone.resolveThrowingStoneDesign(tblConfig)
 	end
 
-	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.THROWING_STONE, "클릭해서 주운 뒤 전초기지 목표에 던집니다", tblThrowingStoneConfig, {
-		Vector3.new(-24, 0.1, 8),
-		Vector3.new(0, 0.1, 4),
-		Vector3.new(24, 0.1, 8),
-	}, {
+	tblThrowingStoneConfig = tblThrowingStoneConfig or {}
+	tblThrowingStoneConfig.SpawnCount = 10
+
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.THROWING_STONE, "클릭해서 주운 뒤 전초기지 목표에 던집니다", tblThrowingStoneConfig, BattlefieldLayout.tblThrowingStoneSpawnPositions, {
 		Shape = Enum.PartType.Ball,
 		Size = Vector3.new(1, 1, 1),
 		Material = Enum.Material.Slate,
@@ -335,12 +335,15 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local eService = CoreEnums.eEngineServiceSingleton
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
-	local svcDebris = game:GetService(eService.DEBRIS)
+	local eAttr = CoreEnums.eEngineAttributeKey
 	local svcPlayers = game:GetService(eService.PLAYERS)
+	local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)
+	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(workspace)
+	local fldItemSpawnArea = tblOutpostWorld.fldItemSpawnArea
+	local eventThrowingStoneAim = EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.THROWING_STONE_AIM, svcReplicatedStorage)
 	local partHandle = Appearance.applyToolHandleStudentStyle(toolThrowingStone, tblConfig)
 
 	local numberDamage = StudentConfig.readConfigNumber(tblConfig, "Damage", 15, 1, 30)
-	local numberCooldown = StudentConfig.readConfigNumber(tblConfig, "Cooldown", 0.8, 0.2, 3)
 	local numberSpeed = StudentConfig.readConfigNumber(tblConfig, "Speed", 90, 20, 140)
 	local numberArc = StudentConfig.readConfigNumber(tblConfig, "Arc", 12, 0, 60)
 	local numberKnockbackForward = StudentConfig.readConfigNumber(tblConfig, "KnockbackForward", 45, 0, 80)
@@ -353,45 +356,129 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local strLookShape = StudentConfig.readConfigString(tblConfig, "LookShape", StudentConfig.readConfigString(tblConfig, "Look", ""))
 	local boolReady = true
 	Appearance.applyRockLook(partHandle, strLookShape)
+	partHandle.CanCollide = false
+	partHandle.CanTouch = false
+	partHandle.CanQuery = false
+	partHandle.Massless = true
+	toolThrowingStone.CanBeDropped = true
 
-	toolThrowingStone.Activated:Connect(function()
+	local function throw_toward_aim(playerAttacker, vectorAimPosition, numberCharge)
+		if not boolReady
+			and toolThrowingStone.Parent == fldItemSpawnArea
+			and toolThrowingStone:GetAttribute(eAttr.BLOCK_IS_PROJECTILE) ~= true then
+			boolReady = true
+			toolThrowingStone.Enabled = true
+		end
+
 		if not boolReady then return end
 
 		local modelCharacter = toolThrowingStone.Parent
 		if not modelCharacter or not modelCharacter:IsA(ePhysical.MODEL) then return end
 
-		local playerAttacker = svcPlayers:GetPlayerFromCharacter(modelCharacter)
+		if playerAttacker ~= svcPlayers:GetPlayerFromCharacter(modelCharacter) then return end
 		local partHumanoidRoot = modelCharacter:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
 		if not partHumanoidRoot then return end
 
 		boolReady = false
+		toolThrowingStone.Enabled = false
 
-		local CoreBlock = require(script.Parent.CoreBlock)
-		local startCFrame = CFrame.new(partHumanoidRoot.Position + partHumanoidRoot.CFrame.LookVector * 3 + Vector3.new(0, 1.5, 0))
-		local vectorVelocity = partHumanoidRoot.CFrame.LookVector * numberSpeed + Vector3.new(0, numberArc, 0)
+		local numberSafeCharge = StudentConfig.clampNumber(type(numberCharge) == "number" and numberCharge or 0, 0, 1)
+		local vectorStartPosition = partHumanoidRoot.Position + Vector3.new(0, 1.5, 0)
+		local vectorAimDirection = partHumanoidRoot.CFrame.LookVector
+		if typeof(vectorAimPosition) == "Vector3" and (vectorAimPosition - vectorStartPosition).Magnitude > 0.1 then
+			vectorAimDirection = (vectorAimPosition - vectorStartPosition).Unit
+		end
 
-		local partRock = CoreBlock.create(workspace, startCFrame, {
-			Size = vectorProjectileSize,
-			Material = enumProjectileMaterial,
-			BrickColor = BrickColor.new(colorProjectile),
-			CanMine = false,
-			CanTakeDamage = true,
-			Damage = numberDamage,
-			ResourceType = "Stone",
-			ResourceYield = 5
-		})
+		local numberChargedSpeed = numberSpeed * (0.55 + numberSafeCharge * 0.75)
+		local numberChargedArc = numberArc * (0.45 + numberSafeCharge * 1.2) + numberSafeCharge * 18
+		local numberChargedLifetime = numberLifetime * (0.75 + numberSafeCharge * 0.75)
+		local startCFrame = CFrame.new(vectorStartPosition + vectorAimDirection * 3)
+		local vectorVelocity = vectorAimDirection * numberChargedSpeed + Vector3.new(0, numberChargedArc, 0)
+		local strHomeName = toolThrowingStone:GetAttribute(eAttr.FIELD_ITEM_HOME_NAME)
+		local boolLanded = false
+		local connectionTouched
 
-		partRock.Name = eLogical.THROWN_STONE
-		partRock.Shape = enumProjectileShape
-		Appearance.applyRockLook(partRock, strLookShape)
+		local function finish_throw_after_delay(numberDelay)
+			if boolLanded then return end
+			boolLanded = true
 
-		CoreBlock.launch(partRock, vectorVelocity, playerAttacker, numberDamage, {
-			Forward = numberKnockbackForward,
-			Up = numberKnockbackUp
-		})
+			task.delay(numberDelay, function()
+				if connectionTouched then
+					connectionTouched:Disconnect()
+				end
+				if not toolThrowingStone.Parent then return end
 
-		task.wait(numberCooldown)
-		boolReady = true
+				partHandle:SetAttribute(eAttr.BLOCK_IS_PROJECTILE, false)
+				partHandle.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				partHandle.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+				toolThrowingStone.Enabled = true
+				boolReady = true
+				if typeof(strHomeName) == "string" then
+					toolThrowingStone.Name = strHomeName
+				end
+				local vectorSafeRestPosition = FieldItem.resolveFieldToolSafeRestPosition(toolThrowingStone, fldItemSpawnArea, partHandle, partHandle.Position)
+				toolThrowingStone.Parent = fldItemSpawnArea
+				FieldItem.applyFieldToolWorldState(toolThrowingStone, partHandle, vectorSafeRestPosition)
+				toolThrowingStone:SetAttribute(eAttr.FIELD_ITEM_HOME_POSITION, vectorSafeRestPosition)
+			end)
+		end
+
+		toolThrowingStone.Parent = fldItemSpawnArea
+		if typeof(strHomeName) == "string" then
+			toolThrowingStone.Name = strHomeName
+		end
+
+		partHandle.Size = vectorProjectileSize
+		partHandle.Material = enumProjectileMaterial
+		partHandle.Color = colorProjectile
+		partHandle.Shape = enumProjectileShape
+		partHandle.CFrame = startCFrame
+		partHandle:SetAttribute(eAttr.BLOCK_IS_PROJECTILE, true)
+		Appearance.applyRockLook(partHandle, strLookShape)
+		FieldItem.applyFieldToolThrownState(toolThrowingStone, partHandle)
+		partHandle.AssemblyLinearVelocity = vectorVelocity
+		partHandle.AssemblyAngularVelocity = Vector3.new(math.random(-6, 6), math.random(-10, 10), math.random(-6, 6))
+
+		connectionTouched = partHandle.Touched:Connect(function(partHit)
+			if boolLanded then return end
+			if partHit == partHandle or partHit:IsDescendantOf(toolThrowingStone) then return end
+			if playerAttacker and playerAttacker.Character and partHit:IsDescendantOf(playerAttacker.Character) then return end
+
+			local modelTarget, humanoidTarget = CombatRules.findHumanoidDamageTargetFromPart(partHit)
+			if not partHit.CanCollide and not humanoidTarget then return end
+
+			if humanoidTarget then
+				local boolDamageApplied = CombatRules.applyHumanoidDamage(playerAttacker, modelTarget, humanoidTarget, numberDamage)
+				local partTargetRoot = modelTarget and modelTarget:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
+				if boolDamageApplied and partTargetRoot then
+					local flatLaunchDir = Vector3.new(vectorVelocity.X, 0, vectorVelocity.Z)
+					local knockbackDir = flatLaunchDir.Magnitude > 0 and flatLaunchDir.Unit or Vector3.new(0, 0, -1)
+					partTargetRoot.AssemblyLinearVelocity = knockbackDir * (numberKnockbackForward * (0.7 + numberSafeCharge * 0.6)) + Vector3.new(0, numberKnockbackUp, 0)
+				end
+			end
+
+			finish_throw_after_delay(0.6)
+		end)
+
+		task.spawn(function()
+			while not boolLanded and toolThrowingStone.Parent do
+				task.wait(0.25)
+				if not FieldItem.isFieldToolWorldPositionSafe(fldItemSpawnArea, partHandle.Position) then
+					finish_throw_after_delay(0)
+					return
+				end
+			end
+		end)
+
+		task.delay(numberChargedLifetime, function()
+			finish_throw_after_delay(0)
+		end)
+	end
+
+	eventThrowingStoneAim.OnServerEvent:Connect(function(playerAttacker, toolRequested, vectorAimPosition, numberCharge)
+		if toolRequested ~= toolThrowingStone then return end
+
+		throw_toward_aim(playerAttacker, vectorAimPosition, numberCharge)
 	end)
 end
 

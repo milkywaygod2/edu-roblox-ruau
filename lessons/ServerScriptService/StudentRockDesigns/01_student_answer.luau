@@ -15,6 +15,6 @@ appearance.LookShape = ""
 rock.DisplayName = "검은 운석"
 rock.Appearance = appearance
 rock.Trait = "Heavy"
-rock.SpawnCount = 3
+rock.SpawnCount = 10
 
 return rock

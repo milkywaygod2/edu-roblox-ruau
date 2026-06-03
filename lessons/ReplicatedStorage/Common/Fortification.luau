@@ -51,9 +51,11 @@ function Fortification.installGateDamageSystem(svcWorkspace, tblConfig) -- [ÏùòÎ
 	for _, partGatePlank in ipairs(modelGate:GetDescendants()) do
 		if partGatePlank:IsA(ePhysical.BASE_PART) then
 			partGatePlank.Touched:Connect(function(partHit)
-				if not CombatRules.isCombatProjectileName(partHit.Name) then return end
+				if not CombatRules.isCombatProjectilePart(partHit) then return end
 
-				partHit:Destroy()
+				if CombatRules.isCombatProjectileName(partHit.Name) then
+					partHit:Destroy()
+				end
 				damage_gate(numberDamagePerHit)
 			end)
 		end
@@ -96,9 +98,11 @@ function Fortification.installStoneWallDamageSystem(svcWorkspace, tblConfig) -- 
 		for _, partStoneBlock in ipairs(modelSection:GetDescendants()) do
 			if partStoneBlock:IsA(ePhysical.BASE_PART) then
 				partStoneBlock.Touched:Connect(function(partHit)
-					if not CombatRules.isCombatProjectileName(partHit.Name) then return end
+					if not CombatRules.isCombatProjectilePart(partHit) then return end
 
-					partHit:Destroy()
+					if CombatRules.isCombatProjectileName(partHit.Name) then
+						partHit:Destroy()
+					end
 					tableSectionHealth[modelSection] -= numberDamagePerHit
 					partStoneBlock.BrickColor = brickDamagedColor
 					if tableSectionHealth[modelSection] <= 0 then

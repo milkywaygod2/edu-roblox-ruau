@@ -302,29 +302,40 @@ function StudentConfig.showStudentRockValidationBoard(svcWorkspace, tblValidatio
 	local eLogical = CoreEnums.eEngineLogicalType
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local partBoard = EngineEnsure.ensureStaticPart(eLogical.STUDENT_ROCK_VALIDATION_BOARD, tblOutpostWorld.fldBattlefield, {
-		Size = Vector3.new(36, 12, 1),
-		Position = Vector3.new(0, 9, -46),
+		Size = Vector3.new(84, 30, 1),
+		CFrame = CFrame.new(-159, 18, 0) * CFrame.Angles(0, math.rad(-90), 0),
 		CanCollide = false,
-		Material = Enum.Material.SmoothPlastic,
+		Material = Enum.Material.Neon,
 		BrickColor = BrickColor.new(#tblValidationMessages == 0 and "Lime green" or "Bright yellow"),
 	})
 
-	local guiBoard = EngineEnsure.ensureNamedInstance(ePhysical.SURFACE_GUI, eLogical.STUDENT_ROCK_VALIDATION_GUI, partBoard, {
-		Face = Enum.NormalId.Front,
-		CanvasSize = Vector2.new(1200, 420),
-	})
-	local labelBoard = EngineEnsure.ensureNamedInstance(ePhysical.TEXT_LABEL, eLogical.STUDENT_ROCK_VALIDATION_TEXT, guiBoard, {
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 0.15,
-		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextWrapped = true,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextYAlignment = Enum.TextYAlignment.Top,
-		TextSize = 24,
-		Font = Enum.Font.Gotham,
-	})
-	labelBoard.Text = StudentConfig.formatStudentRockValidationText(tblValidationMessages)
+	local strValidationText = StudentConfig.formatStudentRockValidationText(tblValidationMessages)
+
+	local function ensure_board_face(strGuiName, enumFace)
+		local guiBoard = EngineEnsure.ensureNamedInstance(ePhysical.SURFACE_GUI, strGuiName, partBoard, {
+			Face = enumFace,
+			AlwaysOnTop = true,
+			CanvasSize = Vector2.new(3200, 1200),
+			PixelsPerStud = 80,
+			LightInfluence = 0,
+		})
+		local labelBoard = EngineEnsure.ensureNamedInstance(ePhysical.TEXT_LABEL, eLogical.STUDENT_ROCK_VALIDATION_TEXT, guiBoard, {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			TextColor3 = Color3.fromRGB(10, 20, 10),
+			TextStrokeColor3 = Color3.fromRGB(255, 255, 255),
+			TextStrokeTransparency = 0.15,
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Center,
+			TextSize = 82,
+			Font = Enum.Font.GothamBlack,
+		})
+		labelBoard.Text = strValidationText
+	end
+
+	ensure_board_face(eLogical.STUDENT_ROCK_VALIDATION_GUI, Enum.NormalId.Front)
+	ensure_board_face(eLogical.STUDENT_ROCK_VALIDATION_GUI_BACK, Enum.NormalId.Back)
 
 	for _, strMessage in ipairs(tblValidationMessages) do
 		warn("학생 돌멩이 설정 검사: " .. strMessage)

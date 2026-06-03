@@ -419,7 +419,6 @@ end
 -- --------------------------------------------------------------------------------
 function CoreBlock.launch(partBlock, vectorVelocity, playerAttacker, numberDamage, tblKnockback)
 	local ePhysical = CoreEnums.eEnginePhysicalType
-	local eService = CoreEnums.eEngineServiceSingleton
 	local eLogical = CoreEnums.eEngineLogicalType
 	local eAttr = CoreEnums.eEngineAttributeKey
 
@@ -429,6 +428,8 @@ function CoreBlock.launch(partBlock, vectorVelocity, playerAttacker, numberDamag
 	partBlock:SetAttribute(eAttr.BLOCK_CAN_MINE, false)
 	partBlock.Anchored = false
 	partBlock.CanCollide = true
+	partBlock.CanTouch = true
+	partBlock.CanQuery = false
 
 	local prompt = partBlock:FindFirstChildOfClass(ePhysical.PROXIMITY_PROMPT)
 	if prompt then prompt:Destroy() end
@@ -447,6 +448,12 @@ function CoreBlock.launch(partBlock, vectorVelocity, playerAttacker, numberDamag
 			return
 		end
 
+		local modelTarget, humanoidTarget = CombatRules.findHumanoidDamageTargetFromPart(partHit)
+		local damageHandler = mapBlockDamageHandlers[partHit]
+		if not partHit.CanCollide and not humanoidTarget and not damageHandler then
+			return
+		end
+
 		boolHit = true
 		touchedConnection:Disconnect()
 
@@ -458,36 +465,43 @@ function CoreBlock.launch(partBlock, vectorVelocity, playerAttacker, numberDamag
 		playBlockEffect(partBlock, partBlock.BrickColor.Name)
 
 		-- 캐릭터 피격 및 넉백
-		local modelTarget = partHit:FindFirstAncestorOfClass(ePhysical.MODEL)
-		local humanoidTarget = modelTarget and modelTarget:FindFirstChildOfClass(ePhysical.HUMANOID)
 		local partTargetRoot = modelTarget and modelTarget:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
 		if humanoidTarget then
-			if CombatRules.canPlayerDamageModel(playerAttacker, modelTarget) then
-				humanoidTarget:TakeDamage(damage)
+			local boolDamageApplied = CombatRules.applyHumanoidDamage(playerAttacker, modelTarget, humanoidTarget, damage)
 
-				-- 물리 넉백 처리
-				if partTargetRoot and tblKnockback then
-					local forwardForce = tblKnockback.Forward or tblKnockback.KnockbackForward or 0
-					local upForce = tblKnockback.Up or tblKnockback.KnockbackUp or 0
-					local launchDir = vectorVelocity.Magnitude > 0 and vectorVelocity.Unit or Vector3.new(0, 0, -1)
-					local knockbackDir = Vector3.new(launchDir.X, 0, launchDir.Z).Unit
-					partTargetRoot.AssemblyLinearVelocity = knockbackDir * forwardForce + Vector3.new(0, upForce, 0)
-				end
+			-- 물리 넉백 처리
+			if boolDamageApplied and partTargetRoot and tblKnockback then
+				local forwardForce = tblKnockback.Forward or tblKnockback.KnockbackForward or 0
+				local upForce = tblKnockback.Up or tblKnockback.KnockbackUp or 0
+				local launchDir = vectorVelocity.Magnitude > 0 and vectorVelocity.Unit or Vector3.new(0, 0, -1)
+				local flatLaunchDir = Vector3.new(launchDir.X, 0, launchDir.Z)
+				local knockbackDir = flatLaunchDir.Magnitude > 0 and flatLaunchDir.Unit or Vector3.new(0, 0, -1)
+				partTargetRoot.AssemblyLinearVelocity = knockbackDir * forwardForce + Vector3.new(0, upForce, 0)
 			end
 		end
 
 		-- 타 방벽 엄폐물 피격 (weak-table에 등록된 블록 대미지 핸들러 호출)
-		local damageHandler = mapBlockDamageHandlers[partHit]
 		if damageHandler then
 			damageHandler(damage * 1.5)
 		end
 
-		-- 투사체 부서지며 물리 자원 조각 스폰
-		spawnDropResources(pos, math.floor(resourceYield * 0.5), resourceType)
+		if not tblKnockback or tblKnockback.DropResourcesOnImpact ~= false then
+			spawnDropResources(pos, math.floor(resourceYield * 0.5), resourceType)
+		end
 		partBlock:Destroy()
 	end)
 
-	game:GetService(eService.DEBRIS):AddItem(partBlock, 10)
+	local numberLifetime = tblKnockback and tblKnockback.Lifetime or 10
+	task.delay(numberLifetime, function()
+		if boolHit or not partBlock.Parent then return end
+
+		boolHit = true
+		if touchedConnection then
+			touchedConnection:Disconnect()
+		end
+
+		partBlock:Destroy()
+	end)
 end
 
 -- --------------------------------------------------------------------------------

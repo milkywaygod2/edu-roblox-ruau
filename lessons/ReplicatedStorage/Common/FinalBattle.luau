@@ -3,8 +3,10 @@ local FinalBattle = {}
 
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
+local BattlefieldLayout = require(script.Parent.BattlefieldLayout)
 local FieldItem = require(script.Parent.FieldItem)
 local StudentConfig = require(script.Parent.StudentConfig)
+local tblWorldLayout = BattlefieldLayout.tblOutpostBattleWorldLayout
 
 -- --------------------------------------------------------------------------------
 function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) -- [의미/의도] 최종 라운드 서버 시스템 설치 함수 정의 ➔ 팀 스폰/라운드 타이머/상태 Attribute를 공통 서버 코드가 책임지게 하기 위함
@@ -64,18 +66,20 @@ function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfi
 				MaxHealth = numberCoreHealth,
 				Health = numberCoreHealth,
 			})
+			EngineEnsure.installHumanoidTargetLifecycle(partCoreRoot, humCore)
 		end
 
 		partCoreRoot.BrickColor = BrickColor.new(strColorName)
 		humCore.MaxHealth = numberCoreHealth
 		humCore.Health = numberCoreHealth
+		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 0)
 		return humCore
 	end
 
 	local teamBlue = ensure_team(eLogical.TEAM_BLUE, "Bright blue")
 	local teamRed = ensure_team(eLogical.TEAM_RED, "Bright red")
-	local partSpawnBlue = ensure_team_spawn(eLogical.TEAM_BLUE, Vector3.new(0, 0.5, 38), "Bright blue")
-	local partSpawnRed = ensure_team_spawn(eLogical.TEAM_RED, Vector3.new(0, 0.5, -38), "Bright red")
+	local partSpawnBlue = ensure_team_spawn(eLogical.TEAM_BLUE, tblWorldLayout.BLUE_SPAWN, "Bright blue")
+	local partSpawnRed = ensure_team_spawn(eLogical.TEAM_RED, tblWorldLayout.RED_SPAWN, "Bright red")
 	local boolPreferBlueForOddRound = true
 
 	local function count_team_players(teamTarget)
@@ -98,6 +102,11 @@ function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfi
 	local function apply_player_team(playerPlayer, teamTarget)
 		playerPlayer.Neutral = false
 		playerPlayer.Team = teamTarget
+		if teamTarget == teamBlue then
+			playerPlayer.RespawnLocation = partSpawnBlue
+		elseif teamTarget == teamRed then
+			playerPlayer.RespawnLocation = partSpawnRed
+		end
 	end
 
 	local function assign_player_to_open_team(playerPlayer)
@@ -191,8 +200,8 @@ function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfi
 		svcWorkspace:SetAttribute(eAttrKey.ROUND_STATE, eRoundState.PREPARING)
 		svcWorkspace:SetAttribute(eAttrKey.ROUND_WINNER_RUNTIME, "None")
 		svcWorkspace:SetAttribute(eAttrKey.ROUND_END_REASON_RUNTIME, "None")
-		ensure_team_core(eLogical.TEAM_BLUE, Vector3.new(0, 3, 32), "Bright blue")
-		ensure_team_core(eLogical.TEAM_RED, Vector3.new(0, 3, -32), "Bright red")
+		ensure_team_core(eLogical.TEAM_BLUE, tblWorldLayout.BLUE_CORE, "Bright blue")
+		ensure_team_core(eLogical.TEAM_RED, tblWorldLayout.RED_CORE, "Bright red")
 		FieldItem.resetFieldToolPickupsToWorld(svcPlayers, fldItemSpawnArea)
 		assign_round_teams()
 		move_players_to_team_spawns()

@@ -1,6 +1,7 @@
 -- [Module] EngineEnsure
 local EngineEnsure = {}
 
+local BattlefieldLayout = require(script.Parent.BattlefieldLayout)
 local CoreEnums = require(script.Parent.CoreEnums)
 
 -- --------------------------------------------------------------------------------
@@ -109,6 +110,89 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function EngineEnsure.removeDefaultWorkspaceBaseplate(svcWorkspace)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local partDefaultBaseplate = svcWorkspace:FindFirstChild(eLogical.DEFAULT_BASEPLATE)
+	if not partDefaultBaseplate or not partDefaultBaseplate:IsA(ePhysical.BASE_PART) then return nil end
+
+	partDefaultBaseplate:Destroy()
+	return partDefaultBaseplate
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function EngineEnsure.restoreHumanoidTargetStandingPose(partHumanoidRoot)
+	if not partHumanoidRoot then return end
+
+	local vectorStandingPosition = partHumanoidRoot:GetAttribute("HumanoidTargetStandingPosition")
+	if typeof(vectorStandingPosition) ~= "Vector3" then
+		vectorStandingPosition = partHumanoidRoot.Position
+	end
+
+	partHumanoidRoot.Anchored = true
+	partHumanoidRoot.CanCollide = true
+	partHumanoidRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+	partHumanoidRoot.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+	partHumanoidRoot.CFrame = CFrame.new(vectorStandingPosition)
+	partHumanoidRoot:SetAttribute("HumanoidTargetDefeatedPose", false)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function EngineEnsure.applyHumanoidTargetDefeatedPose(partHumanoidRoot)
+	if not partHumanoidRoot or partHumanoidRoot:GetAttribute("HumanoidTargetDefeatedPose") == true then return end
+
+	local vectorStandingPosition = partHumanoidRoot:GetAttribute("HumanoidTargetStandingPosition")
+	if typeof(vectorStandingPosition) ~= "Vector3" then
+		vectorStandingPosition = partHumanoidRoot.Position
+	end
+
+	local numberGroundY = vectorStandingPosition.Y - (partHumanoidRoot.Size.Y / 2)
+	local vectorDefeatedPosition = Vector3.new(vectorStandingPosition.X, numberGroundY + (partHumanoidRoot.Size.Z / 2), vectorStandingPosition.Z)
+	partHumanoidRoot.Anchored = true
+	partHumanoidRoot.CanCollide = true
+	partHumanoidRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+	partHumanoidRoot.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+	partHumanoidRoot.CFrame = CFrame.new(vectorDefeatedPosition) * CFrame.Angles(math.rad(90), 0, 0)
+	partHumanoidRoot:SetAttribute("HumanoidTargetDefeatedPose", true)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function EngineEnsure.installHumanoidTargetLifecycle(partHumanoidRoot, humTarget)
+	if not partHumanoidRoot or not humTarget then return end
+
+	partHumanoidRoot:SetAttribute("HumanoidTargetStandingPosition", partHumanoidRoot.Position)
+	if humTarget.Health > 0 then
+		EngineEnsure.restoreHumanoidTargetStandingPose(partHumanoidRoot)
+	else
+		EngineEnsure.applyHumanoidTargetDefeatedPose(partHumanoidRoot)
+	end
+
+	if not EngineEnsure.markRuntimeInstalled(humTarget, "RuntimeInstalled_HumanoidTargetLifecycle") then
+		return
+	end
+
+	humTarget.HealthChanged:Connect(function(numberHealth)
+		if numberHealth <= 0 then
+			EngineEnsure.applyHumanoidTargetDefeatedPose(partHumanoidRoot)
+		else
+			EngineEnsure.restoreHumanoidTargetStandingPose(partHumanoidRoot)
+		end
+	end)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function EngineEnsure.ensureToolWithHandle(strToolName, strToolTip, instanceParent, tblHandleProperties) -- [의미/의도] Tool과 Handle 보장 함수 정의 ➔ 학생 스크립트나 커스터마이즈가 붙은 Tool을 삭제하지 않고 규격만 보정하기 위함
 	local toolTarget = EngineEnsure.ensureNamedInstance(CoreEnums.eEnginePhysicalType.TOOL, strToolName, instanceParent) -- [의미/의도] Tool 보장 ➔ 기존 장비와 내부 Script를 유지하면서 없으면 생성하기 위함
 	toolTarget.RequiresHandle = true -- [의미/의도] Handle 필요 설정 ➔ Roblox 장착 규칙에 맞게 손잡이 파트를 사용하기 위함
@@ -127,6 +211,7 @@ function EngineEnsure.ensureHumanoidTarget(strName, instanceParent, tblRootPartP
 	local modelTarget = EngineEnsure.ensureNamedInstance(CoreEnums.eEnginePhysicalType.MODEL, strName, instanceParent) -- [의미/의도] 목표물 Model 보장 ➔ 몸통 파트와 Humanoid를 하나의 피해 가능 오브젝트로 묶기 위함
 	local partHumanoidRoot = EngineEnsure.ensureStaticPart(CoreEnums.eEngineLogicalType.RESERVED_HUMANOID_ROOT_PART, modelTarget, tblRootPartProperties) -- [의미/의도] HumanoidRootPart 보장 ➔ 데미지 판정과 위치 기준이 되는 중심 파트를 유지 또는 생성하기 위함
 	local humTarget = EngineEnsure.ensureNamedInstance(CoreEnums.eEnginePhysicalType.HUMANOID, CoreEnums.eEnginePhysicalType.HUMANOID, modelTarget, tblHumanoidProperties) -- [의미/의도] Humanoid 보장 ➔ 목표물이 체력과 피해 처리를 갖게 하기 위함
+	EngineEnsure.installHumanoidTargetLifecycle(partHumanoidRoot, humTarget)
 
 	return modelTarget, partHumanoidRoot, humTarget -- [의미/의도] 목표물 구성 객체 반환 ➔ 호출부에서 필요 시 세부 조작할 수 있게 하기 위함
 end
@@ -147,8 +232,8 @@ function EngineEnsure.ensureOutpostBattleWorld(svcWorkspace) -- [의미/의도] 
 	local fldFortification = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.FORTIFICATION, fldOutpostBattleWorld) -- [의미/의도] 방어 구조물 영역 보장 ➔ 문과 벽을 기지 방어 구조로 관리하기 위함
 	local fldSiegeEngine = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.SIEGE_ENGINE, fldOutpostBattleWorld) -- [의미/의도] 중장비 폴더 보장 ➔ 발사 버튼과 기준점을 누적 관리하기 위함
 	local partBattlefieldBase = EngineEnsure.ensureStaticPart(eLogical.BATTLEFIELD_BASE, fldBattlefield, { -- [의미/의도] 공통 전장 바닥 보장 ➔ 1회차부터 12회차까지 같은 플레이 공간을 유지하기 위함
-		Size = Vector3.new(110, 1, 90),
-		Position = Vector3.new(0, -0.45, 0), -- [Z-fighting 해결] 윗면 Y를 0.05로 살짝 띄워 기본 Baseplate(Y=0)와 겹침으로 인한 깜빡임 방지
+		Size = BattlefieldLayout.VECTOR_BATTLEFIELD_BASE_SIZE,
+		Position = Vector3.new(0, -0.45, 0), -- [의미/의도] 윗면을 Y=0.05에 두어 캐릭터와 아이템이 수업용 전장 바닥 위에 안정적으로 놓이게 하기 위함
 		Material = Enum.Material.Grass,
 	})
 
