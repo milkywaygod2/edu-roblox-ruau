@@ -77,117 +77,71 @@ end
 -- --------------------------------------------------------------------------------
 
 
-ThrowingStone.RealMaterial = {
-	Rock     = "Rock",
-	Iron     = "Iron",
-	Gold     = "Gold",
-	Diamond  = "Diamond",
-	Wood     = "Wood",
-	Ice      = "Ice",
-	Rubber   = "Rubber",
-	Obsidian = "Obsidian",
-	Glass    = "Glass",
-	Neon     = "Neon",
-}
-
 local MaterialDatabase = {
-	[ThrowingStone.RealMaterial.Rock] = {
-		Density = 2700, -- 돌(현무암/슬레이트) 밀도: 2,700 kg/m³
-		Hardness = 4.0,  -- 모스 경도: 4.0
-		RobloxMaterial = Enum.Material.Slate,
-		DefaultColor = Color3.fromRGB(120, 120, 120),
-		Transparency = 0
-	},
-	[ThrowingStone.RealMaterial.Iron] = {
-		Density = 7870, -- 순철 밀도: 7,870 kg/m³
-		Hardness = 4.5,  -- 모스 경도: 4.5
-		RobloxMaterial = Enum.Material.Metal,
-		DefaultColor = Color3.fromRGB(190, 190, 195),
-		Transparency = 0
-	},
-	[ThrowingStone.RealMaterial.Gold] = {
-		Density = 19300, -- 순금 밀도: 19,300 kg/m³
-		Hardness = 2.5,   -- 모스 경도: 2.5 (밀도는 높으나 연성)
-		RobloxMaterial = Enum.Material.Metal,
-		DefaultColor = Color3.fromRGB(255, 215, 0),
-		Transparency = 0
-	},
-	[ThrowingStone.RealMaterial.Diamond] = {
-		Density = 3510, -- 다이아몬드 밀도: 3,510 kg/m³
-		Hardness = 10.0, -- 모스 경도: 10.0 (가장 단단함)
-		RobloxMaterial = Enum.Material.Glass,
-		DefaultColor = Color3.fromRGB(180, 240, 255),
-		Transparency = 0.35
-	},
-	[ThrowingStone.RealMaterial.Wood] = {
-		Density = 700,  -- 목재 밀도: 700 kg/m³
-		Hardness = 0.8,  -- 모스 경도: 0.8 (상대적으로 무름)
-		RobloxMaterial = Enum.Material.Wood,
-		DefaultColor = Color3.fromRGB(130, 90, 60),
-		Transparency = 0
-	},
-	[ThrowingStone.RealMaterial.Ice] = {
-		Density = 917,  -- 얼음 밀도: 917 kg/m³
-		Hardness = 1.5,  -- 모스 경도: 1.5
-		RobloxMaterial = Enum.Material.Ice,
-		DefaultColor = Color3.fromRGB(180, 220, 255),
-		Transparency = 0.2
-	},
-	[ThrowingStone.RealMaterial.Rubber] = {
-		Density = 1100, -- 고무 밀도: 1,100 kg/m³
-		Hardness = 0.2,  -- 모스 경도: 0.2 (극도로 낮음, 충격 흡수)
-		RobloxMaterial = Enum.Material.CorrodedMetal,
-		DefaultColor = Color3.fromRGB(85, 60, 60),
-		Transparency = 0
-	},
-	[ThrowingStone.RealMaterial.Obsidian] = {
-		Density = 2400, -- 흑요석 밀도: 2,400 kg/m³
-		Hardness = 5.5,  -- 모스 경도: 5.5
-		RobloxMaterial = Enum.Material.Basalt,
-		DefaultColor = Color3.fromRGB(30, 30, 35),
-		Transparency = 0
-	},
-	[ThrowingStone.RealMaterial.Glass] = {
-		Density = 2500, -- 유리 밀도: 2,500 kg/m³
-		Hardness = 5.5,  -- 모스 경도: 5.5
-		RobloxMaterial = Enum.Material.Glass,
-		DefaultColor = Color3.fromRGB(240, 250, 255),
-		Transparency = 0.45
-	},
-	[ThrowingStone.RealMaterial.Neon] = {
-		Density = 600,  -- 네온(특수 경량 방출 물질) 밀도: 600 kg/m³
-		Hardness = 2.0,  -- 모스 경도: 2.0
-		RobloxMaterial = Enum.Material.Neon,
-		DefaultColor = Color3.fromRGB(255, 100, 0),
-		Transparency = 0
-	},
+	[Enum.Material.Slate] = { Density = 2700, Hardness = 4.0, DefaultColor = Color3.fromRGB(120, 120, 120), Transparency = 0 },
+	[Enum.Material.Metal] = { Density = 7870, Hardness = 4.5, DefaultColor = Color3.fromRGB(190, 190, 195), Transparency = 0 },
+	[Enum.Material.CorrodedMetal] = { Density = 7200, Hardness = 3.5, DefaultColor = Color3.fromRGB(130, 100, 90), Transparency = 0 },
+	[Enum.Material.Wood] = { Density = 700, Hardness = 0.8, DefaultColor = Color3.fromRGB(130, 90, 60), Transparency = 0 },
+	[Enum.Material.WoodPlanks] = { Density = 650, Hardness = 0.8, DefaultColor = Color3.fromRGB(140, 100, 70), Transparency = 0 },
+	[Enum.Material.Ice] = { Density = 917, Hardness = 1.5, DefaultColor = Color3.fromRGB(180, 220, 255), Transparency = 0.2 },
+	[Enum.Material.Glass] = { Density = 2500, Hardness = 5.5, DefaultColor = Color3.fromRGB(240, 250, 255), Transparency = 0.45 },
+	[Enum.Material.Neon] = { Density = 600, Hardness = 2.0, DefaultColor = Color3.fromRGB(255, 100, 0), Transparency = 0 },
+	[Enum.Material.Basalt] = { Density = 2400, Hardness = 5.5, DefaultColor = Color3.fromRGB(30, 30, 35), Transparency = 0 },
+	[Enum.Material.Concrete] = { Density = 2400, Hardness = 4.5, DefaultColor = Color3.fromRGB(150, 150, 150), Transparency = 0 },
+	[Enum.Material.Brick] = { Density = 1900, Hardness = 4.0, DefaultColor = Color3.fromRGB(160, 80, 70), Transparency = 0 },
+	[Enum.Material.Pebble] = { Density = 2600, Hardness = 3.5, DefaultColor = Color3.fromRGB(115, 115, 115), Transparency = 0 },
+	[Enum.Material.Sand] = { Density = 1600, Hardness = 2.0, DefaultColor = Color3.fromRGB(225, 200, 150), Transparency = 0 },
+	[Enum.Material.Grass] = { Density = 300, Hardness = 0.5, DefaultColor = Color3.fromRGB(90, 140, 70), Transparency = 0 },
+	[Enum.Material.Fabric] = { Density = 150, Hardness = 0.1, DefaultColor = Color3.fromRGB(180, 160, 160), Transparency = 0 },
+	[Enum.Material.Plastic] = { Density = 900, Hardness = 1.5, DefaultColor = Color3.fromRGB(170, 170, 170), Transparency = 0 },
+	[Enum.Material.SmoothPlastic] = { Density = 900, Hardness = 1.5, DefaultColor = Color3.fromRGB(180, 180, 180), Transparency = 0 },
+	[Enum.Material.Foil] = { Density = 2700, Hardness = 2.5, DefaultColor = Color3.fromRGB(220, 220, 225), Transparency = 0 },
+	[Enum.Material.Granite] = { Density = 2700, Hardness = 6.0, DefaultColor = Color3.fromRGB(100, 95, 95), Transparency = 0 },
+	[Enum.Material.Marble] = { Density = 2700, Hardness = 3.0, DefaultColor = Color3.fromRGB(230, 230, 235), Transparency = 0 },
+	[Enum.Material.Cobblestone] = { Density = 2500, Hardness = 4.0, DefaultColor = Color3.fromRGB(110, 110, 110), Transparency = 0 },
+	[Enum.Material.Sandstone] = { Density = 2200, Hardness = 3.0, DefaultColor = Color3.fromRGB(195, 160, 120), Transparency = 0 },
+	[Enum.Material.Rock] = { Density = 2700, Hardness = 4.0, DefaultColor = Color3.fromRGB(110, 110, 110), Transparency = 0 },
+	[Enum.Material.Glacier] = { Density = 900, Hardness = 1.5, DefaultColor = Color3.fromRGB(190, 230, 250), Transparency = 0.1 },
+	[Enum.Material.Mud] = { Density = 1500, Hardness = 0.5, DefaultColor = Color3.fromRGB(80, 60, 50), Transparency = 0 },
+	[Enum.Material.Snow] = { Density = 300, Hardness = 0.2, DefaultColor = Color3.fromRGB(245, 245, 245), Transparency = 0 },
+	[Enum.Material.Salt] = { Density = 2160, Hardness = 2.5, DefaultColor = Color3.fromRGB(225, 225, 230), Transparency = 0.05 },
 }
 
 
 -- --------------------------------------------------------------------------------
 function ThrowingStone.getThrowingStoneMaterialProfile(customMaterialNameOrEnum)
-	local strName = tostring(customMaterialNameOrEnum)
+	local enumMaterial = nil
 	if typeof(customMaterialNameOrEnum) == "EnumItem" then
-		strName = customMaterialNameOrEnum.Name
-	end
-
-	-- 1. 커스텀 데이터베이스에서 이름 검사
-	for customKey, data in pairs(MaterialDatabase) do
-		if customKey:lower() == strName:lower() then
-			return data
+		enumMaterial = customMaterialNameOrEnum
+	elseif type(customMaterialNameOrEnum) == "string" then
+		for _, item in ipairs(Enum.Material:GetEnumItems()) do
+			if item.Name:lower() == customMaterialNameOrEnum:lower() then
+				enumMaterial = item
+				break
+			end
+		end
+		
+		-- 구버전 텍스트 "Rock" 에셋 처리 호환성 유지
+		if not enumMaterial and customMaterialNameOrEnum:lower() == "rock" then
+			enumMaterial = Enum.Material.Rock or Enum.Material.Slate
 		end
 	end
 
-	-- 2. 로블록스 순정 재질에 따른 임시 하위 호환 매핑
-	if customMaterialNameOrEnum == Enum.Material.Metal then
-		return MaterialDatabase.Iron
-	elseif customMaterialNameOrEnum == Enum.Material.Wood then
-		return MaterialDatabase.Wood
-	elseif customMaterialNameOrEnum == Enum.Material.Ice then
-		return MaterialDatabase.Ice
+	local data = enumMaterial and MaterialDatabase[enumMaterial]
+	if data then
+		return data, enumMaterial
 	end
 
-	return MaterialDatabase.Rock
+	-- 로블록스 순정 재질에 따른 임시 하위 호환 매핑
+	if customMaterialNameOrEnum == Enum.Material.Metal then
+		return MaterialDatabase[Enum.Material.Metal], Enum.Material.Metal
+	elseif customMaterialNameOrEnum == Enum.Material.Wood then
+		return MaterialDatabase[Enum.Material.Wood], Enum.Material.Wood
+	elseif customMaterialNameOrEnum == Enum.Material.Ice then
+		return MaterialDatabase[Enum.Material.Ice], Enum.Material.Ice
+	end
+
+	return MaterialDatabase[Enum.Material.Slate], Enum.Material.Slate
 end
 
 
@@ -260,10 +214,9 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		vectorSize = StudentConfig.readEquipmentSize(tblAppearanceConfig, "CollisionSize", "ThrowingStone", tblValidationMessages, strSourceName)
 	end
 	
-	-- RealMaterial 문자열 파싱 및 검증
-	local strRealMaterial = StudentConfig.readThrowingStoneMaterial(tblAppearanceConfig, "Material", "Rock", tblValidationMessages, strSourceName)
-	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(strRealMaterial)
-	local enumMaterial = tblMaterialProfile.RobloxMaterial
+	-- Material 파싱 및 검증 (EnumItem 반환)
+	local enumMaterial = StudentConfig.readThrowingStoneMaterial(tblAppearanceConfig, "Material", Enum.Material.Slate, tblValidationMessages, strSourceName)
+	local tblMaterialProfile, matchedEnum = ThrowingStone.getThrowingStoneMaterialProfile(enumMaterial)
 
 	local enumShape = StudentConfig.readConfigEnumItem(tblAppearanceConfig, "CollisionShape", Enum.PartType.Ball)
 	local valueShape = tblAppearanceConfig and tblAppearanceConfig.CollisionShape
@@ -300,7 +253,7 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 10으로 보정했습니다.")
 	end
-	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, strRealMaterial)
+	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, matchedEnum)
 
 	return {
 		VariantId = strVariantId,
@@ -308,7 +261,7 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		SpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", 10, 1, 10),
 		SpawnOffset = StudentConfig.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8)),
 		SpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 4, 0, 8),
-		RealMaterial = strRealMaterial,
+		RealMaterial = matchedEnum.Name,
 		Damage = tblStats.Damage,
 		Cooldown = tblStats.Cooldown,
 		Speed = tblStats.Speed,

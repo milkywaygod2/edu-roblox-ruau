@@ -945,7 +945,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			if not numberDamage then
 				if is_throwing_stone(toolEquipped) then
 					numberDamage = 15
-					strRealMaterial = "Rock"
+					strRealMaterial = "Slate"
 				elseif toolEquipped.Name:find("Sword") or toolEquipped.Name:find("검") then
 					numberDamage = 25
 					strRealMaterial = "Metal"
@@ -963,7 +963,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 					elseif toolEquipped.Name:find("Bow") or toolEquipped.Name:find("활") then
 						strRealMaterial = "Wood"
 					else
-						strRealMaterial = "Rock"
+						strRealMaterial = "Slate"
 					end
 				end
 			end

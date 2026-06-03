@@ -256,37 +256,35 @@ function StudentConfig.readThrowingStoneMaterial(tblConfig, strKey, defaultMater
 		return defaultMaterial
 	end
 
-	-- 1. 하위 호환성 및 서버 내부 호출 대응 (Enum.Material 값을 그대로 보낸 경우)
+	-- 1. Enum.Material 값을 그대로 보낸 경우
 	if typeof(valueMaterial) == "EnumItem" then
 		return valueMaterial
 	end
 
-	-- 2. 문자열(RealMaterial) 입력 검사
+	-- 2. 문자열 입력 검사 (대소문자 무관하게 Enum.Material 목록과 매칭)
 	if type(valueMaterial) == "string" then
-		local tblAllowedRealMaterials = {"Rock", "Iron", "Gold", "Diamond", "Wood", "Ice", "Rubber", "Obsidian", "Glass", "Neon"}
-		local strMatchedMaterial = nil
-		for _, strAllowed in ipairs(tblAllowedRealMaterials) do
-			if strAllowed:lower() == valueMaterial:lower() then
-				strMatchedMaterial = strAllowed
+		local matchedEnum = nil
+		for _, item in ipairs(Enum.Material:GetEnumItems()) do
+			if item.Name:lower() == valueMaterial:lower() then
+				matchedEnum = item
 				break
 			end
 		end
 
-		if strMatchedMaterial then
-			return strMatchedMaterial
+		if matchedEnum then
+			return matchedEnum
 		end
 
-		-- 허용되지 않은 문자열인 경우 경고 출력
+		-- 허용되지 않은 재질 문자열인 경우
 		if tblValidationMessages and strSourceName then
-			local strAllowedList = table.concat(tblAllowedRealMaterials, ", ")
-			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 허용된 재질(" .. strAllowedList .. ") 중 하나여야 해서 기본 " .. tostring(defaultMaterial) .. "으로 보정했습니다.")
+			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 유효한 Enum.Material 이름이어야 합니다. 기본값(" .. tostring(defaultMaterial) .. ")으로 보정했습니다.")
 		end
 		return defaultMaterial
 	end
 
 	-- 3. 유효하지 않은 타입인 경우
 	if tblValidationMessages and strSourceName then
-		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 RealMaterial 명칭(문자열)을 써야 해서 기본 " .. tostring(defaultMaterial) .. "으로 보정했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Enum.Material 또는 해당 재질 이름이어야 합니다.")
 	end
 	return defaultMaterial
 end
