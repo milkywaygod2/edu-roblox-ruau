@@ -8,6 +8,8 @@ local CoreEnums = require(script.Parent.CoreEnums)
 local FieldItem = require(script.Parent.FieldItem)
 local StudentConfig = require(script.Parent.StudentConfig)
 
+local intAutoRockDesignId = 0
+
 -- --------------------------------------------------------------------------------
 
 
@@ -20,13 +22,7 @@ local StudentConfig = require(script.Parent.StudentConfig)
 
 
 function ThrowingStone.isThrowingStoneMaterialBlocked(enumMaterial)
-	for _, enumBlockedMaterial in ipairs(StudentConfig.tblThrowingStoneMaterialBlockList) do
-		if enumMaterial == enumBlockedMaterial then
-			return true
-		end
-	end
-
-	return false
+	return StudentConfig.isThrowingStoneMaterialBlocked(enumMaterial)
 end
 
 
@@ -34,12 +30,7 @@ end
 
 
 function ThrowingStone.hashTextToInteger(strText)
-	local intHash = 0
-	for index = 1, #strText do
-		intHash = (intHash * 31 + string.byte(strText, index)) % 2147483647
-	end
-
-	return intHash
+	return FieldItem.hashTextToInteger(strText)
 end
 
 
@@ -47,14 +38,7 @@ end
 
 
 function ThrowingStone.createFlatSpawnJitter(strSeedText, intIndex, numberRadius)
-	if numberRadius <= 0 then
-		return Vector3.new(0, 0, 0)
-	end
-
-	local randomJitter = Random.new(ThrowingStone.hashTextToInteger(strSeedText .. "_" .. intIndex))
-	local numberDistance = math.sqrt(randomJitter:NextNumber()) * numberRadius
-	local numberAngle = randomJitter:NextNumber() * math.pi * 2
-	return Vector3.new(math.cos(numberAngle) * numberDistance, 0, math.sin(numberAngle) * numberDistance)
+	return FieldItem.createFlatSpawnJitter(strSeedText, intIndex, numberRadius)
 end
 
 
@@ -162,11 +146,11 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 
 	local tblAppearance = StudentConfig.readConfigTable(tblConfig, "Appearance", nil, tblValidationMessages, strSourceName)
 	local tblAppearanceConfig = StudentConfig.mergeConfigTables(tblConfig, tblAppearance)
-	local vectorSize = common.readEquipmentSize(tblAppearanceConfig, "Size", "ThrowingStone", tblValidationMessages, strSourceName)
+	local vectorSize = StudentConfig.readEquipmentSize(tblAppearanceConfig, "Size", "ThrowingStone", tblValidationMessages, strSourceName)
 	if tblAppearanceConfig and tblAppearanceConfig.Size == nil and tblAppearanceConfig.CollisionSize ~= nil then
-		vectorSize = common.readEquipmentSize(tblAppearanceConfig, "CollisionSize", "ThrowingStone", tblValidationMessages, strSourceName)
+		vectorSize = StudentConfig.readEquipmentSize(tblAppearanceConfig, "CollisionSize", "ThrowingStone", tblValidationMessages, strSourceName)
 	end
-	local enumMaterial = common.readThrowingStoneMaterial(tblAppearanceConfig, "Material", Enum.Material.Slate, tblValidationMessages, strSourceName)
+	local enumMaterial = StudentConfig.readThrowingStoneMaterial(tblAppearanceConfig, "Material", Enum.Material.Slate, tblValidationMessages, strSourceName)
 	local enumShape = StudentConfig.readConfigEnumItem(tblAppearanceConfig, "CollisionShape", Enum.PartType.Ball)
 	local valueShape = tblAppearanceConfig and tblAppearanceConfig.CollisionShape
 	if tblAppearanceConfig and tblAppearanceConfig.CollisionShape == nil and tblAppearanceConfig.Shape ~= nil then
@@ -363,7 +347,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local numberKnockbackUp = StudentConfig.readConfigNumber(tblConfig, "KnockbackUp", 18, 0, 60)
 	local numberLifetime = StudentConfig.readConfigNumber(tblConfig, "Lifetime", 5, 1, 12)
 	local vectorProjectileSize = StudentConfig.readConfigVector3(tblConfig, "ProjectileSize", Vector3.new(1.2, 1.2, 1.2), Vector3.new(0.3, 0.3, 0.3), Vector3.new(4, 4, 4))
-	local enumProjectileMaterial = common.readThrowingStoneMaterial(tblConfig, "ProjectileMaterial", Enum.Material.Slate)
+	local enumProjectileMaterial = StudentConfig.readThrowingStoneMaterial(tblConfig, "ProjectileMaterial", Enum.Material.Slate)
 	local colorProjectile = StudentConfig.readConfigColor3(tblConfig, "ProjectileColor", BrickColor.new("Dark stone grey").Color)
 	local enumProjectileShape = StudentConfig.readConfigEnumItem(tblConfig, "ProjectileShape", Enum.PartType.Ball)
 	local strLookShape = StudentConfig.readConfigString(tblConfig, "LookShape", StudentConfig.readConfigString(tblConfig, "Look", ""))

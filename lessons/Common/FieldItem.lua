@@ -6,10 +6,37 @@ local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
 local MagicSystem = require(script.Parent.MagicSystem)
 local StudentConfig = require(script.Parent.StudentConfig)
-local ThrowingStone = require(script.Parent.ThrowingStone)
 local WeaponSystems = require(script.Parent.WeaponSystems)
 
 -- --------------------------------------------------------------------------------
+function FieldItem.hashTextToInteger(strText)
+	local intHash = 0
+	for index = 1, #strText do
+		intHash = (intHash * 31 + string.byte(strText, index)) % 2147483647
+	end
+
+	return intHash
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function FieldItem.createFlatSpawnJitter(strSeedText, intIndex, numberRadius)
+	if numberRadius <= 0 then
+		return Vector3.new(0, 0, 0)
+	end
+
+	local randomJitter = Random.new(FieldItem.hashTextToInteger(strSeedText .. "_" .. intIndex))
+	local numberDistance = math.sqrt(randomJitter:NextNumber()) * numberRadius
+	local numberAngle = randomJitter:NextNumber() * math.pi * 2
+	return Vector3.new(math.cos(numberAngle) * numberDistance, 0, math.sin(numberAngle) * numberDistance)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, strToolName, tblSpawnPositions, strColorName) -- [의미/의도] 전장 아이템 스폰 마커 보장 함수 정의 ➔ 학생 튜닝 장비가 어디에 나타날지 선생 코드에서 지도처럼 배치하기 위함
 	local eLogical = CoreEnums.eEngineLogicalType
 	local brickColor = BrickColor.new(strColorName or "Bright yellow")
@@ -58,7 +85,7 @@ function FieldItem.installFieldToolPickups(svcWorkspace, strToolName, strToolTip
 	local numberSpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 0, 0, 12)
 
 	for index = 1, intSpawnCount do
-		local vectorSpawnJitter = ThrowingStone.createFlatSpawnJitter(strVariantId, index, numberSpawnRadius)
+		local vectorSpawnJitter = FieldItem.createFlatSpawnJitter(strVariantId, index, numberSpawnRadius)
 		local vectorSpawnPosition = tblSpawnPositions[((index - 1) % #tblSpawnPositions) + 1] + vectorSpawnOffset + vectorSpawnJitter
 		local toolPickup = EngineEnsure.ensureToolWithHandle(eLogical.FIELD_ITEM_PREFIX .. strToolName .. "_" .. strVariantId .. "_" .. index, strToolTip, fldItemSpawnArea, tblDefaultHandleProperties)
 		toolPickup.ToolTip = strDisplayName .. " - 클릭해서 줍기"

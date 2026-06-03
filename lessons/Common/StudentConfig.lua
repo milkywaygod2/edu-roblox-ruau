@@ -236,7 +236,21 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function common.readThrowingStoneMaterial(tblConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
+function StudentConfig.isThrowingStoneMaterialBlocked(enumMaterial)
+	for _, enumBlockedMaterial in ipairs(StudentConfig.tblThrowingStoneMaterialBlockList) do
+		if enumMaterial == enumBlockedMaterial then
+			return true
+		end
+	end
+
+	return false
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function StudentConfig.readThrowingStoneMaterial(tblConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
 	local valueMaterial = tblConfig and tblConfig[strKey]
 	if valueMaterial ~= nil and typeof(valueMaterial) ~= "EnumItem" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Enum.Material 값을 써야 해서 기본 Slate로 보정했습니다.")
@@ -249,7 +263,7 @@ function common.readThrowingStoneMaterial(tblConfig, strKey, enumDefault, tblVal
 		return enumDefault
 	end
 
-	if ThrowingStone.isThrowingStoneMaterialBlocked(enumMaterial) then
+	if StudentConfig.isThrowingStoneMaterialBlocked(enumMaterial) then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, tostring(enumMaterial) .. "는 돌 Part에 쓰지 않도록 막아서 기본 Slate로 보정했습니다.")
 		return enumDefault
 	end
