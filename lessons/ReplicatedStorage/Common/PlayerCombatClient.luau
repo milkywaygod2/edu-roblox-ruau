@@ -160,16 +160,18 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			local camera = workspace.CurrentCamera or workspace:WaitForChild("Camera", 5)
 			local originalCameraType = camera and camera.CameraType or Enum.CameraType.Custom
 
-			-- 3중 방어: 카메라 타입을 Scriptable로 전환하고 Modal을 켜서 마우스 및 시선 고정을 강제 차단합니다.
+			-- 4중 방어: 카메라 타입을 Scriptable로 전환하고 Modal 및 커서를 켜서 마우스 및 시선 고정을 강제 차단합니다.
 			if camera then
 				camera.CameraType = Enum.CameraType.Scriptable
 			end
 			UserInputService.ModalEnabled = true
+			UserInputService.MouseIconEnabled = true
 
-			-- 마우스 조작 도중 카메라 스크립트가 MouseBehavior를 강제 잠금하는 것을 방어하는 50ms 주기 루프
+			-- 마우스 조작 도중 카메라 스크립트가 MouseBehavior를 강제 잠금하고 커서를 숨기는 것을 방어하는 50ms 주기 루프
 			task.spawn(function()
 				while guiSpec and guiSpec.Parent do
 					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+					UserInputService.MouseIconEnabled = true
 					task.wait(0.05)
 				end
 			end)
