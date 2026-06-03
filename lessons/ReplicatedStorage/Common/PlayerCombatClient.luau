@@ -74,6 +74,93 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	guiCrosshair.Enabled = false
 	guiCrosshair.Parent = playerLocal:WaitForChild("PlayerGui")
 
+	-- 기본 백팩 UI 비활성화 (커스텀 좌측 핫바 사용을 위함)
+	local boolStarterGuiSuccess = pcall(function()
+		game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+	end)
+
+	-- Left Custom Item Slot Gui
+	local guiLeftHotbar = Instance.new(ePhysical.SCREEN_GUI)
+	guiLeftHotbar.Name = "PlayerCombatLeftHotbarGui"
+	guiLeftHotbar.ResetOnSpawn = false
+	guiLeftHotbar.Enabled = true
+	guiLeftHotbar.Parent = playerLocal:WaitForChild("PlayerGui")
+
+	local frameSlot = Instance.new(ePhysical.FRAME)
+	frameSlot.Name = "ItemSlot"
+	frameSlot.AnchorPoint = Vector2.new(0, 1)
+	frameSlot.Size = UDim2.fromOffset(65, 65)
+	frameSlot.Position = UDim2.new(0, 25, 1, -25)
+	frameSlot.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+	frameSlot.BackgroundTransparency = 0.25
+	frameSlot.BorderSizePixel = 0
+	frameSlot.Parent = guiLeftHotbar
+
+	local cornerSlot = Instance.new("UICorner")
+	cornerSlot.CornerRadius = UDim.new(0, 8)
+	cornerSlot.Parent = frameSlot
+
+	local strokeSlot = Instance.new("UIStroke")
+	strokeSlot.Color = Color3.fromRGB(65, 65, 80)
+	strokeSlot.Thickness = 2
+	strokeSlot.Parent = frameSlot
+
+	local labelHotkey = Instance.new("TextLabel")
+	labelHotkey.Name = "HotkeyLabel"
+	labelHotkey.Size = UDim2.fromOffset(20, 20)
+	labelHotkey.Position = UDim2.fromOffset(5, 5)
+	labelHotkey.BackgroundTransparency = 1
+	labelHotkey.TextColor3 = Color3.fromRGB(150, 150, 150)
+	labelHotkey.TextSize = 10
+	labelHotkey.Font = Enum.Font.GothamBold
+	labelHotkey.Text = "1"
+	labelHotkey.Parent = frameSlot
+
+	local labelItemName = Instance.new("TextLabel")
+	labelItemName.Name = "ItemNameLabel"
+	labelItemName.Size = UDim2.new(1, -10, 1, -20)
+	labelItemName.Position = UDim2.new(0.5, 0, 0.5, 5)
+	labelItemName.AnchorPoint = Vector2.new(0.5, 0.5)
+	labelItemName.BackgroundTransparency = 1
+	labelItemName.TextColor3 = Color3.fromRGB(200, 200, 200)
+	labelItemName.TextSize = 10
+	labelItemName.Font = Enum.Font.GothamBold
+	labelItemName.TextWrapped = true
+	labelItemName.Text = "비어 있음"
+	labelItemName.Parent = frameSlot
+
+	local function toggle_equip_slot_item()
+		local modelCharacter = playerLocal.Character
+		local humanoidPlayer = modelCharacter and modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
+		if not humanoidPlayer then return end
+
+		local toolEquipped = get_equipped_tool()
+		if toolEquipped then
+			humanoidPlayer:UnequipTools()
+		else
+			local backpack = playerLocal:FindFirstChild("Backpack")
+			local toolToEquip = backpack and backpack:FindFirstChildOfClass("Tool")
+			if toolToEquip then
+				humanoidPlayer:EquipTool(toolToEquip)
+			end
+		end
+	end
+
+	local buttonSlotClick = Instance.new("TextButton")
+	buttonSlotClick.Name = "SlotClickButton"
+	buttonSlotClick.Size = UDim2.fromScale(1, 1)
+	buttonSlotClick.BackgroundTransparency = 1
+	buttonSlotClick.Text = ""
+	buttonSlotClick.Parent = frameSlot
+	buttonSlotClick.MouseButton1Click:Connect(toggle_equip_slot_item)
+
+	svcUserInputService.InputBegan:Connect(function(inputBegan, boolProcessed)
+		if boolProcessed then return end
+		if inputBegan.KeyCode == Enum.KeyCode.One then
+			toggle_equip_slot_item()
+		end
+	end)
+
 	-- HUD UI ScreenGui
 	local guiHud = Instance.new(ePhysical.SCREEN_GUI)
 	guiHud.Name = "PlayerCombatHudGui"
@@ -669,6 +756,27 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			labelWeaponName.Text = "장착: 주먹"
 			labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
 		end
+
+		-- 3. 좌측 아이템 슬롯 비주얼 동기화
+		local toolInBackpack = playerLocal:FindFirstChild("Backpack") and playerLocal.Backpack:FindFirstChildOfClass("Tool")
+		local toolCurrent = toolEquipped or toolInBackpack
+
+		if toolCurrent then
+			labelItemName.Text = toolCurrent.Name
+			labelItemName.TextColor3 = Color3.fromRGB(255, 255, 255)
+			if toolEquipped then
+				strokeSlot.Color = Color3.fromRGB(100, 200, 255)
+				frameSlot.BackgroundTransparency = 0.15
+			else
+				strokeSlot.Color = Color3.fromRGB(80, 80, 95)
+				frameSlot.BackgroundTransparency = 0.35
+			end
+		else
+			labelItemName.Text = "비어 있음"
+			labelItemName.TextColor3 = Color3.fromRGB(100, 100, 100)
+			strokeSlot.Color = Color3.fromRGB(50, 50, 60)
+			frameSlot.BackgroundTransparency = 0.5
+		end
 	end
 
 	svcRunService.RenderStepped:Connect(function()
@@ -681,13 +789,17 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end
 
 		frameChargeFill.Size = UDim2.fromScale(get_charge(), 1)
-		update_fist_action_visuals()
 
 		local numberNow = os.clock()
 		if numberNow - numberLastUiUpdateTime > 0.08 then
 			numberLastUiUpdateTime = numberNow
 			update_hud_ui()
 		end
+	end)
+
+	-- [애니메이션 가로채기] 내장 애니메이션 시스템이 Transform 속성을 매 프레임 오버라이드하는 문제를 물리 Stepped 루프에서 가로채서 펀치 모션을 출력시킵니다.
+	svcRunService.Stepped:Connect(function()
+		update_fist_action_visuals()
 	end)
 
 	watch_container(playerLocal:WaitForChild("Backpack"))
