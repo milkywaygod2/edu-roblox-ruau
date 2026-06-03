@@ -504,38 +504,21 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		local boolLanded = false
 		local connectionTouched
 
-		local function finish_throw_after_delay(numberDelay, partHit)
+		local function finish_throw_after_delay(numberDelay)
 			if boolLanded then return end
 			boolLanded = true
-
-			-- [회수 시 충돌 조인트 완전 제거]
-			-- 회수 직전에 충돌했던 파트(partHit)와 partHandle 사이의 모든 물리 조인트를 제거하여 캐릭터에 달라붙는 현상을 차단합니다.
-			if partHit then
-				local function destroyJointsBetween(partA, partB)
-					if not partA or not partB then return end
-					for _, item in ipairs(partA:GetChildren()) do
-						if item:IsA("JointInstance") or item:IsA("WeldConstraint") then
-							if (item.Part0 == partA and item.Part1 == partB) or (item.Part0 == partB and item.Part1 == partA) then
-								item:Destroy()
-							end
-						end
-					end
-					for _, item in ipairs(partB:GetChildren()) do
-						if item:IsA("JointInstance") or item:IsA("WeldConstraint") then
-							if (item.Part0 == partA and item.Part1 == partB) or (item.Part0 == partB and item.Part1 == partA) then
-								item:Destroy()
-							end
-						end
-					end
-				end
-				destroyJointsBetween(partHandle, partHit)
-			end
 
 			task.delay(numberDelay, function()
 				if connectionTouched then
 					connectionTouched:Disconnect()
 				end
 				if not toolThrowingStone.Parent then return end
+
+				-- [물리 조인트 완전 파괴 및 외형 재구축]
+				-- 충돌로 인해 타겟 캐릭터의 여러 파트들과 다중으로 맺어졌을 수 있는 모든 물리 조인트를 단번에 완전히 파괴하고,
+				-- 겉모습 비주얼을 일시적으로 청소한 뒤 스폰 위치 이동이 완료되면 외형을 깨끗하게 새로 입혀 조인트 고착을 완벽히 방지합니다.
+				partHandle:BreakJoints()
+				Appearance.clearRockLook(partHandle)
 
 				partHandle:SetAttribute(eAttr.BLOCK_IS_PROJECTILE, false)
 				partHandle.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
@@ -549,6 +532,9 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 				toolThrowingStone.Parent = fldItemSpawnArea
 				FieldItem.applyFieldToolWorldState(toolThrowingStone, partHandle, vectorSafeRestPosition)
 				toolThrowingStone:SetAttribute(eAttr.FIELD_ITEM_HOME_POSITION, vectorSafeRestPosition)
+
+				-- 스폰이 완벽히 끝난 시점에 외형 모델을 새로 체결하여 조인트 버그를 원천 차단
+				Appearance.applyRockLook(partHandle, strLookShape)
 			end)
 		end
 
@@ -606,11 +592,11 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 				end
 
 				if not boolLanded then
-					finish_throw_after_delay(0, partHit)
+					finish_throw_after_delay(0)
 				end
 			elseif not humanoidTarget and not boolLanded then
 				-- 지형지물에 일반 충돌 시 비행 해제
-				finish_throw_after_delay(0.6, partHit)
+				finish_throw_after_delay(0.6)
 			end
 		end)
 
@@ -618,14 +604,14 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 			while not boolLanded and toolThrowingStone.Parent do
 				task.wait(0.25)
 				if not FieldItem.isFieldToolWorldPositionSafe(fldItemSpawnArea, partHandle.Position) then
-					finish_throw_after_delay(0, nil)
+					finish_throw_after_delay(0)
 					return
 				end
 			end
 		end)
 
 		task.delay(numberChargedLifetime, function()
-			finish_throw_after_delay(0, nil)
+			finish_throw_after_delay(0)
 		end)
 	end
 

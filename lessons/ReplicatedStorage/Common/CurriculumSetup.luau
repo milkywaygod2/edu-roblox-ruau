@@ -13,6 +13,7 @@ local Fortification = require(script.Parent.Fortification)
 local SiegeEngine = require(script.Parent.SiegeEngine)
 local MagicSystem = require(script.Parent.MagicSystem)
 local FinalBattle = require(script.Parent.FinalBattle)
+local CombatRules = require(script.Parent.CombatRules)
 
 local tblWorldLayout = BattlefieldLayout.tblOutpostBattleWorldLayout
 
@@ -324,7 +325,8 @@ function CurriculumSetup.ensureCurriculumCoreTargets(fldObjectiveArea)
 			MaxHealth = 160,
 			Health = 160,
 		})
-		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 0)
+		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 500)
+		CombatRules.showDamageFeedback(modelCore, 0, 160, 160)
 		CurriculumSetup.ensureCurriculumTeamSymbol(fldObjectiveArea, tblCoreConfig.Name, tblCoreConfig.Position, tblCoreConfig.Color)
 	end
 end
