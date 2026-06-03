@@ -4,9 +4,7 @@ local FieldItem = {}
 local Appearance = require(script.Parent.Appearance)
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
-local MagicSystem = require(script.Parent.MagicSystem)
 local StudentConfig = require(script.Parent.StudentConfig)
-local WeaponSystems = require(script.Parent.WeaponSystems)
 
 -- --------------------------------------------------------------------------------
 function FieldItem.hashTextToInteger(strText)
@@ -164,83 +162,5 @@ end
 
 -- --------------------------------------------------------------------------------
 
-
-function FieldItem.installFieldSwordPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 검 파밍 설치 함수 정의 ➔ 근접 무기를 직접 지급하지 않고 중앙 교전 지역에서 획득하게 하기 위함
-	local eLogical = CoreEnums.eEngineLogicalType
-	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SWORD, "클릭해서 주운 뒤 근접 교전에 사용합니다", tblConfig, {
-		Vector3.new(-18, 0.1, -2),
-		Vector3.new(18, 0.1, -2),
-	}, {
-		Size = Vector3.new(1, 5, 1),
-		Material = Enum.Material.Metal,
-		BrickColor = BrickColor.new("Medium stone grey"),
-	}, WeaponSystems.installFieldSwordTool)
-end
-
-
--- --------------------------------------------------------------------------------
-
-
-function FieldItem.installFieldBowPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 활 파밍 설치 함수 정의 ➔ 원거리 무기를 전장 측면에서 찾아 쓰게 하기 위함
-	local eLogical = CoreEnums.eEngineLogicalType
-	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_BOW, "클릭해서 주운 뒤 원거리 견제에 사용합니다", tblConfig, {
-		Vector3.new(-34, 0.1, -6),
-		Vector3.new(34, 0.1, -6),
-	}, {
-		Size = Vector3.new(1, 4, 1),
-		Material = Enum.Material.Wood,
-		BrickColor = BrickColor.new("Reddish brown"),
-	}, WeaponSystems.installFieldBowTool)
-end
-
-
--- --------------------------------------------------------------------------------
-
-
-function FieldItem.installFieldShieldPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 방패 파밍 설치 함수 정의 ➔ 방어 장비를 목표물 주변에서 찾아 선택하게 하기 위함
-	local eLogical = CoreEnums.eEngineLogicalType
-	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SHIELD, "클릭해서 주운 뒤 투사체를 막습니다", tblConfig, {
-		Vector3.new(-12, 0.1, 18),
-		Vector3.new(12, 0.1, -18),
-	}, {
-		Size = Vector3.new(4, 5, 0.6),
-		Material = Enum.Material.Metal,
-		BrickColor = BrickColor.new("Dark stone grey"),
-	}, WeaponSystems.installFieldShieldTool)
-end
-
-
--- --------------------------------------------------------------------------------
-
-
-function FieldItem.installFieldArmorPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 갑옷 파밍 설치 함수 정의 ➔ 강한 방어 장비를 느린 이동이라는 선택지와 함께 맵에 배치하기 위함
-	local eLogical = CoreEnums.eEngineLogicalType
-	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_ARMOR, "클릭해서 주운 뒤 장착 능력치를 적용합니다", tblConfig, {
-		Vector3.new(-30, 0.1, 22),
-		Vector3.new(30, 0.1, -22),
-	}, {
-		Size = Vector3.new(2, 2, 1),
-		Material = Enum.Material.Metal,
-		BrickColor = BrickColor.new("Really black"),
-	}, WeaponSystems.installFieldArmorTool)
-end
-
-
--- --------------------------------------------------------------------------------
-
-
-function FieldItem.installMagicStaffPickups(svcWorkspace, tblConfig) -- [의미/의도] 마법 지팡이 파밍 설치 함수 정의 ➔ 클라이언트 입력 장비도 직접 지급하지 않고 전장에서 획득하게 하기 위함
-	local eLogical = CoreEnums.eEngineLogicalType
-	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.MAGIC_STAFF, "클릭해서 주운 뒤 조준 지점에 마법을 시전합니다", tblConfig, {
-		Vector3.new(-8, 0.1, -30),
-		Vector3.new(8, 0.1, -30),
-	}, {
-		Size = Vector3.new(0.6, 5, 0.6),
-		Material = Enum.Material.Neon,
-		BrickColor = BrickColor.new("Royal purple"),
-	}, MagicSystem.installMagicStaffTool)
-end
-
--- --------------------------------------------------------------------------------
 
 return FieldItem

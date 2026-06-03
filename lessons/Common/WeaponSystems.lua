@@ -5,9 +5,74 @@ local Appearance = require(script.Parent.Appearance)
 local CombatRules = require(script.Parent.CombatRules)
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
+local FieldItem = require(script.Parent.FieldItem)
 local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
+function WeaponSystems.installFieldSwordPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 검 파밍 설치 함수 정의 ➔ 검 장비 도메인이 자기 스폰 규격과 서버 시스템 연결을 소유하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SWORD, "클릭해서 주운 뒤 근접 교전에 사용합니다", tblConfig, {
+		Vector3.new(-18, 0.1, -2),
+		Vector3.new(18, 0.1, -2),
+	}, {
+		Size = Vector3.new(1, 5, 1),
+		Material = Enum.Material.Metal,
+		BrickColor = BrickColor.new("Medium stone grey"),
+	}, WeaponSystems.installFieldSwordTool)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function WeaponSystems.installFieldBowPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 활 파밍 설치 함수 정의 ➔ 활 장비 도메인이 자기 스폰 규격과 서버 시스템 연결을 소유하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_BOW, "클릭해서 주운 뒤 원거리 견제에 사용합니다", tblConfig, {
+		Vector3.new(-34, 0.1, -6),
+		Vector3.new(34, 0.1, -6),
+	}, {
+		Size = Vector3.new(1, 4, 1),
+		Material = Enum.Material.Wood,
+		BrickColor = BrickColor.new("Reddish brown"),
+	}, WeaponSystems.installFieldBowTool)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function WeaponSystems.installFieldShieldPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 방패 파밍 설치 함수 정의 ➔ 방패 장비 도메인이 자기 스폰 규격과 서버 시스템 연결을 소유하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_SHIELD, "클릭해서 주운 뒤 투사체를 막습니다", tblConfig, {
+		Vector3.new(-12, 0.1, 18),
+		Vector3.new(12, 0.1, -18),
+	}, {
+		Size = Vector3.new(4, 5, 0.6),
+		Material = Enum.Material.Metal,
+		BrickColor = BrickColor.new("Dark stone grey"),
+	}, WeaponSystems.installFieldShieldTool)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function WeaponSystems.installFieldArmorPickups(svcWorkspace, tblConfig) -- [의미/의도] 전장 갑옷 파밍 설치 함수 정의 ➔ 갑옷 장비 도메인이 자기 스폰 규격과 서버 시스템 연결을 소유하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.FIELD_ARMOR, "클릭해서 주운 뒤 장착 능력치를 적용합니다", tblConfig, {
+		Vector3.new(-30, 0.1, 22),
+		Vector3.new(30, 0.1, -22),
+	}, {
+		Size = Vector3.new(2, 2, 1),
+		Material = Enum.Material.Metal,
+		BrickColor = BrickColor.new("Really black"),
+	}, WeaponSystems.installFieldArmorTool)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function WeaponSystems.installFieldSwordTool(toolFieldSword, tblConfig) -- [의미/의도] 전장 검 서버 시스템 설치 함수 정의 ➔ 근접 타격 판정과 쿨타임을 공통 서버 코드가 책임지게 하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolFieldSword, "RuntimeInstalled_FieldSword") then
 		return

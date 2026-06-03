@@ -425,13 +425,13 @@ function CurriculumSetup.installStudentLessonConfigByDayNumber(svcWorkspace, svc
 	elseif intDayNumber == 3 then
 		BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.RESOURCE_WALL))
 	elseif intDayNumber == 4 then
-		FieldItem.installFieldSwordPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
+		WeaponSystems.installFieldSwordPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
 	elseif intDayNumber == 5 then
-		FieldItem.installFieldBowPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.BOW))
+		WeaponSystems.installFieldBowPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.BOW))
 	elseif intDayNumber == 6 then
-		FieldItem.installFieldShieldPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SHIELD))
+		WeaponSystems.installFieldShieldPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SHIELD))
 	elseif intDayNumber == 7 then
-		FieldItem.installFieldArmorPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.ARMOR))
+		WeaponSystems.installFieldArmorPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.ARMOR))
 	elseif intDayNumber == 8 then
 		Fortification.installGateDamageSystem(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.GATE))
 	elseif intDayNumber == 9 then
@@ -439,7 +439,7 @@ function CurriculumSetup.installStudentLessonConfigByDayNumber(svcWorkspace, svc
 	elseif intDayNumber == 10 then
 		SiegeEngine.installSiegeEngineSystem(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SIEGE_ENGINE))
 	elseif intDayNumber == 11 then
-		FieldItem.installMagicStaffPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STAFF))
+		MagicSystem.installMagicStaffPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STAFF))
 		MagicSystem.installMagicServerSystem(svcReplicatedStorage, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.MAGIC))
 	elseif intDayNumber == 12 then
 		FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.FINAL_BATTLE))

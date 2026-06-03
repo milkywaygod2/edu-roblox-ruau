@@ -6,9 +6,26 @@ local CombatRules = require(script.Parent.CombatRules)
 local Effect = require(script.Parent.Effect)
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
+local FieldItem = require(script.Parent.FieldItem)
 local StudentConfig = require(script.Parent.StudentConfig)
 
 -- --------------------------------------------------------------------------------
+function MagicSystem.installMagicStaffPickups(svcWorkspace, tblConfig) -- [의미/의도] 마법 지팡이 파밍 설치 함수 정의 ➔ 마법 장비 도메인이 자기 스폰 규격과 서버 시스템 연결을 소유하게 하기 위함
+	local eLogical = CoreEnums.eEngineLogicalType
+	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.MAGIC_STAFF, "클릭해서 주운 뒤 조준 지점에 마법을 시전합니다", tblConfig, {
+		Vector3.new(-8, 0.1, -30),
+		Vector3.new(8, 0.1, -30),
+	}, {
+		Size = Vector3.new(0.6, 5, 0.6),
+		Material = Enum.Material.Neon,
+		BrickColor = BrickColor.new("Royal purple"),
+	}, MagicSystem.installMagicStaffTool)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function MagicSystem.installMagicStaffTool(toolMagicStaff, tblConfig) -- [의미/의도] 마법 지팡이 Tool 외형 설치 함수 정의 ➔ 입력/피해 판정은 클라이언트 요청과 서버 시스템에 맡기고 장비 외형만 제한적으로 반영하기 위함
 	if not EngineEnsure.markRuntimeInstalled(toolMagicStaff, "RuntimeInstalled_MagicStaffTool") then
 		return
