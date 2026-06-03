@@ -8,7 +8,7 @@ Blue/Red는 공수 고정이 없는 대칭 팀입니다. 접속한 모든 플레
 
 ## 1. 핵심 구조
 
-- `lessons/common.module.lua`: `ReplicatedStorage > ModuleScript` 이름 `Common`으로 두는 공통 상수/헬퍼와 서버 권한 게임 시스템입니다.
+- `lessons/Common.lua` + `lessons/Common/`: `ReplicatedStorage > ModuleScript` 이름 `Common`과 그 하위 ModuleScript들로 두는 공통 상수/헬퍼와 서버 권한 게임 시스템입니다.
 - `lessons/teacher_setup.server.lua`: 선생님 전용 단일 준비 코드입니다. 공통 전장, 목표물, 아이템 스폰 마커, 버튼, 방어 구조물, 팀 같은 기준 오브젝트를 `ensure*` 방식으로 한 번에 보장합니다.
 - `lessons/01_student_answer.module.lua` ~ `lessons/12_student_answer.module.lua`: 일자별 학생용 설정 ModuleScript입니다. 허용된 데이터 값만 수정하고, 실제 아이템 생성, 획득, 데미지, 자원, 쿨타임, 라운드 판정은 `Common`이 처리합니다.
 - `lessons/11_student_answer.client.lua`: 11일차 클라이언트 입력 코드입니다. 클라이언트는 입력과 요청만 담당하고 데미지, 자원, 라운드 상태는 서버가 판정합니다.
@@ -57,7 +57,7 @@ Workspace
 
 ## 3. 네이밍 규칙
 
-스크립트 변수는 `타입 축약 접두사 + 고유이름`을 사용합니다. 문자열 이름, 클래스명, Attribute 키는 `common.module.lua`의 enum 테이블에서 관리합니다.
+스크립트 변수는 `타입 축약 접두사 + 고유이름`을 사용합니다. 문자열 이름, 클래스명, Attribute 키는 `Common/CoreEnums.lua`의 enum 테이블에서 관리합니다.
 
 | 접두사 | 대상 | 예시 |
 | --- | --- | --- |
@@ -139,6 +139,18 @@ appearance.LookShape = "Meteor"
 `Common`은 `RockLooks/Meteor`를 찾아 Handle과 투사체에 겉모습으로 붙입니다. `LookShape` 모델은 `Size` 안으로 맞춰지고, 내부 Script/ModuleScript/LocalScript는 제거됩니다. 충돌과 데미지 판정은 계속 안전한 기본 Part가 맡습니다.
 
 최종전 라운드를 다시 시작하면 플레이어가 들고 있던 `FieldItem_*` 장비는 원래 스폰 위치로 돌아갑니다. 따라서 12회차 플레이테스트에서도 각 팀은 자기 스폰에서 시작한 뒤 맵에 놓인 학생 장비를 다시 파밍해야 합니다.
+
+### 물리 실물 자산 및 가상 신용 화폐 규칙
+
+이 프로젝트는 3D 월드의 물리적 상호작용 극대화를 위해 **실물 자원 수송**을 기본 뼈대로 삼습니다.
+
+* **실물 자원 (Wood, Stone, Gold)**:
+  * 맵에서 채굴하거나 적의 성벽을 파괴해서 드랍되는 자원 조각들은 가상 숫자가 아닙니다.
+  * 플레이어가 직접 접근해 **등에 물리적으로 짊어지고(Carry)** 운반해야만 소지할 수 있으며, 이 짊어진 벽돌을 소모해 원하는 위치에 직접 엄폐물(`CoreBlock`)을 건축할 수 있습니다.
+* **가상 신용 화폐 (Credit)**:
+  * 플레이어 계정 리더보드(`leaderstats`)에 표시되는 `Credit` 수치는 물리 자원 블록과는 철저히 독립된 **문서상/신용 화폐**입니다.
+  * 3일차 버튼식 성벽 자동 빌드 등 추상적 자원 거래나 추후 상점 기능에 활용됩니다.
+
 
 11회차 마법 이펙트는 Roblox `ParticleEmitter` 일부 속성을 직접 조합하는 table입니다. 별도 프리셋을 고르지 않고 `Shape`, `ShapeStyle`, `ShapeInOut`, `EmissionDirection`, `Orientation` 같은 Roblox 기본 Enum을 그대로 씁니다.
 
