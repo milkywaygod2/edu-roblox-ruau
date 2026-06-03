@@ -38,11 +38,13 @@ function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfi
 	end
 
 	local function ensure_team_spawn(strTeamName, vectorPosition, strColorName)
-		return EngineEnsure.ensureStaticPart(eLogical.SPAWN_POINT_PREFIX .. strTeamName, fldBattlefield, {
+		return EngineEnsure.ensureSpawnLocation(eLogical.SPAWN_POINT_PREFIX .. strTeamName, fldBattlefield, {
 			Size = Vector3.new(8, 1, 8),
 			Position = vectorPosition,
 			BrickColor = BrickColor.new(strColorName),
 			Material = Enum.Material.Neon,
+			Neutral = false,
+			TeamColor = BrickColor.new(strColorName),
 		})
 	end
 

@@ -1,7 +1,7 @@
 -- Roblox Studio 수업 스크립트 안내
 -- 수업: 02_cover_design - 기초 엄폐물 디자인
 -- 역할: 학생용 에셋 설정 코드입니다. 엄폐물 위치, 재질, 색, 층수만 바꿉니다.
--- 붙여넣기 위치: ServerScriptService > StudentLessonConfigs > ModuleScript 이름 StudentAnswer02
+-- Script Sync 위치: ServerScriptService > StudentLessonConfigs > ModuleScript 이름 02_student_answer
 
 local coverDesign = {}
 local coverLeft = {}

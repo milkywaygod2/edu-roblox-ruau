@@ -24,10 +24,10 @@ Roblox Studio의 Explorer는 기본적으로 Windows 로컬 폴더와 자동 동
 1. `File > Beta Features`를 연다.
 2. `Script Sync`를 체크한다.
 3. Studio가 재시작을 요구하면 재시작한다.
-4. Explorer에서 동기화할 폴더를 선택한다.
-   - 예: `ServerScriptService`
+4. Explorer에서 동기화할 루트 폴더를 선택한다.
    - 예: `ReplicatedStorage`
-   - 예: 특정 수업용 `Folder`
+   - 예: `ServerScriptService`
+   - 예: `StarterPlayer > StarterPlayerScripts`
 5. 선택한 폴더를 우클릭한다.
 6. `Script Sync > Sync with Directory`를 선택한다.
 7. 로컬 폴더를 지정한다.
@@ -35,13 +35,34 @@ Roblox Studio의 Explorer는 기본적으로 Windows 로컬 폴더와 자동 동
 
 ## 수업 repo 적용 판단
 
-이 repo의 `lessons/*.lua` 파일은 Roblox Studio에 자동 반영되지 않는다. Script Sync를 도입하면 다음 범위만 연결 대상으로 삼는다.
+이 repo의 `lessons/`는 Studio Script Sync 연결을 전제로 Studio 서비스 구조를 미러링한다. Studio에서 다음 루트를 선택하고, Sync 대상 디렉터리는 repo의 `lessons` 폴더 하나로 지정한다.
 
-- `ReplicatedStorage/Common` ModuleScript
-- `ServerScriptService/TeacherSetup` Script
-- `ServerScriptService/StudentRockDesigns` Folder와 학생 ModuleScript
-- `ServerScriptService/StudentLessonConfigs` Folder와 `02_student_answer.module.lua` ~ `12_student_answer.module.lua`
-- `StarterPlayerScripts`의 `11_student_answer.client.lua`
+- `ReplicatedStorage` -> `lessons/ReplicatedStorage`
+- `ServerScriptService` -> `lessons/ServerScriptService`
+- `StarterPlayer > StarterPlayerScripts` -> `lessons/StarterPlayerScripts`
+
+루트 이름이 디스크 경로에 한 번 포함되므로 `ReplicatedStorage`를 `lessons/ReplicatedStorage`에 연결하지 않는다. 그렇게 연결하면 `lessons/ReplicatedStorage/ReplicatedStorage`처럼 중첩 폴더가 생길 수 있다.
+
+현재 로컬 구조는 다음과 같다.
+
+```text
+lessons/
+  ReplicatedStorage/
+    Common/
+      init.luau
+      CoreEnums.luau
+      ...
+  ServerScriptService/
+    TeacherSetup.server.luau
+    StudentRockDesigns/
+      01_student_answer.luau
+    StudentLessonConfigs/
+      02_student_answer.luau
+      ...
+      12_student_answer.luau
+  StarterPlayerScripts/
+    11_student_answer.local.luau
+```
 
 `Workspace/OutpostBattleWorld` 아래의 Part, Model, marker, 목표물은 현재처럼 `TeacherSetup`과 `Common`의 `ensure*` 함수가 Studio 안에서 생성/보장하게 둔다.
 

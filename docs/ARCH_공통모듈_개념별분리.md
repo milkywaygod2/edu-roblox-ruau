@@ -2,11 +2,11 @@
 
 ## 목적
 
-`lessons/common.module.lua`는 현재 수업용 게임 엔진, 설정 검증, 외형 처리, 이펙트, 파밍 장비, 전투 규칙, 최종전 운영까지 모두 담고 있다. 1일차 기준으로도 Common은 단순 helper가 아니라 수업 프레임워크가 되었으므로, 날짜가 아니라 큰 기능과 개념 단위로 분리한다.
+`lessons/ReplicatedStorage/Common`은 현재 수업용 게임 엔진, 설정 검증, 외형 처리, 이펙트, 파밍 장비, 전투 규칙, 최종전 운영까지 담고 있다. 1일차 기준으로도 Common은 단순 helper가 아니라 수업 프레임워크가 되었으므로, 날짜가 아니라 큰 기능과 개념 단위로 분리한다.
 
 ## 현재 판단
 
-일자별 `teacher_setup`은 제거했고, 선생님 준비 코드는 `lessons/teacher_setup.server.lua` 하나로 정리했다. 따라서 다음 분리 기준도 날짜가 아니라 아래와 같은 도메인 책임이어야 한다.
+일자별 `teacher_setup`은 제거했고, 선생님 준비 코드는 `lessons/ServerScriptService/TeacherSetup.server.luau` 하나로 정리했다. 따라서 다음 분리 기준도 날짜가 아니라 아래와 같은 도메인 책임이어야 한다.
 
 - 엔진 이름과 상수
 - 인스턴스 보장/생성
@@ -153,27 +153,40 @@ CoreEnums
 
 ## Script Sync와 배치
 
-Script Sync를 도입하면 `ReplicatedStorage/Common` ModuleScript 아래 자식 ModuleScript도 함께 동기화 대상이 된다. 파일명은 Studio Script Sync 규칙에 맞춰 `.luau`로 두는 것을 권장한다.
+Script Sync 기준으로 `ReplicatedStorage/Common` ModuleScript 아래 자식 ModuleScript도 함께 동기화 대상이 된다. 파일명은 Studio Script Sync 규칙에 맞춰 `.luau`로 둔다.
 
 ```text
-Common.luau
-Common/
-  CoreEnums.luau
-  EngineEnsure.luau
-  StudentConfig.luau
-  Appearance.luau
-  Effect.luau
+lessons/ReplicatedStorage/
+  Common/
+    init.luau
+    CoreEnums.luau
+    EngineEnsure.luau
+    StudentConfig.luau
+    Appearance.luau
+    Effect.luau
 ```
 
-현재 repo는 붙여넣기 수업 운영을 고려해 `lessons/common.module.lua` 단일 파일을 유지하고 있다. 실제 분할 단계에서는 Script Sync 또는 Rojo 도입 여부를 먼저 정한 뒤 파일 구조를 확정한다.
+`Common/init.luau`는 Studio의 `ReplicatedStorage > Common` ModuleScript 본문이고, 같은 폴더의 나머지 `.luau` 파일은 그 자식 ModuleScript로 동기화된다.
+
+```text
+ReplicatedStorage
+  Common
+    CoreEnums
+    EngineEnsure
+    StudentConfig
+    Appearance
+    Effect
+```
+
+현재 repo는 붙여넣기 운영 대신 Studio Script Sync를 기준 구조로 삼는다.
 
 ## 완료 기준
 
 1차 분리 완료 조건은 다음과 같다.
 
 - 학생/선생 외부 API가 깨지지 않는다.
-- `lessons/01_student_answer.module.lua`가 기존처럼 동작한다.
-- `lessons/teacher_setup.server.lua`가 기존처럼 `common.setupCurriculumWorld(game)` 하나만 호출한다.
+- `lessons/ServerScriptService/StudentRockDesigns/01_student_answer.luau`가 기존처럼 동작한다.
+- `lessons/ServerScriptService/TeacherSetup.server.luau`가 기존처럼 `common.setupCurriculumWorld(game)` 하나만 호출한다.
 - `common.eParticleTexture`, `Appearance`, `ThrowingStone` 책임이 서로 섞이지 않는다.
 - `Common` Facade 파일은 초기화와 공개 API 결합만 담당한다.
 

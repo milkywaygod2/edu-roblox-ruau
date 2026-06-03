@@ -45,6 +45,7 @@ function FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, strToolName, tb
 			Position = vectorPosition,
 			Transparency = 0.35,
 			BrickColor = brickColor,
+			CanCollide = false,
 		})
 	end
 end

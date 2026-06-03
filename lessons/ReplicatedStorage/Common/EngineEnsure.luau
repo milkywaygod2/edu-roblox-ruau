@@ -66,6 +66,34 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function EngineEnsure.ensureSpawnLocation(strName, instanceParent, tblProperties) -- [의미/의도] 실제 Roblox 스폰 위치 보장 함수 정의 ➔ 장식용 Part가 아니라 캐릭터 시작 좌표를 엔진에 등록하기 위함
+	local tblSpawnProperties = tblProperties or {}
+	tblSpawnProperties.Anchored = tblSpawnProperties.Anchored ~= false
+	tblSpawnProperties.AllowTeamChangeOnTouch = tblSpawnProperties.AllowTeamChangeOnTouch == true
+	tblSpawnProperties.Enabled = tblSpawnProperties.Enabled ~= false
+	return EngineEnsure.ensureNamedInstance(CoreEnums.eEnginePhysicalType.SPAWN_LOCATION, strName, instanceParent, tblSpawnProperties)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace) -- [의미/의도] Baseplate 기본 스폰 비활성화 함수 정의 ➔ 원점 스폰이 수업용 버튼/마커와 겹치는 문제를 막기 위함
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local spawnDefault = svcWorkspace:FindFirstChild(eLogical.DEFAULT_SPAWN_LOCATION)
+	if not spawnDefault or not spawnDefault:IsA(ePhysical.SPAWN_LOCATION) then return nil end
+
+	spawnDefault.Enabled = false
+	spawnDefault.CanCollide = false
+	spawnDefault.Transparency = 1
+	return spawnDefault
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function EngineEnsure.ensureClickDetector(partParent, intMaxActivationDistance) -- [의미/의도] ClickDetector 보장 함수 정의 ➔ 버튼 setup 재실행 시 감지기가 중복 생성되지 않게 하기 위함
 	local clickDetector = partParent:FindFirstChildOfClass(CoreEnums.eEnginePhysicalType.CLICK_DETECTOR) -- [의미/의도] 기존 ClickDetector 검색 ➔ 이미 연결된 클릭 컴포넌트를 재사용하기 위함
 	if not clickDetector then -- [의미/의도] 클릭 감지기가 없다면 ➔ 버튼 기능을 새로 추가하기 위함

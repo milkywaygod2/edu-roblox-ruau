@@ -13,6 +13,16 @@ local SiegeEngine = require(script.Parent.SiegeEngine)
 local MagicSystem = require(script.Parent.MagicSystem)
 local FinalBattle = require(script.Parent.FinalBattle)
 
+local tblWorldLayout = {
+	NEUTRAL_SPAWN = Vector3.new(44, 0.5, 0),
+	NEUTRAL_RESPAWN_HEIGHT = 4,
+	ROUND_START_BUTTON = Vector3.new(-44, 0.5, 0),
+	BUILD_BUTTON = Vector3.new(0, 0.5, 18),
+	WALL_SPAWN = Vector3.new(0, 0.1, 24),
+	BLUE_SPAWN = Vector3.new(0, 0.5, 38),
+	RED_SPAWN = Vector3.new(0, 0.5, -38),
+}
+
 -- --------------------------------------------------------------------------------
 function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
 	local ePhysical = CoreEnums.eEnginePhysicalType
@@ -134,6 +144,14 @@ end
 function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield)
 	local eLogical = CoreEnums.eEngineLogicalType
 
+	EngineEnsure.ensureSpawnLocation(eLogical.SPAWN_POINT_NEUTRAL, fldBattlefield, {
+		Size = Vector3.new(8, 1, 8),
+		Position = tblWorldLayout.NEUTRAL_SPAWN,
+		BrickColor = BrickColor.new("Institutional white"),
+		Material = Enum.Material.Neon,
+		Neutral = true,
+	})
+
 	for index, vectorPosition in ipairs({
 		Vector3.new(-28, 0.1, 0),
 		Vector3.new(-14, 0.1, -4),
@@ -145,27 +163,58 @@ function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield)
 			Size = Vector3.new(2, 0.2, 2),
 			Position = vectorPosition,
 			BrickColor = BrickColor.new("Bright yellow"),
+			CanCollide = false,
 		})
 	end
 
 	local partRoundStartButton = EngineEnsure.ensureStaticPart(eLogical.ROUND_START_BUTTON, fldBattlefield, {
-		Size = Vector3.new(8, 1, 8),
-		Position = Vector3.new(0, 0.5, 0),
+		Size = Vector3.new(6, 1, 6),
+		Position = tblWorldLayout.ROUND_START_BUTTON,
 		BrickColor = BrickColor.new("Lime green"),
-		CanCollide = false, -- [스폰 끼임 방지] 기본 스폰 포인트(원점)와 겹칠 때 캐릭터가 물리적으로 끼는 현상 원천 예방 (ClickDetector는 작동함)
+		CanCollide = false,
 	})
 	EngineEnsure.ensureClickDetector(partRoundStartButton, 30)
 
 	for _, tblSpawnConfig in ipairs({
-		{Team = eLogical.TEAM_BLUE, Position = Vector3.new(0, 0.5, 38), Color = "Bright blue"},
-		{Team = eLogical.TEAM_RED, Position = Vector3.new(0, 0.5, -38), Color = "Bright red"},
+		{Team = eLogical.TEAM_BLUE, Position = tblWorldLayout.BLUE_SPAWN, Color = "Bright blue"},
+		{Team = eLogical.TEAM_RED, Position = tblWorldLayout.RED_SPAWN, Color = "Bright red"},
 	}) do
-		EngineEnsure.ensureStaticPart(eLogical.SPAWN_POINT_PREFIX .. tblSpawnConfig.Team, fldBattlefield, {
+		EngineEnsure.ensureSpawnLocation(eLogical.SPAWN_POINT_PREFIX .. tblSpawnConfig.Team, fldBattlefield, {
 			Size = Vector3.new(8, 1, 8),
 			Position = tblSpawnConfig.Position,
 			BrickColor = BrickColor.new(tblSpawnConfig.Color),
 			Material = Enum.Material.Neon,
+			Neutral = false,
+			TeamColor = BrickColor.new(tblSpawnConfig.Color),
 		})
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.moveNeutralPlayersToSafeSpawn(svcPlayers, fldBattlefield)
+	local eLogical = CoreEnums.eEngineLogicalType
+	local partNeutralSpawn = fldBattlefield:FindFirstChild(eLogical.SPAWN_POINT_NEUTRAL)
+	if not partNeutralSpawn then return end
+
+	local function move_character_if_neutral(playerPlayer, modelCharacter)
+		if not playerPlayer.Neutral then return end
+
+		local partHumanoidRoot = modelCharacter:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART) or modelCharacter:WaitForChild(eLogical.RESERVED_HUMANOID_ROOT_PART, 5)
+		if partHumanoidRoot then
+			partHumanoidRoot.CFrame = CFrame.new(partNeutralSpawn.Position + Vector3.new(0, tblWorldLayout.NEUTRAL_RESPAWN_HEIGHT, 0))
+		end
+	end
+
+	for _, playerPlayer in ipairs(svcPlayers:GetPlayers()) do
+		task.defer(function()
+			local modelCharacter = playerPlayer.Character or playerPlayer.CharacterAdded:Wait()
+			if modelCharacter then
+				move_character_if_neutral(playerPlayer, modelCharacter)
+			end
+		end)
 	end
 end
 
@@ -178,16 +227,18 @@ function CurriculumSetup.ensureCurriculumBuildArea(fldBuildArea)
 
 	local partBuildButton = EngineEnsure.ensureStaticPart(eLogical.BUILD_BUTTON, fldBuildArea, {
 		Size = Vector3.new(6, 1, 6),
-		Position = Vector3.new(0, 0.5, 18),
+		Position = tblWorldLayout.BUILD_BUTTON,
 		BrickColor = BrickColor.new("Bright green"),
+		CanCollide = false,
 	})
 	EngineEnsure.ensureClickDetector(partBuildButton, 24)
 
 	EngineEnsure.ensureStaticPart(eLogical.WALL_SPAWN, fldBuildArea, {
 		Size = Vector3.new(2, 0.2, 2),
-		Position = Vector3.new(0, 0.1, 24),
+		Position = tblWorldLayout.WALL_SPAWN,
 		Transparency = 0.35,
 		BrickColor = BrickColor.new("Bright yellow"),
+		CanCollide = false,
 	})
 end
 
@@ -273,6 +324,7 @@ function CurriculumSetup.ensureCurriculumSiegeEngine(fldSiegeEngine)
 		Size = Vector3.new(6, 1, 6),
 		Position = Vector3.new(0, 0.5, 12),
 		BrickColor = BrickColor.new("Bright blue"),
+		CanCollide = false,
 	})
 	EngineEnsure.ensureClickDetector(partLaunchButton, 24)
 
@@ -280,6 +332,7 @@ function CurriculumSetup.ensureCurriculumSiegeEngine(fldSiegeEngine)
 		Size = Vector3.new(2, 2, 2),
 		Position = Vector3.new(0, 4, 4),
 		Transparency = 0.4,
+		CanCollide = false,
 	})
 
 	EngineEnsure.ensureStaticPart(eLogical.TARGET_POINT, fldSiegeEngine, {
@@ -287,6 +340,7 @@ function CurriculumSetup.ensureCurriculumSiegeEngine(fldSiegeEngine)
 		Position = Vector3.new(0, 4, -34),
 		Transparency = 0.4,
 		BrickColor = BrickColor.new("Bright red"),
+		CanCollide = false,
 	})
 end
 
@@ -336,11 +390,13 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, tblConfig)
 	local boolInstallStudentThrowingStones = tblConfig == nil or tblConfig.InstallStudentThrowingStones ~= false
 	local boolInstallStudentLessonConfigs = tblConfig == nil or tblConfig.InstallStudentLessonConfigs ~= false
 
+	EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace)
 	CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
 	CurriculumSetup.ensureCurriculumTeams(svcTeams)
 	CurriculumSetup.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
 	CurriculumSetup.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea)
 	CurriculumSetup.ensureCurriculumBattlefieldMarkers(tblOutpostWorld.fldBattlefield)
+	CurriculumSetup.moveNeutralPlayersToSafeSpawn(svcPlayers, tblOutpostWorld.fldBattlefield)
 	CurriculumSetup.ensureCurriculumBuildArea(tblOutpostWorld.fldBuildArea)
 	CurriculumSetup.ensureCurriculumItemSpawnMarkers(tblOutpostWorld.fldItemSpawnArea)
 	CurriculumSetup.ensureCurriculumFortification(tblOutpostWorld.fldFortification)

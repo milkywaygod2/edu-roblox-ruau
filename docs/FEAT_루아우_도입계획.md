@@ -6,7 +6,7 @@
 
 ## 1. 도입 배경
 
-현재 프로젝트의 파일들은 전통적인 `.lua` 확장자를 사용하고 있습니다. 그러나 로블록스 엔진은 내부적으로 표준 Lua 5.1이 아닌 자체 파생 언어인 **Luau**를 사용하므로, 에디터 및 빌드 도구가 로컬 소스를 정확히 인지할 수 있도록 점진적인 확장자 마이그레이션이 필요합니다.
+현재 프로젝트의 수업 스크립트는 `.luau` 확장자와 Studio Script Sync 권장 파일명을 사용합니다. 로블록스 엔진은 내부적으로 표준 Lua 5.1이 아닌 자체 파생 언어인 **Luau**를 사용하므로, 에디터 및 빌드 도구가 로컬 소스를 정확히 인지할 수 있도록 이 구조를 기준으로 유지합니다.
 
 ---
 
@@ -20,7 +20,8 @@
 *   로블록스 스튜디오의 내장 `Script Sync` 베타 기능은 파일명을 기준으로 인스턴스 타입을 매핑합니다.
     *   `Filename.luau` ➔ **ModuleScript**
     *   `Filename.server.luau` ➔ **Script**
-    *   `Filename.client.luau` ➔ **LocalScript (Client RunContext)**
+    *   `Filename.client.luau` ➔ **Client RunContext Script**
+    *   `Filename.local.luau` ➔ **LocalScript**
 *   확장자를 Luau 규격에 일치시켜야 동기화 도구 오작동 및 타입 미매칭 오류를 미연에 방지할 수 있습니다.
 
 ### 3) 정적 타입 시스템 사용 가능
@@ -30,20 +31,30 @@
 
 ## 4. 파일 구조 및 확장자 마이그레이션 예시
 
-전환 시 프로젝트의 `lessons/` 내부 구조는 다음과 같이 변경됩니다.
+현재 `lessons/` 내부 구조는 다음과 같습니다.
 
 ```text
 lessons/
-  Common.lua                ➔   Common.luau
-  Common/
-    CoreEnums.lua         ➔   CoreEnums.luau
-    EngineEnsure.lua        ➔   EngineEnsure.luau
-    StudentConfig.lua       ➔   StudentConfig.luau
-    ... (하위 15개 모듈)
-  teacher_setup.server.lua  ➔   teacher_setup.server.luau
+  ReplicatedStorage/
+    Common/
+      init.luau
+      CoreEnums.luau
+      EngineEnsure.luau
+      StudentConfig.luau
+      ... (하위 공통 모듈)
+  ServerScriptService/
+    TeacherSetup.server.luau
+    StudentRockDesigns/
+      01_student_answer.luau
+    StudentLessonConfigs/
+      02_student_answer.luau
+      ...
+      12_student_answer.luau
+  StarterPlayerScripts/
+    11_student_answer.local.luau
 ```
 
-*   **호환성 보장**: 하위 모듈 내에서 타 모듈을 호출하는 `require(script.Parent:WaitForChild("CoreEnums"))` 등은 스튜디오 인스턴스 이름 기준(확장자 미포함)이므로, 파일 확장자만 `.luau`로 일제히 수정해도 내부 의존성 링크는 전혀 깨지지 않습니다.
+*   **호환성 보장**: 하위 모듈 내에서 타 모듈을 호출하는 `require(script.Parent:WaitForChild("CoreEnums"))` 등은 스튜디오 인스턴스 이름 기준(확장자 미포함)이므로, `.luau` 파일명으로 동기화되어도 내부 의존성 링크는 깨지지 않습니다.
 
 ---
 

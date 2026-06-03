@@ -1,7 +1,7 @@
 -- Roblox Studio 수업 스크립트 안내
 -- 수업: 04_melee_weapon - 근접 무기와 디바운스
 -- 역할: 학생용 설정 코드입니다. 검 외형과 제한된 밸런스 값만 바꾸고 생성/획득/타격 판정은 Common 서버 시스템이 처리합니다.
--- 붙여넣기 위치: ServerScriptService > StudentLessonConfigs > ModuleScript 이름 StudentAnswer04
+-- Script Sync 위치: ServerScriptService > StudentLessonConfigs > ModuleScript 이름 04_student_answer
 
 local sword = {}
 local handle = {}

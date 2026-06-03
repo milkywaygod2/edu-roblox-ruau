@@ -1,7 +1,7 @@
 -- Roblox Studio 수업 스크립트 안내
 -- 수업: 11_magic_skill - 마법 스킬과 서버 판정
 -- 역할: 학생용 설정 코드입니다. 지팡이 외형, 파밍 개수, 마법 범위와 제한된 밸런스 값만 바꾸고 서버 검증은 Common 시스템이 처리합니다.
--- 붙여넣기 위치: ServerScriptService > StudentLessonConfigs > ModuleScript 이름 StudentAnswer11
+-- Script Sync 위치: ServerScriptService > StudentLessonConfigs > ModuleScript 이름 11_student_answer
 
 local staff = {}
 local staffHandle = {}
