@@ -158,11 +158,15 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			local UserInputService = game:GetService("UserInputService")
 			local connectionInput
 
+			-- 특화 선택 완료 전까지 마우스 커서를 화면에 고정 해제하고 카메라 회전을 일시 정지시킵니다.
+			UserInputService.ModalEnabled = true
+
 			local function selectSpec(specName)
 				if connectionInput then
 					connectionInput:Disconnect()
 					connectionInput = nil
 				end
+				UserInputService.ModalEnabled = false
 				eventSpecializationSelect:FireServer(specName)
 				guiSpec:Destroy()
 			end
@@ -172,6 +176,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 					connectionInput:Disconnect()
 					connectionInput = nil
 				end
+				UserInputService.ModalEnabled = false
 			end)
 
 			for _, config in ipairs(tblButtonConfigs) do
