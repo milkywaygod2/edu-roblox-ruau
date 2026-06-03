@@ -74,93 +74,6 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	guiCrosshair.Enabled = false
 	guiCrosshair.Parent = playerLocal:WaitForChild("PlayerGui")
 
-	-- 기본 백팩 UI 비활성화 (커스텀 좌측 핫바 사용을 위함)
-	local boolStarterGuiSuccess = pcall(function()
-		game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
-	end)
-
-	-- Left Custom Item Slot Gui
-	local guiLeftHotbar = Instance.new(ePhysical.SCREEN_GUI)
-	guiLeftHotbar.Name = "PlayerCombatLeftHotbarGui"
-	guiLeftHotbar.ResetOnSpawn = false
-	guiLeftHotbar.Enabled = true
-	guiLeftHotbar.Parent = playerLocal:WaitForChild("PlayerGui")
-
-	local frameSlot = Instance.new(ePhysical.FRAME)
-	frameSlot.Name = "ItemSlot"
-	frameSlot.AnchorPoint = Vector2.new(0, 1)
-	frameSlot.Size = UDim2.fromOffset(65, 65)
-	frameSlot.Position = UDim2.new(0, 25, 1, -25)
-	frameSlot.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-	frameSlot.BackgroundTransparency = 0.25
-	frameSlot.BorderSizePixel = 0
-	frameSlot.Parent = guiLeftHotbar
-
-	local cornerSlot = Instance.new("UICorner")
-	cornerSlot.CornerRadius = UDim.new(0, 8)
-	cornerSlot.Parent = frameSlot
-
-	local strokeSlot = Instance.new("UIStroke")
-	strokeSlot.Color = Color3.fromRGB(65, 65, 80)
-	strokeSlot.Thickness = 2
-	strokeSlot.Parent = frameSlot
-
-	local labelHotkey = Instance.new("TextLabel")
-	labelHotkey.Name = "HotkeyLabel"
-	labelHotkey.Size = UDim2.fromOffset(20, 20)
-	labelHotkey.Position = UDim2.fromOffset(5, 5)
-	labelHotkey.BackgroundTransparency = 1
-	labelHotkey.TextColor3 = Color3.fromRGB(150, 150, 150)
-	labelHotkey.TextSize = 10
-	labelHotkey.Font = Enum.Font.GothamBold
-	labelHotkey.Text = "1"
-	labelHotkey.Parent = frameSlot
-
-	local labelItemName = Instance.new("TextLabel")
-	labelItemName.Name = "ItemNameLabel"
-	labelItemName.Size = UDim2.new(1, -10, 1, -20)
-	labelItemName.Position = UDim2.new(0.5, 0, 0.5, 5)
-	labelItemName.AnchorPoint = Vector2.new(0.5, 0.5)
-	labelItemName.BackgroundTransparency = 1
-	labelItemName.TextColor3 = Color3.fromRGB(200, 200, 200)
-	labelItemName.TextSize = 10
-	labelItemName.Font = Enum.Font.GothamBold
-	labelItemName.TextWrapped = true
-	labelItemName.Text = "비어 있음"
-	labelItemName.Parent = frameSlot
-
-	local function toggle_equip_slot_item()
-		local modelCharacter = playerLocal.Character
-		local humanoidPlayer = modelCharacter and modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
-		if not humanoidPlayer then return end
-
-		local toolEquipped = get_equipped_tool()
-		if toolEquipped then
-			humanoidPlayer:UnequipTools()
-		else
-			local backpack = playerLocal:FindFirstChild("Backpack")
-			local toolToEquip = backpack and backpack:FindFirstChildOfClass("Tool")
-			if toolToEquip then
-				humanoidPlayer:EquipTool(toolToEquip)
-			end
-		end
-	end
-
-	local buttonSlotClick = Instance.new("TextButton")
-	buttonSlotClick.Name = "SlotClickButton"
-	buttonSlotClick.Size = UDim2.fromScale(1, 1)
-	buttonSlotClick.BackgroundTransparency = 1
-	buttonSlotClick.Text = ""
-	buttonSlotClick.Parent = frameSlot
-	buttonSlotClick.MouseButton1Click:Connect(toggle_equip_slot_item)
-
-	svcUserInputService.InputBegan:Connect(function(inputBegan, boolProcessed)
-		if boolProcessed then return end
-		if inputBegan.KeyCode == Enum.KeyCode.One then
-			toggle_equip_slot_item()
-		end
-	end)
-
 	-- HUD UI ScreenGui
 	local guiHud = Instance.new(ePhysical.SCREEN_GUI)
 	guiHud.Name = "PlayerCombatHudGui"
@@ -168,37 +81,37 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	guiHud.Enabled = true
 	guiHud.Parent = playerLocal:WaitForChild("PlayerGui")
 
-	-- HUD Container
-	local frameHudContainer = Instance.new(ePhysical.FRAME)
-	frameHudContainer.Name = "HudContainer"
-	frameHudContainer.AnchorPoint = Vector2.new(1, 1) -- [우하단 정렬] 기존 퀵슬롯 핫바(하단 중앙)와의 겹침 방지
-	frameHudContainer.Size = UDim2.fromOffset(360, 80)
-	frameHudContainer.Position = UDim2.new(1, -25, 1, -25) -- 우하단 구석에서 마진 적용
-	frameHudContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-	frameHudContainer.BackgroundTransparency = 0.25
-	frameHudContainer.BorderSizePixel = 0
-	frameHudContainer.Parent = guiHud
+	-- 1. [좌하단 HP HUD] Health Container
+	local frameHealthHud = Instance.new(ePhysical.FRAME)
+	frameHealthHud.Name = "HealthHud"
+	frameHealthHud.AnchorPoint = Vector2.new(0, 1)
+	frameHealthHud.Size = UDim2.fromOffset(200, 48)
+	frameHealthHud.Position = UDim2.new(0, 25, 1, -25) -- 좌하단 구석에서 마진
+	frameHealthHud.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+	frameHealthHud.BackgroundTransparency = 0.25
+	frameHealthHud.BorderSizePixel = 0
+	frameHealthHud.Parent = guiHud
 
-	local cornerHud = Instance.new("UICorner")
-	cornerHud.CornerRadius = UDim.new(0, 10)
-	cornerHud.Parent = frameHudContainer
+	local cornerHealthHud = Instance.new("UICorner")
+	cornerHealthHud.CornerRadius = UDim.new(0, 8)
+	cornerHealthHud.Parent = frameHealthHud
 
-	local strokeHud = Instance.new("UIStroke")
-	strokeHud.Color = Color3.fromRGB(65, 65, 80)
-	strokeHud.Thickness = 2
-	strokeHud.Parent = frameHudContainer
+	local strokeHealthHud = Instance.new("UIStroke")
+	strokeHealthHud.Color = Color3.fromRGB(65, 65, 80)
+	strokeHealthHud.Thickness = 2
+	strokeHealthHud.Parent = frameHealthHud
 
 	-- Health Bar Background
 	local frameHealthBack = Instance.new(ePhysical.FRAME)
 	frameHealthBack.Name = "HealthBack"
-	frameHealthBack.Position = UDim2.fromOffset(15, 12)
-	frameHealthBack.Size = UDim2.fromOffset(330, 20)
+	frameHealthBack.Position = UDim2.fromOffset(10, 8)
+	frameHealthBack.Size = UDim2.fromOffset(180, 12)
 	frameHealthBack.BackgroundColor3 = Color3.fromRGB(45, 15, 15)
 	frameHealthBack.BorderSizePixel = 0
-	frameHealthBack.Parent = frameHudContainer
+	frameHealthBack.Parent = frameHealthHud
 
 	local cornerHealthBack = Instance.new("UICorner")
-	cornerHealthBack.CornerRadius = UDim.new(0, 5)
+	cornerHealthBack.CornerRadius = UDim.new(0, 4)
 	cornerHealthBack.Parent = frameHealthBack
 
 	-- Health Bar Fill
@@ -210,45 +123,68 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	frameHealthFill.Parent = frameHealthBack
 
 	local cornerHealthFill = Instance.new("UICorner")
-	cornerHealthFill.CornerRadius = UDim.new(0, 5)
+	cornerHealthFill.CornerRadius = UDim.new(0, 4)
 	cornerHealthFill.Parent = frameHealthFill
 
 	-- Health Text Label
 	local labelHealth = Instance.new("TextLabel")
 	labelHealth.Name = "HealthLabel"
-	labelHealth.Size = UDim2.fromScale(1, 1)
+	labelHealth.Position = UDim2.fromOffset(10, 24)
+	labelHealth.Size = UDim2.fromOffset(180, 18)
 	labelHealth.BackgroundTransparency = 1
 	labelHealth.TextColor3 = Color3.fromRGB(255, 255, 255)
-	labelHealth.TextSize = 12
+	labelHealth.TextSize = 11
 	labelHealth.Font = Enum.Font.GothamBold
+	labelHealth.TextXAlignment = Enum.TextXAlignment.Left
 	labelHealth.Text = "HP: 100 / 100"
-	labelHealth.Parent = frameHealthBack
+	labelHealth.Parent = frameHealthHud
+
+
+	-- 2. [우하단 무기 HUD] Weapon Container
+	local frameWeaponHud = Instance.new(ePhysical.FRAME)
+	frameWeaponHud.Name = "WeaponHud"
+	frameWeaponHud.AnchorPoint = Vector2.new(1, 1)
+	frameWeaponHud.Size = UDim2.fromOffset(240, 48)
+	frameWeaponHud.Position = UDim2.new(1, -25, 1, -25) -- 우하단 구석에서 마진
+	frameWeaponHud.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+	frameWeaponHud.BackgroundTransparency = 0.25
+	frameWeaponHud.BorderSizePixel = 0
+	frameWeaponHud.Parent = guiHud
+
+	local cornerWeaponHud = Instance.new("UICorner")
+	cornerWeaponHud.CornerRadius = UDim.new(0, 8)
+	cornerWeaponHud.Parent = frameWeaponHud
+
+	local strokeWeaponHud = Instance.new("UIStroke")
+	strokeWeaponHud.Color = Color3.fromRGB(65, 65, 80)
+	strokeWeaponHud.Thickness = 2
+	strokeWeaponHud.Parent = frameWeaponHud
 
 	-- Weapon Name Label
 	local labelWeaponName = Instance.new("TextLabel")
 	labelWeaponName.Name = "WeaponName"
-	labelWeaponName.Position = UDim2.fromOffset(15, 42)
-	labelWeaponName.Size = UDim2.fromOffset(150, 25)
+	labelWeaponName.Position = UDim2.fromOffset(12, 6)
+	labelWeaponName.Size = UDim2.fromOffset(216, 16)
 	labelWeaponName.BackgroundTransparency = 1
 	labelWeaponName.TextColor3 = Color3.fromRGB(240, 240, 245)
-	labelWeaponName.TextSize = 14
+	labelWeaponName.TextSize = 12
 	labelWeaponName.Font = Enum.Font.GothamBold
 	labelWeaponName.TextXAlignment = Enum.TextXAlignment.Left
 	labelWeaponName.Text = "장착: 주먹"
-	labelWeaponName.Parent = frameHudContainer
+	labelWeaponName.Parent = frameWeaponHud
 
 	-- Weapon Stats Label
 	local labelWeaponStats = Instance.new("TextLabel")
 	labelWeaponStats.Name = "WeaponStats"
-	labelWeaponStats.Position = UDim2.fromOffset(165, 42)
-	labelWeaponStats.Size = UDim2.fromOffset(180, 25)
+	labelWeaponStats.Position = UDim2.fromOffset(12, 24)
+	labelWeaponStats.Size = UDim2.fromOffset(216, 16)
 	labelWeaponStats.BackgroundTransparency = 1
-	labelWeaponStats.TextColor3 = Color3.fromRGB(180, 180, 195)
-	labelWeaponStats.TextSize = 11
+	labelWeaponStats.TextColor3 = Color3.fromRGB(170, 170, 185)
+	labelWeaponStats.TextSize = 10
 	labelWeaponStats.Font = Enum.Font.GothamMedium
-	labelWeaponStats.TextXAlignment = Enum.TextXAlignment.Right
+	labelWeaponStats.TextXAlignment = Enum.TextXAlignment.Left
 	labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
-	labelWeaponStats.Parent = frameHudContainer
+	labelWeaponStats.Parent = frameWeaponHud
 
 	local frameCrosshair = Instance.new(ePhysical.FRAME)
 	frameCrosshair.Name = "Crosshair"
@@ -757,26 +693,6 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
 		end
 
-		-- 3. 좌측 아이템 슬롯 비주얼 동기화
-		local toolInBackpack = playerLocal:FindFirstChild("Backpack") and playerLocal.Backpack:FindFirstChildOfClass("Tool")
-		local toolCurrent = toolEquipped or toolInBackpack
-
-		if toolCurrent then
-			labelItemName.Text = toolCurrent.Name
-			labelItemName.TextColor3 = Color3.fromRGB(255, 255, 255)
-			if toolEquipped then
-				strokeSlot.Color = Color3.fromRGB(100, 200, 255)
-				frameSlot.BackgroundTransparency = 0.15
-			else
-				strokeSlot.Color = Color3.fromRGB(80, 80, 95)
-				frameSlot.BackgroundTransparency = 0.35
-			end
-		else
-			labelItemName.Text = "비어 있음"
-			labelItemName.TextColor3 = Color3.fromRGB(100, 100, 100)
-			strokeSlot.Color = Color3.fromRGB(50, 50, 60)
-			frameSlot.BackgroundTransparency = 0.5
-		end
 	end
 
 	svcRunService.RenderStepped:Connect(function()
