@@ -443,14 +443,14 @@ function FieldItem.installFieldToolPickupInArea(fldItemSpawnArea, strToolName, s
 			local massKg = volumeM3 * density
 
 			local strSpec = player:GetAttribute("Specialization") or "None"
-			local maxCarryLimit = 180 -- 일반적인 방법으로는 절대 들 수 없는 한계
+			local maxCarryLimit = 50 -- 일반적인 방법으로는 절대 들 수 없는 한계
 
 			if massKg > maxCarryLimit then
 				-- 아예 들 수 없는 초고중량 (주머니 넣기 불가능)
 				return
 			end
 
-			local maxPickupLimit = (strSpec == "Strength") and 180 or 150
+			local maxPickupLimit = (strSpec == "Strength") and 50 or 30
 			if massKg > maxPickupLimit then
 				-- 힘 특화 유저가 아니라서 획득 불가
 				return

@@ -805,7 +805,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		toolThrowingStone.Equipped:Connect(function()
 			local mass = get_stone_mass(toolThrowingStone)
 			local spec = playerLocal:GetAttribute("Specialization") or "None"
-			local maxWeight = (spec == "Strength") and 180 or 150
+			local maxWeight = (spec == "Strength") and 50 or 30
 
 			if mass > maxWeight then
 				task.spawn(function()
@@ -847,10 +847,10 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 			local mass = get_stone_mass(toolPickup)
 			local spec = playerLocal:GetAttribute("Specialization") or "None"
-			local maxWeight = (spec == "Strength") and 180 or 150
+			local maxWeight = (spec == "Strength") and 50 or 30
 
-			if mass > 180 then
-				show_warning_notification(string.format("너무 무거워서 들 수 없습니다!\n무게: %.1fkg (절대 한계: 180kg)", mass))
+			if mass > 50 then
+				show_warning_notification(string.format("너무 무거워서 들 수 없습니다!\n무게: %.1fkg (절대 한계: 50kg)", mass))
 			elseif mass > maxWeight then
 				show_warning_notification(string.format("힘 특화가 필요하여 들 수 없습니다!\n무게: %.1fkg (현재 한계: %dkg)", mass, maxWeight))
 			end

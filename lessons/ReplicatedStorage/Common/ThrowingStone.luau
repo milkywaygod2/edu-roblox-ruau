@@ -515,11 +515,11 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 
 		-- 특화에 따른 무게 제한 및 발사 에너지 증가 (20,000J -> 24,000J)
 		local strSpec = playerAttacker:GetAttribute("Specialization") or "None"
-		local numberMaxWeight = 150
+		local numberMaxWeight = 30
 		local energyJoules = 20000
 
 		if strSpec == "Strength" then
-			numberMaxWeight = 180 -- 힘 특화 시 180kg으로 제한 완화
+			numberMaxWeight = 50 -- 힘 특화 시 50kg으로 제한 완화
 			energyJoules = 24000  -- 힘 특화 시 발사 에너지 20% 증가
 		end
 
