@@ -344,6 +344,8 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local partHandle = Appearance.applyToolHandleStudentStyle(toolThrowingStone, tblConfig)
 
 	local numberDamage = StudentConfig.readConfigNumber(tblConfig, "Damage", 15, 1, 30)
+	toolThrowingStone:SetAttribute("Damage", math.floor(numberDamage + 0.5))
+	toolThrowingStone:SetAttribute("Trait", tblConfig and tblConfig.Trait or "Balanced")
 	local numberSpeed = StudentConfig.readConfigNumber(tblConfig, "Speed", 90, 20, 140)
 	local numberArc = StudentConfig.readConfigNumber(tblConfig, "Arc", 12, 0, 60)
 	local numberKnockbackForward = StudentConfig.readConfigNumber(tblConfig, "KnockbackForward", 45, 0, 80)
