@@ -200,6 +200,14 @@ function Appearance.applyRockLook(partTarget, strLookShape)
 	local instanceLook = instanceTemplate:Clone()
 	instanceLook.Name = CoreEnums.eEngineLogicalType.THROWING_STONE_LOOK
 	EngineEnsure.removeLuaSourceDescendants(instanceLook)
+
+	-- 에셋 팩 모델 내에 묻어있던 구식 물리 조인트(Weld, Snap 등)로 인해 벽/지형에 충돌 시 엉뚱하게 달라붙어 멈춰 서는 버그를 완전히 차단합니다.
+	for _, descendant in ipairs(instanceLook:GetDescendants()) do
+		if descendant:IsA("JointInstance") or descendant:IsA("WeldConstraint") then
+			descendant:Destroy()
+		end
+	end
+
 	instanceLook.Parent = partTarget
 	partTarget.Transparency = 1
 
