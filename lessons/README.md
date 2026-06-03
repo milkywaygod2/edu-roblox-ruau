@@ -84,10 +84,27 @@ Workspace
 3. `Script Sync > Sync with Directory`에서 repo의 `lessons` 폴더를 지정합니다. 루트 이름이 디스크에 한 번 포함되므로 `ReplicatedStorage`를 `lessons/ReplicatedStorage`에 연결하지 않습니다.
 4. 이미 `lessons/ReplicatedStorage/ReplicatedStorage` 같은 중첩 폴더가 생겼다면 Studio에서 해당 sync를 끊고 `lessons`를 다시 지정합니다.
 5. Explorer에서 `ReplicatedStorage/Common`, `ServerScriptService/TeacherSetup`, `StudentRockDesigns`, `StudentLessonConfigs`가 만들어졌는지 확인합니다.
-6. `TeacherSetup`은 매일 같은 파일을 사용합니다. Play마다 다시 실행되어도 기존 오브젝트를 지우지 않고 누락된 기준 구조만 보강합니다.
+6. `TeacherSetup`은 매일 같은 파일을 사용합니다. Play마다 `Workspace/OutpostBattleWorld`를 새로 만들고, 설정한 회차까지의 기준 구조를 누적 생성합니다.
 7. 학생 답안은 연결된 로컬 `.luau` 파일을 수정하고, 수업에서 허용한 데이터 값만 바꿔 Play로 검증합니다.
 
-초기화가 꼭 필요한 예외 상황에서는 `common.resetNamedInstance()`를 사용할 수 있지만, 기본 수업 운영은 누적 유지입니다.
+예를 들어 `3`을 넣으면 월드를 비운 뒤 1~3일차 구조만 다시 만들고, `10`을 넣으면 1~10일차 구조를 다시 만듭니다. 높은 회차를 실행한 뒤 낮은 회차로 내려가도 학생이 월드 안에 만든 오브젝트까지 함께 정리됩니다.
+
+### 진도 조절
+
+일자별로 누적 실행하려면 `lessons/ServerScriptService/TeacherSetup.server.luau` 상단 숫자만 바꿉니다.
+
+```lua
+local ACTIVE_LESSON_DAY = 3
+```
+
+| 값 | 적용 범위 |
+| --- | --- |
+| `1` | 1일차 돌멩이 파밍까지 |
+| `2` | 1~2일차 |
+| `3` | 1~3일차 |
+| `12` | 전체 최종전까지 |
+
+`ACTIVE_LESSON_DAY`는 1~12 사이로 보정됩니다. 예를 들어 `12`에서 `3`으로 낮춰도 `OutpostBattleWorld`를 새로 만든 뒤 1~3일차 구조만 생성하므로 수동 삭제가 필요 없습니다.
 
 ## 5. 학생 튜닝 장비 규칙
 

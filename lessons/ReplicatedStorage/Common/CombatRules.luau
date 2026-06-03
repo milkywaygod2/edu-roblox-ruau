@@ -34,10 +34,13 @@ end
 function CombatRules.canPlayerDamageModel(playerAttacker, modelTarget)
 	if not modelTarget then return false end
 	if not playerAttacker then return true end
-	if not playerAttacker.Team then return false end
 
 	local svcPlayers = game:GetService(CoreEnums.eEngineServiceSingleton.PLAYERS)
 	local playerTarget = svcPlayers:GetPlayerFromCharacter(modelTarget)
+	if not playerAttacker.Team then
+		return playerTarget == nil
+	end
+
 	if playerTarget and playerTarget.Team == playerAttacker.Team then
 		return false
 	end

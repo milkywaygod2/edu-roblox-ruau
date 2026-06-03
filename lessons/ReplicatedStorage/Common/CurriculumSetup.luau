@@ -23,6 +23,258 @@ local tblWorldLayout = {
 	RED_SPAWN = Vector3.new(0, 0.5, -38),
 }
 
+local DEFAULT_ACTIVE_LESSON_DAY = 12
+local MIN_ACTIVE_LESSON_DAY = 1
+local MAX_ACTIVE_LESSON_DAY = 12
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.readCurriculumActiveLessonDay(valueConfig)
+	local valueActiveLessonDay = valueConfig
+	if type(valueConfig) == "table" then
+		valueActiveLessonDay = valueConfig.ActiveLessonDay
+	end
+
+	local numberActiveLessonDay = tonumber(valueActiveLessonDay)
+	if type(numberActiveLessonDay) ~= "number" or numberActiveLessonDay ~= numberActiveLessonDay then
+		return DEFAULT_ACTIVE_LESSON_DAY
+	end
+
+	return math.clamp(math.floor(numberActiveLessonDay), MIN_ACTIVE_LESSON_DAY, MAX_ACTIVE_LESSON_DAY)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, intRequiredLessonDay)
+	if type(intActiveLessonDay) ~= "number" then
+		return true
+	end
+
+	return intRequiredLessonDay <= intActiveLessonDay
+end
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.resetCurriculumWorld(svcWorkspace)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+
+	return EngineEnsure.resetNamedInstance(ePhysical.FOLDER, eLogical.OUTPOST_BATTLE_WORLD, svcWorkspace)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeNamedChild(instanceParent, strName)
+	if not instanceParent then return end
+
+	local instanceChild = instanceParent:FindFirstChild(strName)
+	if instanceChild then
+		instanceChild:Destroy()
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeChildrenByNamePrefix(instanceParent, strPrefix)
+	if not instanceParent then return end
+
+	for _, instanceChild in ipairs(instanceParent:GetChildren()) do
+		if CoreEnums.hasEngineLogicalNamePrefix(instanceChild.Name, strPrefix) then
+			instanceChild:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeChildrenByNameFragment(instanceParent, strFragment)
+	if not instanceParent then return end
+
+	for _, instanceChild in ipairs(instanceParent:GetChildren()) do
+		if string.find(instanceChild.Name, strFragment, 1, true) then
+			instanceChild:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeDescendantsByName(instanceRoot, strName)
+	if not instanceRoot then return end
+
+	for _, instanceDescendant in ipairs(instanceRoot:GetDescendants()) do
+		if instanceDescendant.Name == strName then
+			instanceDescendant:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeFieldItemToolsFromContainer(instanceContainer, strToolName)
+	if not instanceContainer then return end
+
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
+	for _, instanceChild in ipairs(instanceContainer:GetChildren()) do
+		if instanceChild:IsA(ePhysical.TOOL) and instanceChild:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) == strToolName then
+			instanceChild:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeFieldItemToolDescendants(instanceRoot, strToolName)
+	if not instanceRoot then return end
+
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
+	for _, instanceDescendant in ipairs(instanceRoot:GetDescendants()) do
+		if instanceDescendant:IsA(ePhysical.TOOL) and instanceDescendant:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) == strToolName then
+			instanceDescendant:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, strToolName)
+	local eLogical = CoreEnums.eEngineLogicalType
+
+	CurriculumSetup.removeChildrenByNamePrefix(fldItemSpawnArea, eLogical.ITEM_SPAWN_PREFIX .. strToolName .. "_")
+	CurriculumSetup.removeChildrenByNamePrefix(fldItemSpawnArea, eLogical.FIELD_ITEM_PREFIX .. strToolName .. "_")
+	CurriculumSetup.removeFieldItemToolDescendants(svcWorkspace, strToolName)
+
+	for _, playerPlayer in ipairs(svcPlayers:GetPlayers()) do
+		CurriculumSetup.removeFieldItemToolsFromContainer(playerPlayer:FindFirstChild("Backpack"), strToolName)
+		CurriculumSetup.removeFieldItemToolsFromContainer(playerPlayer.Character, strToolName)
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.clearCurriculumRoundRuntimeState(svcWorkspace, svcPlayers, svcTeams)
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
+
+	for _, strAttributeKey in ipairs({
+		eAttrKey.ROUND_STARTER_PLAYER_NAME_RUNTIME,
+		eAttrKey.ROUND_STATE,
+		eAttrKey.TIME_LEFT_RUNTIME,
+		eAttrKey.ROUND_WINNER_RUNTIME,
+		eAttrKey.ROUND_END_REASON_RUNTIME,
+		eAttrKey.ROUND_BLUE_PLAYER_COUNT_RUNTIME,
+		eAttrKey.ROUND_RED_PLAYER_COUNT_RUNTIME,
+	}) do
+		svcWorkspace:SetAttribute(strAttributeKey, nil)
+	end
+
+	for _, playerPlayer in ipairs(svcPlayers:GetPlayers()) do
+		playerPlayer.Neutral = true
+		playerPlayer.Team = nil
+	end
+
+	CurriculumSetup.removeNamedChild(svcTeams, eLogical.TEAM_BLUE)
+	CurriculumSetup.removeNamedChild(svcTeams, eLogical.TEAM_RED)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.cleanupCurriculumArtifactsAfterActiveLessonDay(svcWorkspace, svcPlayers, svcReplicatedStorage, svcTeams, tblOutpostWorld, intActiveLessonDay)
+	local eLogical = CoreEnums.eEngineLogicalType
+	local fldBattlefield = tblOutpostWorld.fldBattlefield
+	local fldBuildArea = tblOutpostWorld.fldBuildArea
+	local fldObjectiveArea = tblOutpostWorld.fldObjectiveArea
+	local fldItemSpawnArea = tblOutpostWorld.fldItemSpawnArea
+	local fldFortification = tblOutpostWorld.fldFortification
+	local fldSiegeEngine = tblOutpostWorld.fldSiegeEngine
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 2) then
+		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.COVER_MARKER_PREFIX)
+		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.COVER_STUDENT_PREFIX)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 3) then
+		CurriculumSetup.removeNamedChild(fldBuildArea, eLogical.BUILD_BUTTON)
+		CurriculumSetup.removeNamedChild(fldBuildArea, eLogical.WALL_SPAWN)
+		CurriculumSetup.removeChildrenByNameFragment(fldBuildArea, eLogical.WALL_BLOCK_SUFFIX)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 4) then
+		CurriculumSetup.removeChildrenByNamePrefix(fldObjectiveArea, eLogical.DUEL_GUARD_PREFIX)
+		CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, eLogical.FIELD_SWORD)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 5) then
+		CurriculumSetup.removeChildrenByNamePrefix(fldObjectiveArea, eLogical.RANGE_TARGET_PREFIX)
+		CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, eLogical.FIELD_BOW)
+		CurriculumSetup.removeDescendantsByName(svcWorkspace, eLogical.PROJECTILE_ARROW_FIELD)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 6) then
+		CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, eLogical.FIELD_SHIELD)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 7) then
+		CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, eLogical.FIELD_ARMOR)
+		CurriculumSetup.removeDescendantsByName(svcWorkspace, eLogical.ARMOR_AURA)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 8) then
+		CurriculumSetup.removeNamedChild(fldFortification, eLogical.GATE)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 9) then
+		CurriculumSetup.removeNamedChild(fldFortification, eLogical.STONE_WALL)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 10) then
+		CurriculumSetup.removeNamedChild(fldSiegeEngine, eLogical.LAUNCH_BUTTON)
+		CurriculumSetup.removeNamedChild(fldSiegeEngine, eLogical.LAUNCH_POINT)
+		CurriculumSetup.removeNamedChild(fldSiegeEngine, eLogical.TARGET_POINT)
+		CurriculumSetup.removeDescendantsByName(svcWorkspace, eLogical.SIEGE_STONE)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 11) then
+		CurriculumSetup.removeChildrenByNamePrefix(fldObjectiveArea, eLogical.ARCANE_GUARD_PREFIX)
+		CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, eLogical.MAGIC_STAFF)
+		CurriculumSetup.removeNamedChild(svcReplicatedStorage, eLogical.CAST_MAGIC)
+		CurriculumSetup.removeDescendantsByName(svcWorkspace, eLogical.PARTICLE_EFFECT)
+	end
+
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 12) then
+		CurriculumSetup.removeNamedChild(fldBattlefield, eLogical.ROUND_START_BUTTON)
+		CurriculumSetup.removeNamedChild(fldBattlefield, eLogical.SPAWN_POINT_PREFIX .. eLogical.TEAM_BLUE)
+		CurriculumSetup.removeNamedChild(fldBattlefield, eLogical.SPAWN_POINT_PREFIX .. eLogical.TEAM_RED)
+		CurriculumSetup.clearCurriculumRoundRuntimeState(svcWorkspace, svcPlayers, svcTeams)
+		CurriculumSetup.moveNeutralPlayersToSafeSpawn(svcPlayers, fldBattlefield)
+	end
+end
+
+
 -- --------------------------------------------------------------------------------
 function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
 	local ePhysical = CoreEnums.eEnginePhysicalType
@@ -67,7 +319,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.ensureCurriculumPracticeTargets(fldObjectiveArea)
+function CurriculumSetup.ensureCurriculumPracticeTargets(fldObjectiveArea, intActiveLessonDay)
 	local eLogical = CoreEnums.eEngineLogicalType
 
 	for index, vectorPosition in ipairs({
@@ -86,54 +338,60 @@ function CurriculumSetup.ensureCurriculumPracticeTargets(fldObjectiveArea)
 		})
 	end
 
-	for index, vectorPosition in ipairs({
-		Vector3.new(-18, 2.5, -8),
-		Vector3.new(-9, 2.5, -8),
-		Vector3.new(0, 2.5, -8),
-		Vector3.new(9, 2.5, -8),
-		Vector3.new(18, 2.5, -8),
-	}) do
-		EngineEnsure.ensureHumanoidTarget(eLogical.DUEL_GUARD_PREFIX .. index, fldObjectiveArea, {
-			Size = Vector3.new(3, 5, 2),
-			Position = vectorPosition,
-			BrickColor = BrickColor.new("Bright orange"),
-		}, {
-			MaxHealth = 120,
-			Health = 120,
-		})
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 4) then
+		for index, vectorPosition in ipairs({
+			Vector3.new(-18, 2.5, -8),
+			Vector3.new(-9, 2.5, -8),
+			Vector3.new(0, 2.5, -8),
+			Vector3.new(9, 2.5, -8),
+			Vector3.new(18, 2.5, -8),
+		}) do
+			EngineEnsure.ensureHumanoidTarget(eLogical.DUEL_GUARD_PREFIX .. index, fldObjectiveArea, {
+				Size = Vector3.new(3, 5, 2),
+				Position = vectorPosition,
+				BrickColor = BrickColor.new("Bright orange"),
+			}, {
+				MaxHealth = 120,
+				Health = 120,
+			})
+		end
 	end
 
-	for index, vectorPosition in ipairs({
-		Vector3.new(-32, 3, -30),
-		Vector3.new(-20, 3, -34),
-		Vector3.new(-8, 3, -38),
-		Vector3.new(8, 3, -38),
-		Vector3.new(20, 3, -34),
-		Vector3.new(32, 3, -30),
-	}) do
-		EngineEnsure.ensureStaticPart(eLogical.RANGE_TARGET_PREFIX .. index, fldObjectiveArea, {
-			Size = Vector3.new(4, 6, 1),
-			Position = vectorPosition,
-			BrickColor = BrickColor.new("Bright red"),
-		})
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 5) then
+		for index, vectorPosition in ipairs({
+			Vector3.new(-32, 3, -30),
+			Vector3.new(-20, 3, -34),
+			Vector3.new(-8, 3, -38),
+			Vector3.new(8, 3, -38),
+			Vector3.new(20, 3, -34),
+			Vector3.new(32, 3, -30),
+		}) do
+			EngineEnsure.ensureStaticPart(eLogical.RANGE_TARGET_PREFIX .. index, fldObjectiveArea, {
+				Size = Vector3.new(4, 6, 1),
+				Position = vectorPosition,
+				BrickColor = BrickColor.new("Bright red"),
+			})
+		end
 	end
 
-	for index, vectorPosition in ipairs({
-		Vector3.new(-21, 2.5, -26),
-		Vector3.new(-14, 2.5, -30),
-		Vector3.new(-7, 2.5, -34),
-		Vector3.new(7, 2.5, -34),
-		Vector3.new(14, 2.5, -30),
-		Vector3.new(21, 2.5, -26),
-	}) do
-		EngineEnsure.ensureHumanoidTarget(eLogical.ARCANE_GUARD_PREFIX .. index, fldObjectiveArea, {
-			Size = Vector3.new(3, 5, 2),
-			Position = vectorPosition,
-			BrickColor = BrickColor.new("Royal purple"),
-		}, {
-			MaxHealth = 100,
-			Health = 100,
-		})
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 11) then
+		for index, vectorPosition in ipairs({
+			Vector3.new(-21, 2.5, -26),
+			Vector3.new(-14, 2.5, -30),
+			Vector3.new(-7, 2.5, -34),
+			Vector3.new(7, 2.5, -34),
+			Vector3.new(14, 2.5, -30),
+			Vector3.new(21, 2.5, -26),
+		}) do
+			EngineEnsure.ensureHumanoidTarget(eLogical.ARCANE_GUARD_PREFIX .. index, fldObjectiveArea, {
+				Size = Vector3.new(3, 5, 2),
+				Position = vectorPosition,
+				BrickColor = BrickColor.new("Royal purple"),
+			}, {
+				MaxHealth = 100,
+				Health = 100,
+			})
+		end
 	end
 end
 
@@ -141,7 +399,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield)
+function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield, intActiveLessonDay)
 	local eLogical = CoreEnums.eEngineLogicalType
 
 	EngineEnsure.ensureSpawnLocation(eLogical.SPAWN_POINT_NEUTRAL, fldBattlefield, {
@@ -152,41 +410,45 @@ function CurriculumSetup.ensureCurriculumBattlefieldMarkers(fldBattlefield)
 		Neutral = true,
 	})
 
-	for index, vectorPosition in ipairs({
-		Vector3.new(-28, 0.1, 0),
-		Vector3.new(-14, 0.1, -4),
-		Vector3.new(0, 0.1, 0),
-		Vector3.new(14, 0.1, 4),
-		Vector3.new(28, 0.1, 0),
-	}) do
-		EngineEnsure.ensureStaticPart(eLogical.COVER_MARKER_PREFIX .. index, fldBattlefield, {
-			Size = Vector3.new(2, 0.2, 2),
-			Position = vectorPosition,
-			BrickColor = BrickColor.new("Bright yellow"),
-			CanCollide = false,
-		})
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 2) then
+		for index, vectorPosition in ipairs({
+			Vector3.new(-28, 0.1, 0),
+			Vector3.new(-14, 0.1, -4),
+			Vector3.new(0, 0.1, 0),
+			Vector3.new(14, 0.1, 4),
+			Vector3.new(28, 0.1, 0),
+		}) do
+			EngineEnsure.ensureStaticPart(eLogical.COVER_MARKER_PREFIX .. index, fldBattlefield, {
+				Size = Vector3.new(2, 0.2, 2),
+				Position = vectorPosition,
+				BrickColor = BrickColor.new("Bright yellow"),
+				CanCollide = false,
+			})
+		end
 	end
 
-	local partRoundStartButton = EngineEnsure.ensureStaticPart(eLogical.ROUND_START_BUTTON, fldBattlefield, {
-		Size = Vector3.new(6, 1, 6),
-		Position = tblWorldLayout.ROUND_START_BUTTON,
-		BrickColor = BrickColor.new("Lime green"),
-		CanCollide = false,
-	})
-	EngineEnsure.ensureClickDetector(partRoundStartButton, 30)
-
-	for _, tblSpawnConfig in ipairs({
-		{Team = eLogical.TEAM_BLUE, Position = tblWorldLayout.BLUE_SPAWN, Color = "Bright blue"},
-		{Team = eLogical.TEAM_RED, Position = tblWorldLayout.RED_SPAWN, Color = "Bright red"},
-	}) do
-		EngineEnsure.ensureSpawnLocation(eLogical.SPAWN_POINT_PREFIX .. tblSpawnConfig.Team, fldBattlefield, {
-			Size = Vector3.new(8, 1, 8),
-			Position = tblSpawnConfig.Position,
-			BrickColor = BrickColor.new(tblSpawnConfig.Color),
-			Material = Enum.Material.Neon,
-			Neutral = false,
-			TeamColor = BrickColor.new(tblSpawnConfig.Color),
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 12) then
+		local partRoundStartButton = EngineEnsure.ensureStaticPart(eLogical.ROUND_START_BUTTON, fldBattlefield, {
+			Size = Vector3.new(6, 1, 6),
+			Position = tblWorldLayout.ROUND_START_BUTTON,
+			BrickColor = BrickColor.new("Lime green"),
+			CanCollide = false,
 		})
+		EngineEnsure.ensureClickDetector(partRoundStartButton, 30)
+
+		for _, tblSpawnConfig in ipairs({
+			{Team = eLogical.TEAM_BLUE, Position = tblWorldLayout.BLUE_SPAWN, Color = "Bright blue"},
+			{Team = eLogical.TEAM_RED, Position = tblWorldLayout.RED_SPAWN, Color = "Bright red"},
+		}) do
+			EngineEnsure.ensureSpawnLocation(eLogical.SPAWN_POINT_PREFIX .. tblSpawnConfig.Team, fldBattlefield, {
+				Size = Vector3.new(8, 1, 8),
+				Position = tblSpawnConfig.Position,
+				BrickColor = BrickColor.new(tblSpawnConfig.Color),
+				Material = Enum.Material.Neon,
+				Neutral = false,
+				TeamColor = BrickColor.new(tblSpawnConfig.Color),
+			})
+		end
 	end
 end
 
@@ -246,7 +508,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.ensureCurriculumItemSpawnMarkers(fldItemSpawnArea)
+function CurriculumSetup.ensureCurriculumItemSpawnMarkers(fldItemSpawnArea, intActiveLessonDay)
 	local eLogical = CoreEnums.eEngineLogicalType
 
 	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.THROWING_STONE, {
@@ -255,60 +517,74 @@ function CurriculumSetup.ensureCurriculumItemSpawnMarkers(fldItemSpawnArea)
 		Vector3.new(24, 0.1, 8),
 	}, "Bright yellow")
 
-	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_SWORD, {
-		Vector3.new(-18, 0.1, -2),
-		Vector3.new(18, 0.1, -2),
-	}, "Really red")
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 4) then
+		FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_SWORD, {
+			Vector3.new(-18, 0.1, -2),
+			Vector3.new(18, 0.1, -2),
+		}, "Really red")
+	end
 
-	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_BOW, {
-		Vector3.new(-34, 0.1, -6),
-		Vector3.new(34, 0.1, -6),
-	}, "Bright blue")
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 5) then
+		FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_BOW, {
+			Vector3.new(-34, 0.1, -6),
+			Vector3.new(34, 0.1, -6),
+		}, "Bright blue")
+	end
 
-	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_SHIELD, {
-		Vector3.new(-12, 0.1, 18),
-		Vector3.new(12, 0.1, -18),
-	}, "Dark stone grey")
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 6) then
+		FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_SHIELD, {
+			Vector3.new(-12, 0.1, 18),
+			Vector3.new(12, 0.1, -18),
+		}, "Dark stone grey")
+	end
 
-	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_ARMOR, {
-		Vector3.new(-30, 0.1, 22),
-		Vector3.new(30, 0.1, -22),
-	}, "Really black")
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 7) then
+		FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_ARMOR, {
+			Vector3.new(-30, 0.1, 22),
+			Vector3.new(30, 0.1, -22),
+		}, "Really black")
+	end
 
-	FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.MAGIC_STAFF, {
-		Vector3.new(-8, 0.1, -30),
-		Vector3.new(8, 0.1, -30),
-	}, "Royal purple")
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 11) then
+		FieldItem.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.MAGIC_STAFF, {
+			Vector3.new(-8, 0.1, -30),
+			Vector3.new(8, 0.1, -30),
+		}, "Royal purple")
+	end
 end
 
 
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.ensureCurriculumFortification(fldFortification)
+function CurriculumSetup.ensureCurriculumFortification(fldFortification, intActiveLessonDay)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
-	local modelGate = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.GATE, fldFortification)
 
-	for index = 1, 5 do
-		EngineEnsure.ensureStaticPart(eLogical.GATE_PLANK_PREFIX .. index, modelGate, {
-			Size = Vector3.new(2, 10, 1),
-			Position = Vector3.new((index - 3) * 2, 5, -26),
-			Material = Enum.Material.WoodPlanks,
-			BrickColor = BrickColor.new("Reddish brown"),
-		})
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 8) then
+		local modelGate = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.GATE, fldFortification)
+		for index = 1, 5 do
+			EngineEnsure.ensureStaticPart(eLogical.GATE_PLANK_PREFIX .. index, modelGate, {
+				Size = Vector3.new(2, 10, 1),
+				Position = Vector3.new((index - 3) * 2, 5, -26),
+				Material = Enum.Material.WoodPlanks,
+				BrickColor = BrickColor.new("Reddish brown"),
+			})
+		end
 	end
 
-	local modelStoneWall = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.STONE_WALL, fldFortification)
-	for section = 1, 5 do
-		local modelWallSection = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.WALL_SECTION_PREFIX .. section, modelStoneWall)
-		for height = 1, 4 do
-			EngineEnsure.ensureStaticPart(eLogical.STONE_BLOCK_PREFIX .. height, modelWallSection, {
-				Size = Vector3.new(6, 2, 2),
-				Position = Vector3.new((section - 3) * 6, height * 2 - 1, -30),
-				Material = Enum.Material.Slate,
-				BrickColor = BrickColor.new("Dark stone grey"),
-			})
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 9) then
+		local modelStoneWall = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.STONE_WALL, fldFortification)
+		for section = 1, 5 do
+			local modelWallSection = EngineEnsure.ensureNamedInstance(ePhysical.MODEL, eLogical.WALL_SECTION_PREFIX .. section, modelStoneWall)
+			for height = 1, 4 do
+				EngineEnsure.ensureStaticPart(eLogical.STONE_BLOCK_PREFIX .. height, modelWallSection, {
+					Size = Vector3.new(6, 2, 2),
+					Position = Vector3.new((section - 3) * 6, height * 2 - 1, -30),
+					Material = Enum.Material.Slate,
+					BrickColor = BrickColor.new("Dark stone grey"),
+				})
+			end
 		end
 	end
 end
@@ -377,43 +653,59 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.setupCurriculumWorld(gameRoot, tblConfig)
+function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	local eService = CoreEnums.eEngineServiceSingleton
 	local dataModel = gameRoot or game
+	local tblSetupConfig = type(valueConfig) == "table" and valueConfig or nil
+	local intActiveLessonDay = CurriculumSetup.readCurriculumActiveLessonDay(valueConfig)
 	local svcWorkspace = dataModel:GetService(eService.WORKSPACE)
 	local svcPlayers = dataModel:GetService(eService.PLAYERS)
 	local svcReplicatedStorage = dataModel:GetService(eService.REPLICATED_STORAGE)
 	local svcServerScriptService = dataModel:GetService(eService.SERVER_SCRIPT_SERVICE)
 	local svcTeams = dataModel:GetService(eService.TEAMS)
+	CurriculumSetup.resetCurriculumWorld(svcWorkspace)
 	local tblOutpostWorld = EngineEnsure.ensureOutpostBattleWorld(svcWorkspace)
 	local tblSharedAssets = CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
-	local boolInstallStudentThrowingStones = tblConfig == nil or tblConfig.InstallStudentThrowingStones ~= false
-	local boolInstallStudentLessonConfigs = tblConfig == nil or tblConfig.InstallStudentLessonConfigs ~= false
+	local boolInstallStudentThrowingStones = tblSetupConfig == nil or tblSetupConfig.InstallStudentThrowingStones ~= false
+	local boolInstallStudentLessonConfigs = tblSetupConfig == nil or tblSetupConfig.InstallStudentLessonConfigs ~= false
 
 	EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace)
-	CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
-	CurriculumSetup.ensureCurriculumTeams(svcTeams)
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 11) then
+		CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
+	end
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 12) then
+		CurriculumSetup.ensureCurriculumTeams(svcTeams)
+	end
 	CurriculumSetup.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
-	CurriculumSetup.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea)
-	CurriculumSetup.ensureCurriculumBattlefieldMarkers(tblOutpostWorld.fldBattlefield)
+	CurriculumSetup.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea, intActiveLessonDay)
+	CurriculumSetup.ensureCurriculumBattlefieldMarkers(tblOutpostWorld.fldBattlefield, intActiveLessonDay)
 	CurriculumSetup.moveNeutralPlayersToSafeSpawn(svcPlayers, tblOutpostWorld.fldBattlefield)
-	CurriculumSetup.ensureCurriculumBuildArea(tblOutpostWorld.fldBuildArea)
-	CurriculumSetup.ensureCurriculumItemSpawnMarkers(tblOutpostWorld.fldItemSpawnArea)
-	CurriculumSetup.ensureCurriculumFortification(tblOutpostWorld.fldFortification)
-	CurriculumSetup.ensureCurriculumSiegeEngine(tblOutpostWorld.fldSiegeEngine)
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 3) then
+		CurriculumSetup.ensureCurriculumBuildArea(tblOutpostWorld.fldBuildArea)
+	end
+	CurriculumSetup.ensureCurriculumItemSpawnMarkers(tblOutpostWorld.fldItemSpawnArea, intActiveLessonDay)
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 8) then
+		CurriculumSetup.ensureCurriculumFortification(tblOutpostWorld.fldFortification, intActiveLessonDay)
+	end
+	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 10) then
+		CurriculumSetup.ensureCurriculumSiegeEngine(tblOutpostWorld.fldSiegeEngine)
+	end
 
 	if boolInstallStudentThrowingStones then
 		ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, tblSharedAssets.fldStudentRockDesigns)
 	end
 
 	if boolInstallStudentLessonConfigs then
-		CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs)
+		CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs, intActiveLessonDay)
 	end
 
-	print("수업 월드 준비 완료")
+	CurriculumSetup.cleanupCurriculumArtifactsAfterActiveLessonDay(svcWorkspace, svcPlayers, svcReplicatedStorage, svcTeams, tblOutpostWorld, intActiveLessonDay)
+
+	print("수업 월드 준비 완료: " .. tostring(intActiveLessonDay) .. "일차까지 적용")
 	return {
 		tblOutpostWorld = tblOutpostWorld,
 		tblSharedAssets = tblSharedAssets,
+		intActiveLessonDay = intActiveLessonDay,
 	}
 end
 
@@ -512,14 +804,18 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages)
-	local tblLessonConfig = CurriculumSetup.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
-	if not tblLessonConfig then
+function CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages, intActiveLessonDay)
+	local intDayNumber = CurriculumSetup.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+	if not intDayNumber then
 		return false
 	end
 
-	local intDayNumber = CurriculumSetup.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
-	if not intDayNumber then
+	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, intDayNumber) then
+		return false
+	end
+
+	local tblLessonConfig = CurriculumSetup.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+	if not tblLessonConfig then
 		return false
 	end
 
@@ -530,7 +826,7 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs)
+function CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs, intActiveLessonDay)
 	local tblModules = {}
 	local tblValidationMessages = {}
 	if fldStudentLessonConfigs then
@@ -547,7 +843,7 @@ function CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, s
 
 	local intInstalledCount = 0
 	for _, moduleLessonConfig in ipairs(tblModules) do
-		if CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages) then
+		if CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages, intActiveLessonDay) then
 			intInstalledCount += 1
 		end
 	end
