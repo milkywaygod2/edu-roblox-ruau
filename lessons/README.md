@@ -79,7 +79,7 @@ Workspace
 ## 4. 실행 순서
 
 1. Roblox Studio에서 수업용 place를 엽니다.
-2. `ReplicatedStorage`에 `ModuleScript`를 만들고 `lessons/common.module.lua`를 붙여넣은 뒤 이름을 `Common`으로 설정합니다.
+2. `ReplicatedStorage`에 `lessons/Common.luau`와 `lessons/Common/` 구조를 배치합니다. (Roblox Studio 내에서는 `Common` ModuleScript 하위에 자식 ModuleScript들로 구성되며, Studio `Script Sync` 등을 활용해 동기화할 수 있습니다.)
 3. `ServerScriptService`에 `lessons/teacher_setup.server.lua`를 붙여넣고 이름을 `TeacherSetup`으로 둡니다.
 4. Explorer에서 `Workspace/OutpostBattleWorld`, `Teams`, `ReplicatedStorage` 생성물을 확인합니다.
 5. `TeacherSetup`은 매일 같은 파일을 사용합니다. Play마다 다시 실행되어도 기존 오브젝트를 지우지 않고 누락된 기준 구조만 보강합니다.
