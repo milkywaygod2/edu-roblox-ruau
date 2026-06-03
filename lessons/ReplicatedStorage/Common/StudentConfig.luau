@@ -263,7 +263,7 @@ function StudentConfig.readThrowingStoneMaterial(tblConfig, strKey, defaultMater
 
 	-- 2. 문자열(RealMaterial) 입력 검사
 	if type(valueMaterial) == "string" then
-		local tblAllowedRealMaterials = {"Rock", "Iron", "Wood", "Ice", "Rubber", "Obsidian"}
+		local tblAllowedRealMaterials = {"Rock", "Iron", "Gold", "Diamond", "Wood", "Ice", "Rubber", "Obsidian", "Glass", "Neon"}
 		local strMatchedMaterial = nil
 		for _, strAllowed in ipairs(tblAllowedRealMaterials) do
 			if strAllowed:lower() == valueMaterial:lower() then

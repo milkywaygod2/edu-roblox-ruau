@@ -81,48 +81,86 @@ end
 ThrowingStone.RealMaterial = {
 	Rock     = "Rock",
 	Iron     = "Iron",
+	Gold     = "Gold",
+	Diamond  = "Diamond",
 	Wood     = "Wood",
 	Ice      = "Ice",
 	Rubber   = "Rubber",
 	Obsidian = "Obsidian",
+	Glass    = "Glass",
+	Neon     = "Neon",
 }
 
 local MaterialDatabase = {
 	[ThrowingStone.RealMaterial.Rock] = {
-		Density = 1.0, -- 기준 밀도
+		Density = 1.0,
 		Hardness = 1.0,
 		RobloxMaterial = Enum.Material.Slate,
-		DefaultColor = Color3.fromRGB(120, 120, 120)
+		DefaultColor = Color3.fromRGB(120, 120, 120),
+		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Iron] = {
-		Density = 2.8, -- 철: 매우 무거움
+		Density = 2.8,
 		Hardness = 1.5,
 		RobloxMaterial = Enum.Material.Metal,
-		DefaultColor = Color3.fromRGB(190, 190, 195)
+		DefaultColor = Color3.fromRGB(190, 190, 195),
+		Transparency = 0
+	},
+	[ThrowingStone.RealMaterial.Gold] = {
+		Density = 4.8, -- 금: 아주 묵직함 (밀도가 철의 1.7배)
+		Hardness = 0.9, -- 하지만 물리적으로 연성이라 경도는 낮음
+		RobloxMaterial = Enum.Material.Metal,
+		DefaultColor = Color3.fromRGB(255, 215, 0),
+		Transparency = 0
+	},
+	[ThrowingStone.RealMaterial.Diamond] = {
+		Density = 1.6, -- 다이아몬드: 질량 보통
+		Hardness = 3.0, -- 경도는 가장 단단함!
+		RobloxMaterial = Enum.Material.Glass,
+		DefaultColor = Color3.fromRGB(180, 240, 255),
+		Transparency = 0.35
 	},
 	[ThrowingStone.RealMaterial.Wood] = {
-		Density = 0.6, -- 나무: 가벼움
+		Density = 0.6,
 		Hardness = 0.6,
 		RobloxMaterial = Enum.Material.Wood,
-		DefaultColor = Color3.fromRGB(130, 90, 60)
+		DefaultColor = Color3.fromRGB(130, 90, 60),
+		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Ice] = {
-		Density = 0.9, -- 얼음: 중간 질량
+		Density = 0.9,
 		Hardness = 0.8,
 		RobloxMaterial = Enum.Material.Ice,
-		DefaultColor = Color3.fromRGB(180, 220, 255)
+		DefaultColor = Color3.fromRGB(180, 220, 255),
+		Transparency = 0.2
 	},
 	[ThrowingStone.RealMaterial.Rubber] = {
-		Density = 1.2, -- 고무: 질량 보통, 경도 낮음
+		Density = 1.2,
 		Hardness = 0.4,
 		RobloxMaterial = Enum.Material.CorrodedMetal,
-		DefaultColor = Color3.fromRGB(85, 60, 60)
+		DefaultColor = Color3.fromRGB(85, 60, 60),
+		Transparency = 0
 	},
 	[ThrowingStone.RealMaterial.Obsidian] = {
-		Density = 1.8, -- 흑요석: 단단하고 무거움
+		Density = 1.8,
 		Hardness = 1.3,
 		RobloxMaterial = Enum.Material.Basalt,
-		DefaultColor = Color3.fromRGB(30, 30, 35)
+		DefaultColor = Color3.fromRGB(30, 30, 35),
+		Transparency = 0
+	},
+	[ThrowingStone.RealMaterial.Glass] = {
+		Density = 1.1,
+		Hardness = 1.1,
+		RobloxMaterial = Enum.Material.Glass,
+		DefaultColor = Color3.fromRGB(240, 250, 255),
+		Transparency = 0.45
+	},
+	[ThrowingStone.RealMaterial.Neon] = {
+		Density = 0.7,
+		Hardness = 0.7,
+		RobloxMaterial = Enum.Material.Neon,
+		DefaultColor = Color3.fromRGB(255, 100, 0),
+		Transparency = 0
 	},
 }
 
@@ -296,12 +334,14 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		ProjectileBrickColor = brickColor,
 		ProjectileColor = colorProjectile,
 		ProjectileShape = enumShape,
+		ProjectileTransparency = tblMaterialProfile.Transparency or 0,
 		Handle = {
 			Size = vectorSize,
 			Material = enumMaterial,
 			BrickColor = brickColor,
 			Color = colorProjectile,
 			Shape = enumShape,
+			Transparency = tblMaterialProfile.Transparency or 0,
 		},
 	}
 end
@@ -435,6 +475,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local fldItemSpawnArea = tblOutpostWorld.fldItemSpawnArea
 	local eventThrowingStoneAim = EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.THROWING_STONE_AIM, svcReplicatedStorage)
 	local partHandle = Appearance.applyToolHandleStudentStyle(toolThrowingStone, tblConfig)
+	partHandle.Transparency = tblConfig and tblConfig.Handle and tblConfig.Handle.Transparency or 0
 
 	local numberDamage = StudentConfig.readConfigNumber(tblConfig, "Damage", 15, 1, 30)
 	toolThrowingStone:SetAttribute("Damage", math.floor(numberDamage + 0.5))
@@ -527,6 +568,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		partHandle.Material = enumProjectileMaterial
 		partHandle.Color = colorProjectile
 		partHandle.Shape = enumProjectileShape
+		partHandle.Transparency = tblConfig and tblConfig.ProjectileTransparency or 0
 		partHandle.CFrame = startCFrame
 		partHandle:SetAttribute(eAttr.BLOCK_IS_PROJECTILE, true)
 		Appearance.applyRockLook(partHandle, strLookShape)
