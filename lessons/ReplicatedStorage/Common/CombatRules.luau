@@ -2,6 +2,9 @@
 local CombatRules = {}
 
 local CoreEnums = require(script.Parent.CoreEnums)
+local DAMAGE_FEEDBACK_HIDE_SECONDS = 0.9
+local DAMAGE_FEEDBACK_MAX_DISTANCE = 120
+local DAMAGE_FEEDBACK_WORLD_SIZE = UDim2.fromScale(4.8, 2.1)
 
 -- --------------------------------------------------------------------------------
 function CombatRules.isCombatProjectileName(strName) -- [의미/의도] 전투 투사체 이름 판별 함수 정의 ➔ 문/벽/방패가 받을 수 있는 공격 투사체를 공통으로 구분하기 위함
@@ -161,8 +164,8 @@ function CombatRules.ensureDamageFeedbackLabel(modelTarget)
 	end
 	guiDamageFeedback.AlwaysOnTop = true
 	guiDamageFeedback.Enabled = boolDamageFeedbackWasEnabled
-	guiDamageFeedback.MaxDistance = 180
-	guiDamageFeedback.Size = UDim2.fromOffset(150, 70)
+	guiDamageFeedback.MaxDistance = DAMAGE_FEEDBACK_MAX_DISTANCE
+	guiDamageFeedback.Size = DAMAGE_FEEDBACK_WORLD_SIZE
 	guiDamageFeedback.StudsOffsetWorldSpace = Vector3.new(0, math.max(5, partAdornee.Size.Y * 0.75), 0)
 	guiDamageFeedback.Adornee = partAdornee
 
@@ -178,7 +181,7 @@ function CombatRules.ensureDamageFeedbackLabel(modelTarget)
 	end
 	labelDamageFeedback.AnchorPoint = Vector2.new(0.5, 0.5)
 	labelDamageFeedback.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	labelDamageFeedback.BackgroundTransparency = 0.2
+	labelDamageFeedback.BackgroundTransparency = 0.35
 	labelDamageFeedback.BorderSizePixel = 0
 	labelDamageFeedback.Font = Enum.Font.GothamBold
 	labelDamageFeedback.Position = UDim2.fromScale(0.5, 0.5)
@@ -201,69 +204,30 @@ function CombatRules.showDamageFeedback(modelTarget, numberDamage, numberHealth,
 
 	local intDamage = math.max(0, round_damage_number(numberDamage))
 	local eAttrKey = CoreEnums.eEngineAttributeKey
-	
-	-- [점수 차감식 변경] 
-	-- 누적 방식 대신 최초 500점에서 피해량만큼 차감해 나가는 방식으로 동작합니다.
-	local intScore = modelTarget:GetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE)
-	if intScore == nil then
-		intScore = 500
+	local numberScore = tonumber(modelTarget:GetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE))
+	if numberScore then
+		local intScore = math.max(0, round_damage_number(numberScore))
+		local intNewScore = math.max(0, intScore - intDamage)
+		modelTarget:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, intNewScore)
+		labelDamageFeedback.Text = tostring(intNewScore)
+		labelDamageFeedback.TextColor3 = Color3.fromRGB(255, 230, 90)
+		guiDamageFeedback.Enabled = true
+		return
 	end
-	
-	local intNewScore = math.max(0, intScore - intDamage)
-	modelTarget:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, intNewScore)
 
-	labelDamageFeedback.Text = tostring(intNewScore)
+	if intDamage <= 0 then return end
+
+	labelDamageFeedback.Text = "-" .. tostring(intDamage)
 	labelDamageFeedback.TextColor3 = Color3.fromRGB(255, 230, 90)
 	guiDamageFeedback.Enabled = true
 
-	-- [대문짝만한 승리팀 스크린 프린트]
-	-- 점수가 0점이 되는 순간, 상대 팀의 승리를 스크린에 대문짝만하게 표시합니다.
-	if intScore > 0 and intNewScore == 0 then
-		local strDefeatedTeam = CombatRules.getOutpostObjectiveTeamName(modelTarget)
-		if strDefeatedTeam then
-			local strWinningTeam = (strDefeatedTeam == "Blue") and "Red" or "Blue"
-			local colorWinning = (strWinningTeam == "Red") and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(80, 80, 255)
-			
-			local Players = game:GetService(CoreEnums.eEngineServiceSingleton.PLAYERS)
-			for _, player in ipairs(Players:GetPlayers()) do
-				local playerGui = player:FindFirstChildOfClass("PlayerGui")
-				if playerGui then
-					-- 기존 승리 화면이 있다면 제거
-					local existingGui = playerGui:FindFirstChild("VictoryScreenGui")
-					if existingGui then
-						existingGui:Destroy()
-					end
-
-					local screenGui = Instance.new("ScreenGui")
-					screenGui.Name = "VictoryScreenGui"
-					screenGui.ResetOnSpawn = false
-					screenGui.IgnoreGuiInset = true
-					
-					local textLabel = Instance.new("TextLabel")
-					textLabel.Size = UDim2.fromScale(1, 1)
-					textLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-					textLabel.BackgroundTransparency = 0.4
-					textLabel.Text = "★ " .. strWinningTeam:upper() .. " TEAM VICTORY ★"
-					textLabel.TextColor3 = colorWinning
-					textLabel.Font = Enum.Font.GothamBold
-					textLabel.TextScaled = true
-					textLabel.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
-					textLabel.TextStrokeTransparency = 0.3
-					textLabel.Parent = screenGui
-					
-					-- 약간의 UI 패딩 효과 제공
-					local uiPadding = Instance.new("UIPadding")
-					uiPadding.PaddingTop = UDim.new(0.2, 0)
-					uiPadding.PaddingBottom = UDim.new(0.2, 0)
-					uiPadding.PaddingLeft = UDim.new(0.1, 0)
-					uiPadding.PaddingRight = UDim.new(0.1, 0)
-					uiPadding.Parent = textLabel
-
-					screenGui.Parent = playerGui
-				end
-			end
+	local intFeedbackToken = (tonumber(guiDamageFeedback:GetAttribute("DamageFeedbackToken")) or 0) + 1
+	guiDamageFeedback:SetAttribute("DamageFeedbackToken", intFeedbackToken)
+	task.delay(DAMAGE_FEEDBACK_HIDE_SECONDS, function()
+		if guiDamageFeedback.Parent and guiDamageFeedback:GetAttribute("DamageFeedbackToken") == intFeedbackToken then
+			guiDamageFeedback.Enabled = false
 		end
-	end
+	end)
 end
 
 

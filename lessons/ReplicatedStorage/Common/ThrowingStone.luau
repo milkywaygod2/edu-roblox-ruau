@@ -552,6 +552,14 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		partHandle:SetAttribute(eAttr.BLOCK_IS_PROJECTILE, true)
 		Appearance.applyRockLook(partHandle, strLookShape)
 		FieldItem.applyFieldToolThrownState(toolThrowingStone, partHandle)
+
+		-- [네트워크 소유권 서버 강제 귀속]
+		-- 투사체 물리 시뮬레이션 권한을 서버(nil)로 고정하여, 비행 종료 시 클라이언트의
+		-- 물리 복제 오버라이드로 인해 순간이동이 씹히거나 공중에 고착되는 버그를 제거합니다.
+		pcall(function()
+			partHandle:SetNetworkOwner(nil)
+		end)
+
 		partHandle.AssemblyLinearVelocity = vectorVelocity
 		partHandle.AssemblyAngularVelocity = Vector3.new(math.random(-6, 6), math.random(-10, 10), math.random(-6, 6))
 

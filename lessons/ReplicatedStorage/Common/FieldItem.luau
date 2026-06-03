@@ -7,6 +7,7 @@ local CoreEnums = require(script.Parent.CoreEnums)
 local StudentConfig = require(script.Parent.StudentConfig)
 
 local FIELD_ITEM_OUTSIDE_CHECK_SECONDS = 0.25
+local FIELD_ITEM_REST_SURFACE_PADDING = 0.05
 local randomFieldItemRespawn = Random.new()
 
 -- --------------------------------------------------------------------------------
@@ -75,6 +76,27 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function FieldItem.createFieldToolBattlefieldRestPosition(fldItemSpawnArea, partHandle, vectorCandidatePosition)
+	if typeof(vectorCandidatePosition) ~= "Vector3" then return nil end
+
+	local partBattlefieldBase = FieldItem.findFieldItemBattlefieldBase(fldItemSpawnArea)
+	if not partBattlefieldBase then
+		return vectorCandidatePosition
+	end
+
+	local numberBaseSurfaceY = partBattlefieldBase.Position.Y + partBattlefieldBase.Size.Y / 2
+	local vectorGroundPosition = Vector3.new(
+		vectorCandidatePosition.X,
+		numberBaseSurfaceY + FIELD_ITEM_REST_SURFACE_PADDING,
+		vectorCandidatePosition.Z
+	)
+	return FieldItem.createFieldToolRestPosition(vectorGroundPosition, partHandle)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function FieldItem.applyFieldToolVisualState(toolPickup, partHandle)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 
@@ -95,7 +117,11 @@ function FieldItem.applyFieldToolWorldState(toolPickup, partHandle, vectorHomePo
 	local eAttrKey = CoreEnums.eEngineAttributeKey
 	toolPickup:SetAttribute(eAttrKey.BLOCK_IS_PROJECTILE, false)
 	FieldItem.applyFieldToolBasePartState(partHandle, true, false, true)
-	partHandle.Position = vectorHomePosition
+
+	-- [물리 순간이동 강제 보장]
+	-- Position 대신 CFrame을 설정하여 물리 고착 관계를 무시하고 스폰 좌표로 확실하게 강제 텔레포트시킵니다.
+	partHandle.CFrame = CFrame.new(vectorHomePosition)
+
 	FieldItem.applyFieldToolVisualState(toolPickup, partHandle)
 	EngineEnsure.ensureClickDetector(partHandle, 18)
 	FieldItem.setFieldToolClickDistance(partHandle, 18)
@@ -216,7 +242,7 @@ end
 
 function FieldItem.resolveFieldToolSafeRestPosition(toolPickup, fldItemSpawnArea, partHandle, vectorCandidatePosition)
 	if FieldItem.isFieldToolWorldPositionSafe(fldItemSpawnArea, vectorCandidatePosition) then
-		return vectorCandidatePosition
+		return FieldItem.createFieldToolBattlefieldRestPosition(fldItemSpawnArea, partHandle, vectorCandidatePosition)
 	end
 
 	return FieldItem.pickFieldToolRespawnPosition(toolPickup, fldItemSpawnArea, partHandle)

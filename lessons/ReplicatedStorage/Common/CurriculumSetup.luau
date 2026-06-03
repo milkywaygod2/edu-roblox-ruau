@@ -312,6 +312,7 @@ end
 function CurriculumSetup.ensureCurriculumCoreTargets(fldObjectiveArea)
 	local eLogical = CoreEnums.eEngineLogicalType
 	local eAttrKey = CoreEnums.eEngineAttributeKey
+	CurriculumSetup.removeDescendantsByName(fldObjectiveArea, eLogical.DAMAGE_FEEDBACK_GUI)
 
 	for _, tblCoreConfig in ipairs({
 		{Name = eLogical.TEAM_BLUE, Position = tblWorldLayout.BLUE_CORE, Color = "Bright blue"},
@@ -326,8 +327,8 @@ function CurriculumSetup.ensureCurriculumCoreTargets(fldObjectiveArea)
 			Health = 160,
 		})
 		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 500)
-		CombatRules.showDamageFeedback(modelCore, 0, 160, 160)
 		CurriculumSetup.ensureCurriculumTeamSymbol(fldObjectiveArea, tblCoreConfig.Name, tblCoreConfig.Position, tblCoreConfig.Color)
+		CombatRules.showDamageFeedback(modelCore, 0, 160, 160)
 	end
 end
 

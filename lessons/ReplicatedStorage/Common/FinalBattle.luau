@@ -6,6 +6,7 @@ local CoreEnums = require(script.Parent.CoreEnums)
 local BattlefieldLayout = require(script.Parent.BattlefieldLayout)
 local FieldItem = require(script.Parent.FieldItem)
 local StudentConfig = require(script.Parent.StudentConfig)
+local CombatRules = require(script.Parent.CombatRules)
 local tblWorldLayout = BattlefieldLayout.tblOutpostBattleWorldLayout
 
 -- --------------------------------------------------------------------------------
@@ -72,7 +73,8 @@ function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfi
 		partCoreRoot.BrickColor = BrickColor.new(strColorName)
 		humCore.MaxHealth = numberCoreHealth
 		humCore.Health = numberCoreHealth
-		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 0)
+		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 500)
+		CombatRules.showDamageFeedback(modelCore, 0, numberCoreHealth, numberCoreHealth)
 		return humCore
 	end
 
