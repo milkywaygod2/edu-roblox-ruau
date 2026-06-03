@@ -68,6 +68,143 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local numberCameraYaw = 0
 	local numberCameraPitch = math.rad(-10)
 
+	local eventSpecializationSelect = svcReplicatedStorage:WaitForChild(eLogical.SPECIALIZATION_SELECT, 5)
+	if eventSpecializationSelect and not playerLocal:GetAttribute("Specialization") then
+		task.spawn(function()
+			local playerGui = playerLocal:WaitForChild("PlayerGui", 10)
+			if not playerGui then return end
+
+			local guiSpec = Instance.new("ScreenGui")
+			guiSpec.Name = "SpecializationSelectGui"
+			guiSpec.ResetOnSpawn = false
+			guiSpec.Parent = playerGui
+
+			local frameSpecSelect = Instance.new("Frame")
+			frameSpecSelect.Name = "SpecSelectFrame"
+			frameSpecSelect.AnchorPoint = Vector2.new(0.5, 0.5)
+			frameSpecSelect.Position = UDim2.fromScale(0.5, 0.5)
+			frameSpecSelect.Size = UDim2.fromOffset(480, 260)
+			frameSpecSelect.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+			frameSpecSelect.BackgroundTransparency = 0.15
+			frameSpecSelect.BorderSizePixel = 0
+			frameSpecSelect.Parent = guiSpec
+
+			local cornerSpec = Instance.new("UICorner")
+			cornerSpec.CornerRadius = UDim.new(0, 12)
+			cornerSpec.Parent = frameSpecSelect
+
+			local strokeSpec = Instance.new("UIStroke")
+			strokeSpec.Color = Color3.fromRGB(80, 80, 100)
+			strokeSpec.Thickness = 2
+			strokeSpec.Parent = frameSpecSelect
+
+			local labelTitle = Instance.new("TextLabel")
+			labelTitle.Size = UDim2.new(1, 0, 0, 40)
+			labelTitle.Position = UDim2.fromOffset(0, 15)
+			labelTitle.BackgroundTransparency = 1
+			labelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+			labelTitle.TextSize = 18
+			labelTitle.Font = Enum.Font.GothamBold
+			labelTitle.Text = "전투 특화 선택 (Select Specialization)"
+			labelTitle.Parent = frameSpecSelect
+
+			local labelDesc = Instance.new("TextLabel")
+			labelDesc.Size = UDim2.new(1, 0, 0, 20)
+			labelDesc.Position = UDim2.fromOffset(0, 50)
+			labelDesc.BackgroundTransparency = 1
+			labelDesc.TextColor3 = Color3.fromRGB(180, 180, 200)
+			labelDesc.TextSize = 11
+			labelDesc.Font = Enum.Font.Gotham
+			labelDesc.Text = "처음 스폰 시 한 가지 특화를 선택하여 능력치를 20% 강화할 수 있습니다."
+			labelDesc.Parent = frameSpecSelect
+
+			local frameButtons = Instance.new("Frame")
+			frameButtons.Size = UDim2.new(0.9, 0, 0.55, 0)
+			frameButtons.Position = UDim2.fromScale(0.05, 0.35)
+			frameButtons.BackgroundTransparency = 1
+			frameButtons.Parent = frameSpecSelect
+
+			local listLayout = Instance.new("UIListLayout")
+			listLayout.FillDirection = Enum.FillDirection.Horizontal
+			listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			listLayout.Padding = UDim.new(0, 15)
+			listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			listLayout.Parent = frameButtons
+
+			local tblButtonConfigs = {
+				{
+					Name = "Strength",
+					Title = "힘 (Strength)",
+					Desc = "• 투척 에너지 1.2배\n• 한계 중량 180kg 상향\n• 무거운 물체 조작",
+					Color = Color3.fromRGB(150, 45, 45),
+					LayoutOrder = 1
+				},
+				{
+					Name = "Agility",
+					Title = "민첩 (Agility)",
+					Desc = "• 이동 속도 +20%\n• 스피드/기동성 강화\n• 빠른 위치 선점",
+					Color = Color3.fromRGB(45, 130, 95),
+					LayoutOrder = 2
+				},
+				{
+					Name = "Constitution",
+					Title = "체력 (Health)",
+					Desc = "• 최대 체력 +20%\n• 탱킹/생존력 특화\n• 맷집 대폭 강화",
+					Color = Color3.fromRGB(150, 115, 30),
+					LayoutOrder = 3
+				}
+			}
+
+			for _, config in ipairs(tblButtonConfigs) do
+				local btn = Instance.new("TextButton")
+				btn.Name = config.Name .. "Btn"
+				btn.Size = UDim2.fromOffset(130, 130)
+				btn.BackgroundColor3 = config.Color
+				btn.BorderSizePixel = 0
+				btn.Text = ""
+				btn.LayoutOrder = config.LayoutOrder
+				btn.Parent = frameButtons
+
+				local btnCorner = Instance.new("UICorner")
+				btnCorner.CornerRadius = UDim.new(0, 8)
+				btnCorner.Parent = btn
+
+				local strokeBtn = Instance.new("UIStroke")
+				strokeBtn.Color = Color3.fromRGB(255, 255, 255)
+				strokeBtn.Thickness = 1
+				strokeBtn.Transparency = 0.6
+				strokeBtn.Parent = btn
+
+				local textTitle = Instance.new("TextLabel")
+				textTitle.Size = UDim2.new(1, 0, 0, 30)
+				textTitle.Position = UDim2.fromOffset(0, 10)
+				textTitle.BackgroundTransparency = 1
+				textTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+				textTitle.TextSize = 13
+				textTitle.Font = Enum.Font.GothamBold
+				textTitle.Text = config.Title
+				textTitle.Parent = btn
+
+				local textDesc = Instance.new("TextLabel")
+				textDesc.Size = UDim2.new(0.9, 0, 0.7, -30)
+				textDesc.Position = UDim2.fromScale(0.05, 0.3)
+				textDesc.BackgroundTransparency = 1
+				textDesc.TextColor3 = Color3.fromRGB(240, 240, 240)
+				textDesc.TextSize = 10
+				textDesc.Font = Enum.Font.Gotham
+				textDesc.Text = config.Desc
+				textDesc.TextYAlignment = Enum.TextYAlignment.Top
+				textDesc.TextXAlignment = Enum.TextXAlignment.Left
+				textDesc.Parent = btn
+
+				btn.MouseButton1Click:Connect(function()
+					eventSpecializationSelect:FireServer(config.Name)
+					guiSpec:Destroy()
+				end)
+			end
+		end)
+	end
+
 	local guiCrosshair = Instance.new(ePhysical.SCREEN_GUI)
 	guiCrosshair.Name = "PlayerCombatCrosshairGui"
 	guiCrosshair.ResetOnSpawn = false
@@ -598,12 +735,89 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end)
 	end
 
+	local function get_stone_mass(toolStone)
+		local handle = toolStone:FindFirstChild("Handle")
+		local size = handle and handle.Size or Vector3.new(1.2, 1.2, 1.2)
+		local realMaterial = toolStone:GetAttribute("RealMaterial") or "Rock"
+		
+		local Common = script.Parent
+		local ThrowingStone = require(Common:WaitForChild("ThrowingStone"))
+		local profile = ThrowingStone.getThrowingStoneMaterialProfile(realMaterial)
+		local density = profile and profile.Density or 2700
+
+		local volumeM3 = (size.X * size.Y * size.Z) * 0.027
+		return volumeM3 * density
+	end
+
+	local function show_warning_notification(textMessage)
+		local playerGui = playerLocal:FindFirstChild("PlayerGui")
+		if not playerGui then return end
+
+		local guiNotif = Instance.new("ScreenGui")
+		guiNotif.Name = "WeightWarningGui"
+		guiNotif.ResetOnSpawn = true
+		guiNotif.Parent = playerGui
+
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.fromOffset(360, 50)
+		frame.Position = UDim2.new(0.5, -180, 0.25, 0)
+		frame.BackgroundColor3 = Color3.fromRGB(35, 12, 12)
+		frame.BackgroundTransparency = 0.1
+		frame.BorderSizePixel = 0
+		frame.Parent = guiNotif
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(180, 45, 45)
+		stroke.Thickness = 2
+		stroke.Parent = frame
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 6)
+		corner.Parent = frame
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.fromRGB(255, 100, 100)
+		label.TextSize = 13
+		label.Font = Enum.Font.GothamBold
+		label.Text = textMessage
+		label.Parent = frame
+
+		task.delay(2.2, function()
+			for i = 1, 10 do
+				task.wait(0.04)
+				if frame then
+					frame.BackgroundTransparency = 0.1 + (i * 0.09)
+					stroke.Transparency = i * 0.1
+					label.TextTransparency = i * 0.1
+				end
+			end
+			guiNotif:Destroy()
+		end)
+	end
+
 	local function connect_throwing_stone(toolThrowingStone)
 		if tblConnectedTools[toolThrowingStone] or not is_throwing_stone(toolThrowingStone) then return end
 
 		tblConnectedTools[toolThrowingStone] = true
 
 		toolThrowingStone.Equipped:Connect(function()
+			local mass = get_stone_mass(toolThrowingStone)
+			local spec = playerLocal:GetAttribute("Specialization") or "None"
+			local maxWeight = (spec == "Strength") and 180 or 150
+
+			if mass > maxWeight then
+				task.spawn(function()
+					local humanoid = playerLocal.Character and playerLocal.Character:FindFirstChildOfClass("Humanoid")
+					if humanoid then
+						humanoid:UnequipTools()
+					end
+				end)
+				show_warning_notification(string.format("너무 무거워서 들 수 없습니다!\n무게: %.1fkg (한계: %dkg)", mass, maxWeight))
+				return
+			end
+
 			toolActiveThrowingStone = toolThrowingStone
 			set_default_aim_control_enabled(true)
 			set_throw_charge_visible(true)

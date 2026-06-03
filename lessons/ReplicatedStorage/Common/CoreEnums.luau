@@ -117,6 +117,7 @@ CoreEnums.eEngineLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 
 	THROWING_STONE_AIM    = "ThrowingStoneAim", -- [의미/의도] 돌 투척 조준 RemoteEvent 이름 ➔ 클라이언트 커서 조준점을 서버 투척 판정에 전달하기 위함
 	FIST_ATTACK           = "FistAttack",       -- [의미/의도] 빈손 타격 RemoteEvent 이름 ➔ 기본 좌클릭 근접 공격을 서버 판정으로 처리하기 위함
 	CAST_MAGIC            = "CastMagic",    -- [의미/의도] 마법 시전 RemoteEvent 이름 ➔ 클라이언트 입력과 서버 판정을 연결하기 위함
+	SPECIALIZATION_SELECT = "SpecializationSelect", -- [의미/의도] 플레이어 특화(힘/민첩/체력) 선택 RemoteEvent 이름 ➔ 1일차 특화 선택 통신에 사용하기 위함
 
 	TEAM_BLUE             = "Blue",             -- [의미/의도] 청팀 이름 ➔ 전초기지 공방전 팀 구분에 사용하기 위함
 	TEAM_RED              = "Red",              -- [의미/의도] 홍팀 이름 ➔ 전초기지 공방전 팀 구분에 사용하기 위함

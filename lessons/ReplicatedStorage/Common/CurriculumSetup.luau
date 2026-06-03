@@ -600,10 +600,14 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
+function CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage, intActiveLessonDay)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
-	EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage)
+	EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.SPECIALIZATION_SELECT, svcReplicatedStorage)
+
+	if intActiveLessonDay == nil or intActiveLessonDay >= 11 then
+		EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage)
+	end
 end
 
 
@@ -747,8 +751,19 @@ function CurriculumSetup.installCurriculumTeamSpawnRouting(svcPlayers, svcTeams,
 		local function on_character_added(modelCharacter)
 			local humanoid = modelCharacter:WaitForChild("Humanoid", 10)
 			if humanoid and humanoid:IsA("Humanoid") then
-				humanoid.MaxHealth = 50
-				humanoid.Health = 50
+				local strSpec = playerPlayer:GetAttribute("Specialization")
+				if strSpec == "Constitution" then
+					humanoid.MaxHealth = 60
+					humanoid.Health = 60
+				elseif strSpec == "Agility" then
+					humanoid.MaxHealth = 50
+					humanoid.Health = 50
+					humanoid.WalkSpeed = 19.2 -- 16 * 1.2
+				else
+					humanoid.MaxHealth = 50
+					humanoid.Health = 50
+					humanoid.WalkSpeed = 16
+				end
 			end
 			task.defer(CurriculumSetup.movePlayerToCurriculumSpawn, fldBattlefield, playerPlayer, modelCharacter)
 		end
@@ -769,6 +784,35 @@ function CurriculumSetup.installCurriculumTeamSpawnRouting(svcPlayers, svcTeams,
 
 	if EngineEnsure.markRuntimeInstalled(svcPlayers, "RuntimeInstalled_CurriculumTeamSpawnRouting") then
 		svcPlayers.PlayerAdded:Connect(install_player_spawn_routing)
+
+		local svcReplicatedStorage = game:GetService("ReplicatedStorage")
+		local eLogical = CoreEnums.eEngineLogicalType
+		local eventSpecializationSelect = svcReplicatedStorage:WaitForChild(eLogical.SPECIALIZATION_SELECT, 5)
+		if eventSpecializationSelect then
+			eventSpecializationSelect.OnServerEvent:Connect(function(playerPlayer, strSpec)
+				if type(strSpec) ~= "string" then return end
+				if strSpec ~= "Strength" and strSpec ~= "Agility" and strSpec ~= "Constitution" then return end
+
+				playerPlayer:SetAttribute("Specialization", strSpec)
+
+				local modelCharacter = playerPlayer.Character
+				if modelCharacter then
+					local humanoid = modelCharacter:FindFirstChildOfClass("Humanoid")
+					if humanoid then
+						humanoid.MaxHealth = 50
+						humanoid.Health = math.clamp(humanoid.Health, 0, 50)
+						humanoid.WalkSpeed = 16
+
+						if strSpec == "Constitution" then
+							humanoid.MaxHealth = 60
+							humanoid.Health = 60
+						elseif strSpec == "Agility" then
+							humanoid.WalkSpeed = 19.2
+						end
+					end
+				end
+			end)
+		end
 	end
 end
 
@@ -795,9 +839,7 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	svcWorkspace.Gravity = DEFAULT_WORKSPACE_GRAVITY
 	EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace)
 	EngineEnsure.removeDefaultWorkspaceBaseplate(svcWorkspace)
-	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 11) then
-		CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage)
-	end
+	CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage, intActiveLessonDay)
 	CurriculumSetup.ensureCurriculumTeams(svcTeams)
 	CurriculumSetup.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
 	CurriculumSetup.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea, intActiveLessonDay)

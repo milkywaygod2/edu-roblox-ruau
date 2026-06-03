@@ -507,13 +507,40 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		toolThrowingStone.Enabled = false
 
 		local numberSafeCharge = StudentConfig.clampNumber(type(numberCharge) == "number" and numberCharge or 0, 0, 1)
+		
+		-- 1 Stud = 0.3m 물리 고증 기반 질량(kg) 서버 검증
+		local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(enumProjectileMaterial)
+		local volumeM3 = (vectorProjectileSize.X * vectorProjectileSize.Y * vectorProjectileSize.Z) * 0.027
+		local massKg = volumeM3 * tblMaterialProfile.Density
+
+		-- 특화에 따른 무게 제한 및 발사 에너지 증가 (20,000J -> 24,000J)
+		local strSpec = playerAttacker:GetAttribute("Specialization") or "None"
+		local numberMaxWeight = 150
+		local energyJoules = 20000
+
+		if strSpec == "Strength" then
+			numberMaxWeight = 180 -- 힘 특화 시 180kg으로 제한 완화
+			energyJoules = 24000  -- 힘 특화 시 발사 에너지 20% 증가
+		end
+
+		-- 무게 초과 시 투척 불가 처리 및 원상복구
+		if massKg > numberMaxWeight then
+			toolThrowingStone.Enabled = true
+			boolReady = true
+			return
+		end
+
+		-- 운동에너지(E = 0.5 * m * v^2)에 의거한 투척 탄속 정밀 동적 재산출
+		local speedMS = math.sqrt(2 * energyJoules / massKg)
+		local speedStud = speedMS * 3.333 -- studs/s로 환산
+
 		local vectorStartPosition = partHumanoidRoot.Position + Vector3.new(0, 1.5, 0)
 		local vectorAimDirection = partHumanoidRoot.CFrame.LookVector
 		if typeof(vectorAimPosition) == "Vector3" and (vectorAimPosition - vectorStartPosition).Magnitude > 0.1 then
 			vectorAimDirection = (vectorAimPosition - vectorStartPosition).Unit
 		end
 
-		local numberChargedSpeed = numberSpeed * (0.55 + numberSafeCharge * 0.75)
+		local numberChargedSpeed = speedStud * (0.55 + numberSafeCharge * 0.75)
 		local numberChargedArc = numberArc * (0.45 + numberSafeCharge * 1.2) + numberSafeCharge * 18
 		local numberChargedLifetime = numberLifetime * (0.75 + numberSafeCharge * 0.75)
 		local startCFrame = CFrame.new(vectorStartPosition + vectorAimDirection * 3)
