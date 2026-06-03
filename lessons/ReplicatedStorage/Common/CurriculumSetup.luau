@@ -326,7 +326,7 @@ function CurriculumSetup.ensureCurriculumCoreTargets(fldObjectiveArea)
 			MaxHealth = 160,
 			Health = 160,
 		})
-		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 500)
+		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 1000)
 		CurriculumSetup.ensureCurriculumTeamSymbol(fldObjectiveArea, tblCoreConfig.Name, tblCoreConfig.Position, tblCoreConfig.Color)
 		CombatRules.showDamageFeedback(modelCore, 0, 160, 160)
 	end

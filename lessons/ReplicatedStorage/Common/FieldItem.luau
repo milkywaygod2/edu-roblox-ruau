@@ -454,29 +454,32 @@ function FieldItem.installFieldToolPickupInArea(fldItemSpawnArea, strToolName, s
 			if not backpackPlayer or toolPickup.Parent ~= fldItemSpawnArea then return end
 			if toolPickup:GetAttribute(eAttrKey.BLOCK_IS_PROJECTILE) == true then return end
 
-			-- [무게 제한 검사] 일반 한계 180kg, 힘 특화 미선택 시 150kg
+			-- [무게 제한 검사] 일반 50kg, 힘 특화 70kg 기준으로 서버에서 최종 검증
 			local tblDensities = {
-				Rock = 2700, Iron = 7870, Gold = 19300, Diamond = 3510,
-				Wood = 700, Ice = 917, Rubber = 1100, Obsidian = 2400,
-				Glass = 2500, Neon = 600
+				Basalt = 2400, Brick = 1900, Cobblestone = 2500, Concrete = 2400,
+				CorrodedMetal = 7200, Fabric = 150, Foil = 2700, Glass = 2500,
+				Glacier = 900, Granite = 2700, Grass = 300, Ice = 917,
+				Marble = 2700, Metal = 7870, Mud = 1500, Neon = 600,
+				Pebble = 2600, Plastic = 900, Rock = 2700, Salt = 2160,
+				Sand = 1600, Sandstone = 2200, Slate = 2700, SmoothPlastic = 900,
+				Snow = 300, Wood = 700, WoodPlanks = 650
 			}
 
 			local partHandle = toolPickup:FindFirstChild("Handle")
 			local size = partHandle and partHandle.Size or Vector3.new(1.2, 1.2, 1.2)
 			local realMaterial = toolPickup:GetAttribute("RealMaterial") or "Rock"
 			local density = tblDensities[realMaterial] or 2700
-			local volumeM3 = (size.X * size.Y * size.Z) * 0.027
-			local massKg = volumeM3 * density
+			local massKg = StudentConfig.calculateEquipmentMassKg(size, density)
 
 			local strSpec = player:GetAttribute("Specialization") or "None"
-			local maxCarryLimit = 50 -- 일반적인 방법으로는 절대 들 수 없는 한계
+			local maxCarryLimit = 70 -- 힘 특화도 넘을 수 없는 절대 한계
 
 			if massKg > maxCarryLimit then
 				-- 아예 들 수 없는 초고중량 (주머니 넣기 불가능)
 				return
 			end
 
-			local maxPickupLimit = (strSpec == "Strength") and 50 or 30
+			local maxPickupLimit = (strSpec == "Strength") and 70 or 50
 			if massKg > maxPickupLimit then
 				-- 힘 특화 유저가 아니라서 획득 불가
 				return

@@ -2,6 +2,7 @@
 local PlayerCombatClient = {}
 
 local CoreEnums = require(script.Parent.CoreEnums)
+local StudentConfig = require(script.Parent.StudentConfig)
 
 local boolPlayerCombatClientControlsInstalled = false
 
@@ -791,8 +792,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		local profile = ThrowingStone.getThrowingStoneMaterialProfile(realMaterial)
 		local density = profile and profile.Density or 2700
 
-		local volumeM3 = (size.X * size.Y * size.Z) * 0.027
-		return volumeM3 * density
+		return StudentConfig.calculateEquipmentMassKg(size, density)
 	end
 
 	local function show_warning_notification(textMessage)

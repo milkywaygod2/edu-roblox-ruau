@@ -151,13 +151,9 @@ function ThrowingStone.calculateThrowingStoneStats(vectorSize, customMaterialNam
 	local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(customMaterialNameOrEnum)
 	
 	-- 1. 부피 연산 (1 Stud = 0.3m 고증)
-	-- 실제 부피 (m³) = 스터드 부피 * (0.3m)^3 = 스터드 부피 * 0.027
-	local volumeStud = vectorSize.X * vectorSize.Y * vectorSize.Z
-	local volumeM3 = volumeStud * 0.027
-	
-	-- 2. 실제 질량 (kg) = 실제 부피 (m³) * 실제 밀도 (kg/m³)
+	-- 실제 질량은 장식/가구형 모델의 속 빈 부피를 고려해 실질 부피 20%만 반영합니다.
 	local densityKgM3 = tblMaterialProfile.Density
-	local massKg = volumeM3 * densityKgM3
+	local massKg = StudentConfig.calculateEquipmentMassKg(vectorSize, densityKgM3)
 	
 	-- 3. 모스 경도 (Mohs Hardness)
 	local hardnessMohs = tblMaterialProfile.Hardness
@@ -244,7 +240,10 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		local RunService = game:GetService("RunService")
 		local boolIsServerAsset = assetId and RunService:IsServer()
 
-		local template = Appearance.findRockLookTemplate(strLookShape)
+		local template = nil
+		if not boolIsServerAsset then
+			template = Appearance.findRockLookTemplate(strLookShape)
+		end
 		if not template and not boolIsServerAsset then
 			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "LookShape '" .. strLookShape .. "'를 ReplicatedStorage/OutpostAssets/RockLooks에서 찾지 못해 기본 모양을 사용합니다.")
 		end
@@ -366,6 +365,42 @@ end
 -- --------------------------------------------------------------------------------
 
 
+local function read_rock_design_look_shape(tblRockDesign)
+	if type(tblRockDesign) ~= "table" then return nil end
+
+	local tblAppearance = type(tblRockDesign.Appearance) == "table" and tblRockDesign.Appearance or nil
+	local valueLookShape = tblAppearance and (tblAppearance.LookShape or tblAppearance.Look)
+	if valueLookShape == nil then
+		valueLookShape = tblRockDesign.LookShape or tblRockDesign.Look
+	end
+
+	if type(valueLookShape) == "number" then
+		return tostring(valueLookShape)
+	end
+
+	if type(valueLookShape) == "string" and valueLookShape ~= "" then
+		return valueLookShape
+	end
+
+	return nil
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function append_unique_rock_look_shape(tblLookShapes, mapLookShapes, tblRockDesign)
+	local strLookShape = read_rock_design_look_shape(tblRockDesign)
+	if not strLookShape or mapLookShapes[strLookShape] then return end
+
+	mapLookShapes[strLookShape] = true
+	table.insert(tblLookShapes, strLookShape)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, fldStudentRockDesigns)
 	local tblModules = {}
 	local tblValidationMessages = {}
@@ -388,11 +423,26 @@ function ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, fldStude
 		return 1
 	end
 
+	local tblRockDesignEntries = {}
+	local tblLookShapes = {}
+	local mapLookShapes = {}
 	for _, moduleRockDesign in ipairs(tblModules) do
 		local tblRockDesign = ThrowingStone.readStudentRockDesignModule(moduleRockDesign, tblValidationMessages)
 		if tblRockDesign then
-			ThrowingStone.installThrowingStonePickups(svcWorkspace, ThrowingStone.resolveThrowingStoneDesign(tblRockDesign, tblValidationMessages, moduleRockDesign.Name))
+			table.insert(tblRockDesignEntries, {
+				Module = moduleRockDesign,
+				Config = tblRockDesign,
+			})
+			append_unique_rock_look_shape(tblLookShapes, mapLookShapes, tblRockDesign)
 		end
+	end
+
+	Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, "StudentRockDesigns")
+	for _, tblRockDesignEntry in ipairs(tblRockDesignEntries) do
+		ThrowingStone.installThrowingStonePickups(
+			svcWorkspace,
+			ThrowingStone.resolveThrowingStoneDesign(tblRockDesignEntry.Config, tblValidationMessages, tblRockDesignEntry.Module.Name)
+		)
 	end
 
 	StudentConfig.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
@@ -428,11 +478,23 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local numberKnockbackForward = StudentConfig.readConfigNumber(tblConfig, "KnockbackForward", 45, 0, 80)
 	local numberKnockbackUp = StudentConfig.readConfigNumber(tblConfig, "KnockbackUp", 18, 0, 60)
 	local numberLifetime = StudentConfig.readConfigNumber(tblConfig, "Lifetime", 5, 1, 12)
-	local vectorProjectileSize = StudentConfig.readConfigVector3(tblConfig, "ProjectileSize", Vector3.new(1.2, 1.2, 1.2), Vector3.new(0.3, 0.3, 0.3), Vector3.new(4, 4, 4))
+	local tblThrowingStoneSizeRule = StudentConfig.tblEquipmentSizeRule.ThrowingStone
+	local vectorProjectileSize = StudentConfig.readConfigVector3(
+		tblConfig,
+		"ProjectileSize",
+		tblThrowingStoneSizeRule.Default,
+		tblThrowingStoneSizeRule.Min,
+		tblThrowingStoneSizeRule.Max
+	)
 	local enumProjectileMaterial = StudentConfig.readThrowingStoneMaterial(tblConfig, "ProjectileMaterial", Enum.Material.Slate)
 	local colorProjectile = StudentConfig.readConfigColor3(tblConfig, "ProjectileColor", BrickColor.new("Dark stone grey").Color)
 	local enumProjectileShape = StudentConfig.readConfigEnumItem(tblConfig, "ProjectileShape", Enum.PartType.Ball)
 	local strLookShape = StudentConfig.readConfigString(tblConfig, "LookShape", StudentConfig.readConfigString(tblConfig, "Look", ""))
+	local strDisplayName = StudentConfig.readConfigString(
+		{DisplayName = toolThrowingStone:GetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME)},
+		"DisplayName",
+		toolThrowingStone.Name
+	)
 	local boolReady = true
 	Appearance.applyRockLook(partHandle, strLookShape)
 	partHandle.CanCollide = false
@@ -465,8 +527,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		
 		-- 1 Stud = 0.3m 물리 고증 기반 질량(kg) 서버 검증
 		local tblMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(enumProjectileMaterial)
-		local volumeM3 = (vectorProjectileSize.X * vectorProjectileSize.Y * vectorProjectileSize.Z) * 0.027 * 0.8 -- 형상 보정 20% 할인 적용 (돌멩이의 비정형성 반영)
-		local massKg = volumeM3 * tblMaterialProfile.Density
+		local massKg = StudentConfig.calculateEquipmentMassKg(vectorProjectileSize, tblMaterialProfile.Density)
 
 		-- 특화에 따른 무게 제한 및 발사 에너지 증가 (20,000J -> 24,000J)
 		local strSpec = playerAttacker:GetAttribute("Specialization") or "None"
@@ -500,7 +561,6 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		local numberChargedLifetime = numberLifetime * (0.75 + numberSafeCharge * 0.75)
 		local startCFrame = CFrame.new(vectorStartPosition + vectorAimDirection * 3)
 		local vectorVelocity = vectorAimDirection * numberChargedSpeed + Vector3.new(0, numberChargedArc, 0)
-		local strHomeName = toolThrowingStone:GetAttribute(eAttr.FIELD_ITEM_HOME_NAME)
 		local boolLanded = false
 		local connectionTouched
 
@@ -525,9 +585,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 				partHandle.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 				toolThrowingStone.Enabled = true
 				boolReady = true
-				if typeof(strHomeName) == "string" then
-					toolThrowingStone.Name = strHomeName
-				end
+				toolThrowingStone.Name = strDisplayName
 				local vectorSafeRestPosition = FieldItem.resolveFieldToolSafeRestPosition(toolThrowingStone, fldItemSpawnArea, partHandle, partHandle.Position)
 				toolThrowingStone.Parent = fldItemSpawnArea
 				FieldItem.applyFieldToolWorldState(toolThrowingStone, partHandle, vectorSafeRestPosition)
@@ -539,9 +597,7 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		end
 
 		toolThrowingStone.Parent = fldItemSpawnArea
-		if typeof(strHomeName) == "string" then
-			toolThrowingStone.Name = strHomeName
-		end
+		toolThrowingStone.Name = strDisplayName
 
 		partHandle.Size = vectorProjectileSize
 		partHandle.Material = enumProjectileMaterial

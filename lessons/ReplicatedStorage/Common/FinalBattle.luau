@@ -73,7 +73,7 @@ function FinalBattle.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfi
 		partCoreRoot.BrickColor = BrickColor.new(strColorName)
 		humCore.MaxHealth = numberCoreHealth
 		humCore.Health = numberCoreHealth
-		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 500)
+		modelCore:SetAttribute(eAttrKey.DAMAGE_FEEDBACK_SCORE, 1000)
 		CombatRules.showDamageFeedback(modelCore, 0, numberCoreHealth, numberCoreHealth)
 		return humCore
 	end

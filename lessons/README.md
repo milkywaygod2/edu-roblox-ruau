@@ -114,13 +114,13 @@ local ACTIVE_LESSON_DAY = 3
 1회차 돌멩이는 `ServerScriptService > StudentRockDesigns` 폴더 안의 학생 ModuleScript가 데이터 table만 `return`합니다. `VariantId`, 생성, 배치, 획득, 데미지 판정은 `Common`이 처리합니다. 학생 ModuleScript 하나가 오타로 실패해도 `pcall(require)`로 격리하고, 그 학생 돌만 기본 돌멩이로 대체합니다. 오류와 보정 내용은 Output과 전장 안 `StudentRockValidationBoard`에 표시됩니다.
 
 ```lua
-local CM = 1 / 30 -- 1 stud = 30cm 물리 스케일 기준 (센티미터 단위를 Roblox stud 크기로 변환)
+local CM = 1 / 30 -- 1 stud = 30cm 물리 스케일 기준 (센티미터 입력)
 
 local rock = {}
 local appearance = {}
 
 appearance.Material = Enum.Material.Slate
-appearance.Size = Vector3.new(30, 30, 30) * CM -- 센티미터 단위 입력 (가로 30cm, 세로 30cm, 높이 30cm -> 1.0 stud)
+appearance.Size = Vector3.new(30, 30, 30) * CM -- 센티미터 단위 입력 (가로 30cm, 세로 30cm, 높이 30cm)
 appearance.CollisionShape = Enum.PartType.Ball
 appearance.LookShape = "" -- 공식 에셋 팩 링크: https://create.roblox.com/store/asset/17354921094
 
@@ -138,15 +138,15 @@ return rock
 
 `Damage`, `Speed`, `Cooldown`, `Knockback` 같은 결과값은 학생 코드에 넣지 않습니다. `Common`이 돌의 크기, 재질, 성격을 읽고 서버에서 계산합니다. `SpawnCount`는 1~10으로 제한되며, 스폰 위치는 선생님이 놓은 기준점 주변에 자동 분산됩니다. 학생 코드에는 `SpawnOffset`을 넣지 않습니다.
 
-수업 설명에서는 `1 stud ~= 30cm` 정도로 잡습니다. 학생들이 센티미터 단위를 사용해 직관적으로 크기를 상상할 수 있도록 `CM` 상수를 제공합니다. (돌멩이의 비정형성을 반영하여 부피 계산에 20%의 할인 보정이 적용되며, 일반 들기 한계는 **50kg**, 힘 특화 한계는 **70kg**으로 작동합니다.)
+수업 설명에서는 `1 stud ~= 30cm` 정도로 잡습니다. 학생 입력값은 센티미터 그대로 쓰고, `Vector3.new(..., 200, ...) * CM`의 Y 높이는 2m가 됩니다. (돌멩이의 비정형성을 반영하여 부피 계산에 20%의 할인 보정이 적용되며, 일반 들기 한계는 **50kg**, 힘 특화 한계는 **70kg**으로 작동합니다.)
 
 | 센티미터 입력 값 | Studs 크기 변환 | 수업용 느낌 (무게 예시 - Slate 재질) |
 | --- | --- | --- |
-| `Vector3.new(21, 21, 21) * CM` | `(0.7, 0.7, 0.7)` | 조약돌 (약 20.2kg - 일반 플레이어 들기 가능) |
-| `Vector3.new(30, 30, 30) * CM` | `(1.0, 1.0, 1.0)` | 일반적인 돌멩이 (약 58.3kg - 힘 특화 시 들기 가능) |
-| `Vector3.new(36, 36, 36) * CM` | `(1.2, 1.2, 1.2)` | 큰 손바위 (약 100.8kg - 너무 무거워서 들 수 없음) |
+| `Vector3.new(21, 21, 21) * CM` | `(0.7, 0.7, 0.7)` | 조약돌 (약 5.0kg - 일반 플레이어 들기 가능) |
+| `Vector3.new(30, 30, 30) * CM` | `(1.0, 1.0, 1.0)` | 일반적인 돌멩이 (약 14.6kg - 일반 플레이어 들기 가능) |
+| `Vector3.new(36, 36, 36) * CM` | `(1.2, 1.2, 1.2)` | 큰 손바위 (약 25.2kg - 일반 플레이어 들기 가능) |
 
-돌멩이 크기는 `Common.tblEquipmentSizeRule.ThrowingStone` 기준으로 `0.5`~`2.6` studs 안에서 보정됩니다. 투석기 탄환처럼 큰 물체는 별도 규칙(`SiegeStone`)을 둬서 `10` studs까지 허용할 수 있습니다.
+돌멩이 크기는 `Common.tblEquipmentSizeRule.ThrowingStone` 기준으로 `0.5`~`20` studs 안에서 보정됩니다. 센티미터 입력값 기준으로는 대략 `15`~`600cm` 범위이며, 큰 물체는 시야와 무게 제한 때문에 들 수 없을 수 있습니다.
 
 돌멩이 `Material`은 자유도를 유지하기 위해 blacklist 방식으로 처리합니다. `Enum.Material.Air`, `Enum.Material.Water`, `Enum.Material.ForceField`처럼 돌 Part에 맞지 않거나 특수 효과성인 재질만 `Enum.Material.Slate`로 되돌리고, 나머지 Material은 가능한 한 그대로 반영합니다.
 

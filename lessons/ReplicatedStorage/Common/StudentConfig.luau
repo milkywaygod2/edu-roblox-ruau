@@ -4,6 +4,25 @@ local StudentConfig = {}
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
 
+StudentConfig.STUD_VOLUME_TO_CUBIC_METERS = 0.027 -- 1 stud = 0.3m 기준 부피 환산
+StudentConfig.EQUIPMENT_EFFECTIVE_VOLUME_RATIO = 0.2 -- 의자/장식 모델처럼 속이 빈 물체는 실질 부피 20%만 질량으로 계산
+
+-- --------------------------------------------------------------------------------
+
+
+function StudentConfig.calculateEquipmentMassKg(vectorSize, numberDensityKgM3)
+	if typeof(vectorSize) ~= "Vector3" or type(numberDensityKgM3) ~= "number" then
+		return 0
+	end
+
+	local numberVolumeStuds = vectorSize.X * vectorSize.Y * vectorSize.Z
+	return numberVolumeStuds
+		* StudentConfig.STUD_VOLUME_TO_CUBIC_METERS
+		* StudentConfig.EQUIPMENT_EFFECTIVE_VOLUME_RATIO
+		* numberDensityKgM3
+end
+
+
 -- --------------------------------------------------------------------------------
 function StudentConfig.readConfigNumber(tblConfig, strKey, numberDefault, numberMin, numberMax) -- [의미/의도] 학생 설정 숫자 읽기 함수 정의 ➔ 학생이 바꾼 수치를 서버 기준 범위 안으로 제한하기 위함
 	local numberValue = tblConfig and tblConfig[strKey] -- [의미/의도] 설정 테이블에서 값 조회 ➔ 없는 값은 기본값으로 처리하기 위함
@@ -369,7 +388,7 @@ StudentConfig.tblEquipmentSizeRule = {
 	ThrowingStone = {
 		Default = Vector3.new(1.2, 1.2, 1.2),
 		Min = Vector3.new(0.5, 0.5, 0.5),
-		Max = Vector3.new(2.6, 2.6, 2.6),
+		Max = Vector3.new(20, 20, 20),
 	},
 	SiegeStone = {
 		Default = Vector3.new(4, 4, 4),

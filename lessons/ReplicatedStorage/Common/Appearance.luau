@@ -5,11 +5,47 @@ local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
 local StudentConfig = require(script.Parent.StudentConfig)
 
+local ROCK_LOOK_PRELOAD_WAIT_SECONDS = 8
+local ROCK_LOOK_PRELOAD_WAIT_STEP_SECONDS = 0.1
+
+local function get_rock_look_failed_assets()
+	local tblFailedAssets = _G.RockLookFailedAssets or {}
+	_G.RockLookFailedAssets = tblFailedAssets
+	return tblFailedAssets
+end
+
+
 -- --------------------------------------------------------------------------------
+
+
+local function mark_rock_look_asset_failed(strLook, strError)
+	get_rock_look_failed_assets()[strLook] = strError or true
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function clear_rock_look_asset_failure(strLook)
+	get_rock_look_failed_assets()[strLook] = nil
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function read_rock_look_asset_failure(strLook)
+	return get_rock_look_failed_assets()[strLook]
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function Appearance.applyToolHandleStudentStyle(toolTarget, tblConfig) -- [의미/의도] Tool Handle 학생 스타일 적용 함수 정의 ➔ 학생이 외형만 바꿀 수 있게 크기/재질/색을 제한적으로 반영하기 위함
 	local tblHandleConfig = tblConfig and tblConfig.Handle or {} -- [의미/의도] Handle 설정 테이블 준비 ➔ 학생이 생략한 값은 기존 기본값을 쓰기 위함
 	local partHandle = EngineEnsure.ensureNamedInstance(CoreEnums.eEnginePhysicalType.PART, CoreEnums.eEngineLogicalType.RESERVED_HANDLE, toolTarget)
-	partHandle.Size = StudentConfig.readConfigVector3(tblHandleConfig, "Size", partHandle.Size, Vector3.new(0.2, 0.2, 0.2), Vector3.new(8, 8, 8))
+	partHandle.Size = StudentConfig.readConfigVector3(tblHandleConfig, "Size", partHandle.Size, Vector3.new(0.2, 0.2, 0.2), Vector3.new(20, 20, 20))
 	partHandle.Material = StudentConfig.readConfigEnumItem(tblHandleConfig, "Material", partHandle.Material)
 	local brickHandleColor = StudentConfig.readConfigBrickColor(tblHandleConfig, "BrickColor", partHandle.BrickColor.Name)
 	local colorHandle = brickHandleColor.Color
@@ -28,17 +64,162 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function Appearance.findRockLookTemplate(strLook)
-	if type(strLook) == "number" then
-		strLook = tostring(strLook)
-	elseif type(strLook) ~= "string" or strLook == "" then
-		return nil
+local function normalize_rock_look_key(valueLook)
+	if type(valueLook) == "number" then
+		return tostring(valueLook)
 	end
 
+	if type(valueLook) == "string" and valueLook ~= "" then
+		return valueLook
+	end
+
+	return nil
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function find_rock_looks_folder()
 	local eLogical = CoreEnums.eEngineLogicalType
 	local svcReplicatedStorage = game:GetService(CoreEnums.eEngineServiceSingleton.REPLICATED_STORAGE)
 	local fldOutpostAssets = svcReplicatedStorage:FindFirstChild(eLogical.OUTPOST_ASSETS)
-	local fldRockLooks = fldOutpostAssets and fldOutpostAssets:FindFirstChild(eLogical.ROCK_LOOKS)
+	return fldOutpostAssets and fldOutpostAssets:FindFirstChild(eLogical.ROCK_LOOKS)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function store_loaded_rock_look_asset(fldRockLooks, strLook, loadedModel)
+	local instanceExisting = fldRockLooks:FindFirstChild(strLook)
+	if instanceExisting then
+		loadedModel:Destroy()
+		return instanceExisting
+	end
+
+	local instanceRealAsset = loadedModel:GetChildren()[1]
+	if instanceRealAsset then
+		instanceRealAsset.Name = strLook
+		instanceRealAsset.Parent = fldRockLooks
+		loadedModel:Destroy()
+		return instanceRealAsset
+	end
+
+	loadedModel.Name = strLook
+	loadedModel.Parent = fldRockLooks
+	return loadedModel
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function download_rock_look_template(fldRockLooks, strLook, assetId)
+	local boolSuccess, loadedModel = pcall(function()
+		return game:GetService("InsertService"):LoadAsset(assetId)
+	end)
+
+	if not boolSuccess or not loadedModel then
+		return nil, tostring(loadedModel)
+	end
+
+	local instanceTemplate = store_loaded_rock_look_asset(fldRockLooks, strLook, loadedModel)
+	clear_rock_look_asset_failure(strLook)
+	return instanceTemplate, nil
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function Appearance.loadRockLookTemplateNow(valueLook)
+	local strLook = normalize_rock_look_key(valueLook)
+	if not strLook then return nil, "empty" end
+
+	local fldRockLooks = find_rock_looks_folder()
+	if not fldRockLooks then
+		return nil, "missing RockLooks folder"
+	end
+
+	local instanceExisting = fldRockLooks:FindFirstChild(strLook)
+	if instanceExisting then
+		return instanceExisting, nil
+	end
+
+	local assetId = tonumber(strLook)
+	local svcRunService = game:GetService(CoreEnums.eEngineServiceSingleton.RUN_SERVICE)
+	if not assetId or not svcRunService:IsServer() then
+		return nil, "not a server-loadable asset id"
+	end
+
+	local tblDownloadingAssets = _G.DownloadingAssets or {}
+	_G.DownloadingAssets = tblDownloadingAssets
+	if tblDownloadingAssets[strLook] then
+		local numberStartTime = os.clock()
+		while os.clock() - numberStartTime < ROCK_LOOK_PRELOAD_WAIT_SECONDS do
+			task.wait(ROCK_LOOK_PRELOAD_WAIT_STEP_SECONDS)
+			instanceExisting = fldRockLooks:FindFirstChild(strLook)
+			if instanceExisting then
+				return instanceExisting, nil
+			end
+		end
+
+		return nil, "asset download already in progress"
+	end
+
+	tblDownloadingAssets[strLook] = true
+	local boolDownloadSuccess, instanceTemplate, strError = pcall(download_rock_look_template, fldRockLooks, strLook, assetId)
+	tblDownloadingAssets[strLook] = nil
+	if not boolDownloadSuccess then
+		mark_rock_look_asset_failed(strLook, instanceTemplate)
+		return nil, tostring(instanceTemplate)
+	end
+
+	if not instanceTemplate then
+		mark_rock_look_asset_failed(strLook, strError)
+	end
+	return instanceTemplate, strError
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, strSourceName)
+	if type(tblLookShapes) ~= "table" then return 0 end
+
+	local intLoadedCount = 0
+	for _, valueLook in ipairs(tblLookShapes) do
+		local strLook = normalize_rock_look_key(valueLook)
+		if strLook then
+			local instanceTemplate, strError = Appearance.loadRockLookTemplateNow(strLook)
+			if instanceTemplate then
+				intLoadedCount += 1
+			elseif strError ~= "empty" and strError ~= "not a server-loadable asset id" then
+				StudentConfig.addValidationMessage(
+					tblValidationMessages,
+					strSourceName or "RockLooks",
+					"LookShape '" .. strLook .. "' 선다운로드에 실패해 기본 모양으로 시작할 수 있습니다. " .. tostring(strError)
+				)
+			end
+		end
+	end
+
+	return intLoadedCount
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function Appearance.findRockLookTemplate(strLook)
+	strLook = normalize_rock_look_key(strLook)
+	if not strLook then
+		return nil
+	end
+
+	local fldRockLooks = find_rock_looks_folder()
 	if not fldRockLooks then
 		return nil
 	end
@@ -64,27 +245,20 @@ function Appearance.findRockLookTemplate(strLook)
 		tblDownloadingAssets[strLook] = true
 
 		task.spawn(function()
-			local InsertService = game:GetService("InsertService")
-			local success, loadedModel = pcall(function()
-				return InsertService:LoadAsset(assetId)
+			local success, instanceTemplate, strError = pcall(function()
+				local template, errorMessage = download_rock_look_template(fldRockLooks, strLook, assetId)
+				return template, errorMessage
 			end)
-
-			if success and loadedModel then
-				-- InsertService:LoadAsset은 단일 자식을 포함한 Model wrapper를 반환하므로 실물 에셋을 추출
-				local realAsset = loadedModel:GetChildren()[1]
-				if realAsset then
-					realAsset.Name = strLook
-					realAsset.Parent = fldRockLooks
-					loadedModel:Destroy()
-				else
-					loadedModel.Name = strLook
-					loadedModel.Parent = fldRockLooks
-				end
-			else
-				warn("[Appearance] 에셋 ID '" .. strLook .. "' 동적 다운로드 실패: " .. tostring(loadedModel))
-			end
-
 			tblDownloadingAssets[strLook] = nil
+
+			if not success or not instanceTemplate then
+				local strFailure = success and strError or instanceTemplate
+				local boolAlreadyWarned = read_rock_look_asset_failure(strLook) ~= nil
+				mark_rock_look_asset_failed(strLook, strFailure)
+				if not boolAlreadyWarned then
+					warn("[Appearance] 에셋 ID '" .. strLook .. "' 동적 다운로드 실패: " .. tostring(strFailure))
+				end
+			end
 		end)
 	end
 
