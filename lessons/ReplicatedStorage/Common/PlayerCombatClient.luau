@@ -53,6 +53,9 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local numberLastFistAttackTime = 0
 	local numberFistActionStartTime = nil
 	local motorFistRightShoulder = nil
+	local motorFistRightElbow = nil
+	local cframeFistRightShoulderOriginalC0 = nil
+	local cframeFistRightElbowOriginalC0 = nil
 	local humanoidAimCharacter = nil
 	local boolSavedAutoRotate = nil
 	local boolSavedMouseIconEnabled = nil
@@ -97,7 +100,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	frameChargeBack.Name = "ChargeBack"
 	frameChargeBack.AnchorPoint = Vector2.new(0.5, 0)
 	frameChargeBack.Size = UDim2.fromOffset(42, 5)
-	frameChargeBack.Position = UDim2.fromOffset(0, CROSSHAIR_SIZE)
+	frameChargeBack.Position = UDim2.new(0.5, 0, 1, 8)
 	frameChargeBack.BorderSizePixel = 0
 	frameChargeBack.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	frameChargeBack.Visible = false
@@ -267,44 +270,69 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		cameraCurrent.CFrame = cframeCameraFollow
 	end
 
-	local function find_right_shoulder_motor(modelCharacter)
+	local function find_character_motor(modelCharacter, tblMotorNames, tblPart1Names)
 		if not modelCharacter then return nil end
 
 		for _, instanceDescendant in ipairs(modelCharacter:GetDescendants()) do
-			if instanceDescendant:IsA(ePhysical.MOTOR_6D)
-				and (instanceDescendant.Name == "RightShoulder" or instanceDescendant.Name == "Right Shoulder") then
-				return instanceDescendant
+			if instanceDescendant:IsA(ePhysical.MOTOR_6D) then
+				for _, strMotorName in ipairs(tblMotorNames) do
+					if instanceDescendant.Name == strMotorName then
+						return instanceDescendant
+					end
+				end
+
+				if instanceDescendant.Part1 then
+					for _, strPartName in ipairs(tblPart1Names) do
+						if instanceDescendant.Part1.Name == strPartName then
+							return instanceDescendant
+						end
+					end
+				end
 			end
 		end
 
 		return nil
 	end
 
-	local function reset_fist_action_visuals()
-		if motorFistRightShoulder then
-			motorFistRightShoulder.Transform = CFrame.new()
-			motorFistRightShoulder = nil
-		end
+	local function cache_fist_action_motors(modelCharacter)
+		if motorFistRightShoulder and motorFistRightShoulder.Parent then return end
+
+		motorFistRightShoulder = find_character_motor(modelCharacter, {"RightShoulder", "Right Shoulder"}, {"RightUpperArm", "Right Arm"})
+		motorFistRightElbow = find_character_motor(modelCharacter, {"RightElbow", "Right Elbow"}, {"RightLowerArm"})
+		cframeFistRightShoulderOriginalC0 = motorFistRightShoulder and motorFistRightShoulder.C0 or nil
+		cframeFistRightElbowOriginalC0 = motorFistRightElbow and motorFistRightElbow.C0 or nil
 	end
 
-	local function get_fist_punch_motor_transform(numberFistProgress)
+	local function reset_fist_action_visuals()
+		if motorFistRightShoulder and motorFistRightShoulder.Parent and cframeFistRightShoulderOriginalC0 then
+			motorFistRightShoulder.C0 = cframeFistRightShoulderOriginalC0
+			motorFistRightShoulder.Transform = CFrame.new()
+		end
+
+		if motorFistRightElbow and motorFistRightElbow.Parent and cframeFistRightElbowOriginalC0 then
+			motorFistRightElbow.C0 = cframeFistRightElbowOriginalC0
+			motorFistRightElbow.Transform = CFrame.new()
+		end
+
+		motorFistRightShoulder = nil
+		motorFistRightElbow = nil
+		cframeFistRightShoulderOriginalC0 = nil
+		cframeFistRightElbowOriginalC0 = nil
+	end
+
+	local function get_fist_punch_joint_offsets(numberFistProgress)
 		if numberFistProgress < 0.32 then
 			local numberWindup = numberFistProgress / 0.32
-			return CFrame.Angles(
-				math.rad(-35) * numberWindup,
-				math.rad(28) * numberWindup,
-				math.rad(38) * numberWindup
-			)
+			return CFrame.Angles(math.rad(60) * numberWindup, math.rad(28) * numberWindup, math.rad(80) * numberWindup),
+				CFrame.Angles(math.rad(-75) * numberWindup, 0, 0)
 		end
 
 		local numberThrust = math.clamp((numberFistProgress - 0.32) / 0.28, 0, 1)
 		local numberRecover = math.clamp((numberFistProgress - 0.6) / 0.4, 0, 1)
 		local numberPunchPower = math.sin(numberThrust * math.pi * 0.5) * (1 - numberRecover)
-		return CFrame.Angles(
-			math.rad(-105) * numberPunchPower,
-			math.rad(-10) * numberPunchPower,
-			math.rad(-22) * numberPunchPower
-		) * CFrame.new(0, 0, -0.45 * numberPunchPower)
+		return CFrame.Angles(math.rad(-150) * numberPunchPower, math.rad(-20) * numberPunchPower, math.rad(-55) * numberPunchPower)
+				* CFrame.new(0, 0, -0.35 * numberPunchPower),
+			CFrame.Angles(math.rad(70) * numberPunchPower, 0, 0)
 	end
 
 	local function update_fist_action_visuals()
@@ -316,9 +344,16 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end
 
 		local modelCharacter = playerLocal.Character
-		motorFistRightShoulder = motorFistRightShoulder or find_right_shoulder_motor(modelCharacter)
-		if motorFistRightShoulder then
-			motorFistRightShoulder.Transform = get_fist_punch_motor_transform(numberFistProgress)
+		cache_fist_action_motors(modelCharacter)
+		local cframeShoulderOffset, cframeElbowOffset = get_fist_punch_joint_offsets(numberFistProgress)
+		if motorFistRightShoulder and cframeFistRightShoulderOriginalC0 then
+			motorFistRightShoulder.C0 = cframeFistRightShoulderOriginalC0 * cframeShoulderOffset
+			motorFistRightShoulder.Transform = cframeShoulderOffset
+		end
+
+		if motorFistRightElbow and cframeFistRightElbowOriginalC0 then
+			motorFistRightElbow.C0 = cframeFistRightElbowOriginalC0 * cframeElbowOffset
+			motorFistRightElbow.Transform = cframeElbowOffset
 		end
 	end
 
@@ -424,12 +459,12 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		local numberNow = os.clock()
 		if numberNow - numberLastFistAttackTime < FIST_ATTACK_COOLDOWN_SECONDS then return end
 
-		local eventFistAttack = svcReplicatedStorage:FindFirstChild(eLogical.FIST_ATTACK)
-		if not eventFistAttack then return end
-
 		numberLastFistAttackTime = numberNow
 		start_fist_action_visuals()
-		eventFistAttack:FireServer(get_camera_aim_position())
+		local eventFistAttack = svcReplicatedStorage:FindFirstChild(eLogical.FIST_ATTACK)
+		if eventFistAttack then
+			eventFistAttack:FireServer(get_camera_aim_position())
+		end
 	end
 
 	local function connect_throwing_stone(toolThrowingStone)

@@ -19,6 +19,9 @@ local tblWorldLayout = BattlefieldLayout.tblOutpostBattleWorldLayout
 local DEFAULT_ACTIVE_LESSON_DAY = 12
 local MIN_ACTIVE_LESSON_DAY = 1
 local MAX_ACTIVE_LESSON_DAY = 12
+local DEFAULT_WORKSPACE_GRAVITY = 130
+local DEFAULT_PLAYER_JUMP_POWER = 30
+local DEFAULT_PLAYER_JUMP_HEIGHT = 3.6
 
 -- --------------------------------------------------------------------------------
 
@@ -705,9 +708,24 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function CurriculumSetup.applyCurriculumPlayerMovement(modelCharacter)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local humPlayer = modelCharacter and modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
+	if not humPlayer then return end
+
+	humPlayer.UseJumpPower = true
+	humPlayer.JumpPower = DEFAULT_PLAYER_JUMP_POWER
+	humPlayer.JumpHeight = DEFAULT_PLAYER_JUMP_HEIGHT
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function CurriculumSetup.movePlayerToCurriculumSpawn(fldBattlefield, playerPlayer, modelCharacter)
 	local eLogical = CoreEnums.eEngineLogicalType
 	local partSpawn = CurriculumSetup.applyCurriculumRespawnLocation(fldBattlefield, playerPlayer)
+	CurriculumSetup.applyCurriculumPlayerMovement(modelCharacter)
 	local partHumanoidRoot = modelCharacter and (
 		modelCharacter:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
 		or modelCharacter:WaitForChild(eLogical.RESERVED_HUMANOID_ROOT_PART, 5)
@@ -767,6 +785,7 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	local boolInstallStudentThrowingStones = tblSetupConfig == nil or tblSetupConfig.InstallStudentThrowingStones ~= false
 	local boolInstallStudentLessonConfigs = tblSetupConfig == nil or tblSetupConfig.InstallStudentLessonConfigs ~= false
 
+	svcWorkspace.Gravity = DEFAULT_WORKSPACE_GRAVITY
 	EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace)
 	EngineEnsure.removeDefaultWorkspaceBaseplate(svcWorkspace)
 	if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 11) then
