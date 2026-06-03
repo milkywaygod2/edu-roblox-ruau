@@ -440,24 +440,41 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 		partHandle.AssemblyAngularVelocity = Vector3.new(math.random(-6, 6), math.random(-10, 10), math.random(-6, 6))
 
 		connectionTouched = partHandle.Touched:Connect(function(partHit)
-			if boolLanded then return end
 			if partHit == partHandle or partHit:IsDescendantOf(toolThrowingStone) then return end
 			if playerAttacker and playerAttacker.Character and partHit:IsDescendantOf(playerAttacker.Character) then return end
 
 			local modelTarget, humanoidTarget = CombatRules.findHumanoidDamageTargetFromPart(partHit)
 			if not partHit.CanCollide and not humanoidTarget then return end
 
-			if humanoidTarget then
-				local boolDamageApplied = CombatRules.applyHumanoidDamage(playerAttacker, modelTarget, humanoidTarget, numberDamage)
+			-- [관성/낙하 데미지 판정] 수명이 다했더라도(boolLanded == true), 투사체 파트의 물리적 이동 속도가 빠르면 데미지를 적용합니다.
+			local numberVelocityMagnitude = partHandle.AssemblyLinearVelocity.Magnitude
+			local boolCanApplyDamage = not boolLanded or (numberVelocityMagnitude > 12)
+
+			if humanoidTarget and boolCanApplyDamage then
+				local numberFinalDamage = numberDamage
+				local flatLaunchDir = Vector3.new(partHandle.AssemblyLinearVelocity.X, 0, partHandle.AssemblyLinearVelocity.Z)
+				
+				-- 수명이 지난 상태에서 맞은 경우 관성 데미지 보정 (속도 비례 최소 4, 최대 기존데미지)
+				if boolLanded then
+					numberFinalDamage = math.clamp(numberDamage * (numberVelocityMagnitude / numberSpeed), 4, numberDamage)
+					-- 중복 타격 방지를 위해 충돌과 즉시 관성을 소멸시킵니다.
+					partHandle.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				else
+					-- 비행 중 타격 시 즉시 비행 상태 해제 딜레이 개시
+					finish_throw_after_delay(0.4)
+					boolLanded = true -- 타격 성공 시 다단히트 방지
+				end
+
+				local boolDamageApplied = CombatRules.applyHumanoidDamage(playerAttacker, modelTarget, humanoidTarget, numberFinalDamage)
 				local partTargetRoot = modelTarget and modelTarget:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
 				if boolDamageApplied and partTargetRoot then
-					local flatLaunchDir = Vector3.new(vectorVelocity.X, 0, vectorVelocity.Z)
 					local knockbackDir = flatLaunchDir.Magnitude > 0 and flatLaunchDir.Unit or Vector3.new(0, 0, -1)
-					partTargetRoot.AssemblyLinearVelocity = knockbackDir * (numberKnockbackForward * (0.7 + numberSafeCharge * 0.6)) + Vector3.new(0, numberKnockbackUp, 0)
+					partTargetRoot.AssemblyLinearVelocity = knockbackDir * (numberKnockbackForward * (0.5 + numberSafeCharge * 0.5)) + Vector3.new(0, numberKnockbackUp * 0.7, 0)
 				end
+			elseif not humanoidTarget and not boolLanded then
+				-- 지형지물에 일반 충돌 시 비행 해제
+				finish_throw_after_delay(0.6)
 			end
-
-			finish_throw_after_delay(0.6)
 		end)
 
 		task.spawn(function()

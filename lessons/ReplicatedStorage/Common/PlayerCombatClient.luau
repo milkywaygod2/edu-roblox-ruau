@@ -84,9 +84,9 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	-- HUD Container
 	local frameHudContainer = Instance.new(ePhysical.FRAME)
 	frameHudContainer.Name = "HudContainer"
-	frameHudContainer.AnchorPoint = Vector2.new(0.5, 1)
+	frameHudContainer.AnchorPoint = Vector2.new(1, 1) -- [우하단 정렬] 기존 퀵슬롯 핫바(하단 중앙)와의 겹침 방지
 	frameHudContainer.Size = UDim2.fromOffset(360, 80)
-	frameHudContainer.Position = UDim2.new(0.5, 0, 1, -25)
+	frameHudContainer.Position = UDim2.new(1, -25, 1, -25) -- 우하단 구석에서 마진 적용
 	frameHudContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 	frameHudContainer.BackgroundTransparency = 0.25
 	frameHudContainer.BorderSizePixel = 0
