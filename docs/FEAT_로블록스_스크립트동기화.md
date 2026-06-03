@@ -39,7 +39,7 @@ Roblox Studio의 Explorer는 기본적으로 Windows 로컬 폴더와 자동 동
 
 - `ReplicatedStorage` -> `lessons/ReplicatedStorage`
 - `ServerScriptService` -> `lessons/ServerScriptService`
-- `StarterPlayer > StarterPlayerScripts` -> `lessons/StarterPlayerScripts`
+- `StarterPlayer > StarterPlayerScripts` -> `lessons/StarterPlayer/StarterPlayerScripts`
 
 루트 이름이 디스크 경로에 한 번 포함되므로 `ReplicatedStorage`를 `lessons/ReplicatedStorage`에 연결하지 않는다. 그렇게 연결하면 `lessons/ReplicatedStorage/ReplicatedStorage`처럼 중첩 폴더가 생길 수 있다.
 
@@ -60,8 +60,9 @@ lessons/
       02_student_answer.luau
       ...
       12_student_answer.luau
-  StarterPlayerScripts/
-    11_student_answer.local.luau
+  StarterPlayer/
+    StarterPlayerScripts/
+      11_student_answer.local.luau
 ```
 
 `Workspace/OutpostBattleWorld` 아래의 Part, Model, marker, 목표물은 현재처럼 `TeacherSetup`과 `Common`의 `ensure*` 함수가 Studio 안에서 생성/보장하게 둔다.

@@ -50,8 +50,9 @@ lessons/
       02_student_answer.luau
       ...
       12_student_answer.luau
-  StarterPlayerScripts/
-    11_student_answer.local.luau
+  StarterPlayer/
+    StarterPlayerScripts/
+      11_student_answer.local.luau
 ```
 
 *   **호환성 보장**: 하위 모듈 내에서 타 모듈을 호출하는 `require(script.Parent:WaitForChild("CoreEnums"))` 등은 스튜디오 인스턴스 이름 기준(확장자 미포함)이므로, `.luau` 파일명으로 동기화되어도 내부 의존성 링크는 깨지지 않습니다.
