@@ -14,7 +14,7 @@
 	* 로직 타입 (Luau 기본 데이터 타입): C++ 표준 약어형 소문자(str, int, float, tbl, bool)를 접두사로 사용
 	* 고유이름: 타입명 바로 뒤에 붙이며, 첫 글자를 대문자로 시작하여 이어 씀
 	* 일차(Day) 표시:
-		- 폴더명(디렉토리): 정렬 편의를 위해 숫자를 접두사로 배치 (예: 01_rock_tool)
+		- 학생 파일명: 정렬 편의를 위해 숫자를 접두사로 배치 (예: 01_student_answer.module.lua)
 		- 게임 오브젝트 이름: 누적 전초기지 공방전 월드에서는 역할 이름을 우선하고, 최초 추가 회차를 구분해야 할 때만 숫자 접미사를 사용
 	* enum 기반 객체 호출 선언: local fldBattlefield = ..., local partRock = ...처럼 소문자 축약타입 + 카멜케이스로 작성
 
@@ -48,6 +48,7 @@
 ]]
 
 local common = {} -- [의미/의도] 공통 모듈 테이블 정의 ➔ 헬퍼 함수와 상수를 담아 반환하기 위함
+local intAutoRockDesignId = 0
 
 -- --------------------------------------------------------------------------------
 
@@ -55,6 +56,7 @@ common.eEngineServiceSingleton = { -- [의미/의도] 엔진 서비스 싱글턴
 	WORKSPACE          = "Workspace",         -- [의미/의도] Workspace 서비스 키 ➔ 게임 월드(파트·폴더) 공간에 접근하기 위함
 	PLAYERS            = "Players",           -- [의미/의도] Players 서비스 키 ➔ 접속 플레이어와 leaderstats를 관리하기 위함
 	REPLICATED_STORAGE = "ReplicatedStorage", -- [의미/의도] ReplicatedStorage 서비스 키 ➔ 서버·클라이언트 공유 저장소에 접근하기 위함
+	SERVER_SCRIPT_SERVICE = "ServerScriptService",
 	DEBRIS             = "Debris",            -- [의미/의도] Debris 서비스 키 ➔ 생성물을 일정 시간 후 자동 삭제하기 위함
 	TEAMS              = "Teams",             -- [의미/의도] Teams 서비스 키 ➔ 진영(팀)을 등록·관리하기 위함
 }
@@ -67,6 +69,10 @@ common.eEnginePhysicalType = { -- [의미/의도] 물리(명목) 타입 이넘 �
 	MODEL            = "Model",           -- [의미/의도] Model 클래스명 ➔ 여러 파트를 묶는 모델 인스턴스를 만들거나 검사하기 위함
 	HUMANOID         = "Humanoid",        -- [의미/의도] Humanoid 클래스명 ➔ 체력·피해 기능을 가진 생명체 컴포넌트를 만들기 위함
 	FOLDER           = "Folder",          -- [의미/의도] Folder 클래스명 ➔ 오브젝트를 분류·정리하는 폴더 인스턴스를 만들기 위함
+	MODULE_SCRIPT    = "ModuleScript",
+	SURFACE_GUI      = "SurfaceGui",
+	TEXT_LABEL       = "TextLabel",
+	WELD_CONSTRAINT  = "WeldConstraint",
 	TOOL             = "Tool",            -- [의미/의도] Tool 클래스명 ➔ 플레이어가 장착하는 도구 인스턴스를 만들기 위함
 	INT_VALUE        = "IntValue",        -- [의미/의도] IntValue 클래스명 ➔ 정수 값을 저장하는 인스턴스를 만들기 위함
 	CLICK_DETECTOR   = "ClickDetector",   -- [의미/의도] ClickDetector 클래스명 ➔ 마우스 클릭 감지 컴포넌트를 만들기 위함
@@ -89,6 +95,13 @@ common.eEngineLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 ➔
 	BUILD_AREA            = "BuildArea",          -- [의미/의도] 건설/방벽 영역 폴더 ➔ 버튼, 방벽 소환 위치, 학생 건축물을 누적 관리하기 위함
 	OBJECTIVE_AREA        = "ObjectiveArea",      -- [의미/의도] 목표물 영역 폴더 ➔ 전초기지 코어, 가드, 표적을 같은 전장 목표 영역에서 관리하기 위함
 	ITEM_SPAWN_AREA       = "ItemSpawns",         -- [의미/의도] 파밍 아이템 영역 폴더 ➔ 학생 튜닝 장비를 전장 곳곳에 흩뿌려 관리하기 위함
+	OUTPOST_ASSETS        = "OutpostAssets",
+	ROCK_LOOKS            = "RockLooks",
+	STUDENT_ROCK_VALIDATION_BOARD = "StudentRockValidationBoard",
+	STUDENT_ROCK_VALIDATION_GUI = "StudentRockValidationGui",
+	STUDENT_ROCK_VALIDATION_TEXT = "StudentRockValidationText",
+	STUDENT_ROCK_DESIGNS  = "StudentRockDesigns",
+	STUDENT_LESSON_CONFIGS = "StudentLessonConfigs",
 	FORTIFICATION         = "Fortification",      -- [의미/의도] 기지 방어 구조물 폴더 ➔ 문/벽을 양 팀 전초기지 방어 시설로 관리하기 위함
 	GATE                  = "Gate",               -- [의미/의도] 문 모델 이름 ➔ 기지 방어선의 파괴 가능한 진입 목표물을 식별하기 위함
 	STONE_WALL            = "StoneWall",          -- [의미/의도] 석조 벽 모델 이름 ➔ 기지 주변의 부분 파괴 가능한 벽을 식별하기 위함
@@ -111,6 +124,8 @@ common.eEngineLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 ➔
 	MAGIC_STAFF           = "MagicStaff",    -- [의미/의도] 마법 지팡이 도구 이름 ➔ RemoteEvent 기반 스킬 입력 장비를 식별하기 위함
 
 	THROWN_STONE          = "ThrownStone", -- [의미/의도] 던져진 돌 투사체 이름 ➔ 충돌 판정에서 기본 투사체를 구분하기 위함
+	PARTICLE_EFFECT       = "ParticleEffect",
+	THROWING_STONE_LOOK   = "ThrowingStoneLook",
 	PROJECTILE_ALL        = "Projectile",  -- [의미/의도] 공통 투사체 이름 ➔ 방어/충돌 규칙에서 넓게 투사체를 구분하기 위함
 	PROJECTILE_ARROW      = "Arrow",       -- [의미/의도] 화살 이름 ➔ 화살 계열 투사체를 구분하기 위함
 	PROJECTILE_ARROW_FIELD = "FieldArrow", -- [의미/의도] 전장 화살 이름 ➔ 원거리 무기 수업의 서버 생성 화살을 구분하기 위함
@@ -161,6 +176,23 @@ common.eRoundStateValue = { -- [의미/의도] 라운드 상태값 이넘 정의
 	PREPARING = "Preparing", -- [의미/의도] Preparing 상태 ➔ 라운드 준비 중 단계를 나타내기 위함
 	PLAYING   = "Playing",   -- [의미/의도] Playing 상태 ➔ 라운드 진행 중 단계를 나타내기 위함
 	FINISHED  = "Finished",  -- [의미/의도] Finished 상태 ➔ 라운드 종료 단계를 나타내기 위함
+}
+
+-- --------------------------------------------------------------------------------
+
+common.eStudentLessonConfigKey = {
+	COVER_DESIGN  = "CoverDesign",
+	RESOURCE_WALL = "ResourceWall",
+	SWORD         = "Sword",
+	BOW           = "Bow",
+	SHIELD        = "Shield",
+	ARMOR         = "Armor",
+	GATE          = "Gate",
+	STONE_WALL    = "StoneWall",
+	SIEGE_ENGINE  = "SiegeEngine",
+	STAFF         = "Staff",
+	MAGIC         = "Magic",
+	FINAL_BATTLE  = "FinalBattle",
 }
 
 -- --------------------------------------------------------------------------------
@@ -430,7 +462,12 @@ end
 
 -- --------------------------------------------------------------------------------
 
-function common.readConfigBrickColor(tblConfig, strKey, strDefaultColor) -- [의미/의도] 학생 설정 BrickColor 읽기 함수 정의 ➔ 색상 이름을 안전한 BrickColor 값으로 변환하기 위함
+function common.readConfigBrickColor(tblConfig, strKey, strDefaultColor) -- [의미/의도] 학생 설정 BrickColor 읽기 함수 정의 ➔ BrickColor 값 또는 색상 이름을 안전하게 받기 위함
+	local valueColor = tblConfig and tblConfig[strKey]
+	if typeof(valueColor) == "BrickColor" then
+		return valueColor
+	end
+
 	local strColorName = common.readConfigString(tblConfig, strKey, strDefaultColor) -- [의미/의도] 색상 이름 읽기 ➔ 비어 있거나 잘못된 문자열을 기본값으로 대체하기 위함
 	local boolSuccess, brickColor = pcall(function()
 		return BrickColor.new(strColorName)
@@ -441,6 +478,48 @@ function common.readConfigBrickColor(tblConfig, strKey, strDefaultColor) -- [의
 	end
 
 	return brickColor -- [의미/의도] 검증된 BrickColor 반환 ➔ Part 색상 설정에 사용하기 위함
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readConfigColor3(tblConfig, strKey, colorDefault, tblValidationMessages, strSourceName)
+	local valueColor = tblConfig and tblConfig[strKey]
+	if valueColor == nil then
+		return colorDefault
+	end
+
+	if typeof(valueColor) == "Color3" then
+		return valueColor
+	end
+
+	if typeof(valueColor) == "BrickColor" then
+		return valueColor.Color
+	end
+
+	if type(valueColor) == "string" then
+		local boolSuccess, brickColor = pcall(function()
+			return BrickColor.new(valueColor)
+		end)
+		if boolSuccess then
+			return brickColor.Color
+		end
+	end
+
+	common.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Color3.fromRGB(...), BrickColor.new(...), 또는 색상 이름 문자열이어야 해서 기본색으로 보정했습니다.")
+	return colorDefault
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.createBrickColorFromColor3(colorValue, strDefaultColor)
+	local boolSuccess, brickColor = pcall(function()
+		return BrickColor.new(colorValue)
+	end)
+	if boolSuccess then
+		return brickColor
+	end
+
+	return BrickColor.new(strDefaultColor or "Dark stone grey")
 end
 
 -- --------------------------------------------------------------------------------
@@ -456,13 +535,810 @@ end
 
 -- --------------------------------------------------------------------------------
 
+function common.clampNumber(numberValue, numberMin, numberMax)
+	return math.min(math.max(numberValue, numberMin), numberMax)
+end
+
+-- --------------------------------------------------------------------------------
+
+common.tblEquipmentSizeRule = {
+	ThrowingStone = {
+		Default = Vector3.new(1.2, 1.2, 1.2),
+		Min = Vector3.new(0.5, 0.5, 0.5),
+		Max = Vector3.new(2.6, 2.6, 2.6),
+	},
+	SiegeStone = {
+		Default = Vector3.new(4, 4, 4),
+		Min = Vector3.new(1.5, 1.5, 1.5),
+		Max = Vector3.new(10, 10, 10),
+	},
+}
+
+-- --------------------------------------------------------------------------------
+
+common.tblThrowingStoneMaterialBlockList = {
+	Enum.Material.Air,
+	Enum.Material.Water,
+	Enum.Material.ForceField,
+}
+
+-- --------------------------------------------------------------------------------
+
+common.eParticleTexture = {
+	EXPLOSION01_CORE_MAIN = "rbxasset://textures/particles/explosion01_core_main.dds",
+	EXPLOSION01_IMPLOSION_MAIN = "rbxasset://textures/particles/explosion01_implosion_main.dds",
+	EXPLOSION01_SHOCKWAVE_MAIN = "rbxasset://textures/particles/explosion01_shockwave_main.dds",
+	EXPLOSION01_SMOKE_MAIN = "rbxasset://textures/particles/explosion01_smoke_main.dds",
+	FIRE_MAIN = "rbxasset://textures/particles/fire_main.dds",
+	FIRE_SPARKS_MAIN = "rbxasset://textures/particles/fire_sparks_main.dds",
+	FORCEFIELD_GLOW_MAIN = "rbxasset://textures/particles/forcefield_glow_main.dds",
+	FORCEFIELD_VORTEX_MAIN = "rbxasset://textures/particles/forcefield_vortex_main.dds",
+	SMOKE_MAIN = "rbxasset://textures/particles/smoke_main.dds",
+	SPARKLES_MAIN = "rbxasset://textures/particles/sparkles_main.dds",
+	SQUARE_PARTICLE = "rbxasset://textures/particles/SquareParticle.png",
+
+	SPARKLES = "rbxasset://textures/particles/sparkles_main.dds",
+	FIRE = "rbxasset://textures/particles/fire_main.dds",
+	SMOKE = "rbxasset://textures/particles/smoke_main.dds",
+}
+
+-- --------------------------------------------------------------------------------
+
+function common.isThrowingStoneMaterialBlocked(enumMaterial)
+	for _, enumBlockedMaterial in ipairs(common.tblThrowingStoneMaterialBlockList) do
+		if enumMaterial == enumBlockedMaterial then
+			return true
+		end
+	end
+
+	return false
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.addValidationMessage(tblValidationMessages, strSourceName, strMessage)
+	if not tblValidationMessages then
+		return
+	end
+
+	local strSafeSourceName = strSourceName or "Unknown"
+	table.insert(tblValidationMessages, strSafeSourceName .. ": " .. strMessage)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readConfigTable(tblConfig, strKey, tblDefault, tblValidationMessages, strSourceName)
+	local valueTable = tblConfig and tblConfig[strKey]
+	if valueTable == nil then
+		return tblDefault
+	end
+
+	if type(valueTable) ~= "table" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 table이어야 해서 기본 설정을 사용합니다.")
+		return tblDefault
+	end
+
+	return valueTable
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.mergeConfigTables(tblBase, tblOverride)
+	local tblMerged = {}
+	if type(tblBase) == "table" then
+		for keyConfig, valueConfig in pairs(tblBase) do
+			tblMerged[keyConfig] = valueConfig
+		end
+	end
+
+	if type(tblOverride) == "table" then
+		for keyConfig, valueConfig in pairs(tblOverride) do
+			tblMerged[keyConfig] = valueConfig
+		end
+	end
+
+	return tblMerged
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.isVector3OutsideRange(vectorValue, vectorMin, vectorMax)
+	return vectorValue.X < vectorMin.X or vectorValue.Y < vectorMin.Y or vectorValue.Z < vectorMin.Z
+		or vectorValue.X > vectorMax.X or vectorValue.Y > vectorMax.Y or vectorValue.Z > vectorMax.Z
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readThrowingStoneMaterial(tblConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
+	local valueMaterial = tblConfig and tblConfig[strKey]
+	if valueMaterial ~= nil and typeof(valueMaterial) ~= "EnumItem" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Enum.Material 값을 써야 해서 기본 Slate로 보정했습니다.")
+		return enumDefault
+	end
+
+	local enumMaterial = common.readConfigEnumItem(tblConfig, strKey, enumDefault)
+	if valueMaterial ~= nil and enumMaterial == enumDefault and valueMaterial ~= enumDefault then
+		common.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Material 종류가 아니라 기본 Slate로 보정했습니다.")
+		return enumDefault
+	end
+
+	if common.isThrowingStoneMaterialBlocked(enumMaterial) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, tostring(enumMaterial) .. "는 돌 Part에 쓰지 않도록 막아서 기본 Slate로 보정했습니다.")
+		return enumDefault
+	end
+
+	return enumMaterial
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectNumber(tblEffectConfig, strKey, numberDefault, numberMin, numberMax, tblValidationMessages, strSourceName)
+	local numberRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if numberRaw ~= nil and type(numberRaw) ~= "number" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 숫자여야 해서 기본값으로 보정했습니다.")
+		return numberDefault
+	end
+
+	if type(numberRaw) == "number" and (numberRaw < numberMin or numberRaw > numberMax) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 " .. numberMin .. "~" .. numberMax .. " 범위로 보정했습니다.")
+	end
+
+	return common.readConfigNumber(tblEffectConfig, strKey, numberDefault, numberMin, numberMax)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectColor(tblEffectConfig, strKey, colorDefault, tblValidationMessages, strSourceName)
+	local valueColor = tblEffectConfig and tblEffectConfig[strKey]
+	if valueColor == nil then
+		return colorDefault
+	end
+
+	if typeof(valueColor) == "ColorSequence" then
+		return valueColor
+	end
+
+	if typeof(valueColor) == "Color3" then
+		return ColorSequence.new(valueColor)
+	end
+
+	common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 ColorSequence.new(...) 또는 Color3.fromRGB(...) 값이어야 해서 기본색으로 보정했습니다.")
+	return colorDefault
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.isAllowedParticleTexture(strTexture)
+	for _, strAllowedTexture in pairs(common.eParticleTexture) do
+		if strTexture == strAllowedTexture then
+			return true
+		end
+	end
+
+	return false
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectTexture(tblEffectConfig, strKey, strDefaultTexture, tblValidationMessages, strSourceName)
+	local strTexture = common.readConfigString(tblEffectConfig, strKey, strDefaultTexture)
+	if common.isAllowedParticleTexture(strTexture) then
+		return strTexture
+	end
+
+	common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 common.eParticleTexture 값만 사용할 수 있어 기본 Sparkles로 보정했습니다.")
+	return strDefaultTexture
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectBoolean(tblEffectConfig, strKey, boolDefault, tblValidationMessages, strSourceName)
+	local boolRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if boolRaw == nil then
+		return boolDefault
+	end
+
+	if type(boolRaw) ~= "boolean" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 true/false 값이어야 해서 기본값으로 보정했습니다.")
+		return boolDefault
+	end
+
+	return boolRaw
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectEnumItem(tblEffectConfig, strKey, enumDefault, tblValidationMessages, strSourceName)
+	local enumRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if enumRaw == nil then
+		return enumDefault
+	end
+
+	local enumValue = common.readConfigEnumItem(tblEffectConfig, strKey, enumDefault)
+	if enumValue == enumDefault and enumRaw ~= enumDefault then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 올바른 Roblox Enum 값이어야 해서 기본값으로 보정했습니다.")
+	end
+
+	return enumValue
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectVector2(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax, tblValidationMessages, strSourceName)
+	local vectorRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if vectorRaw == nil then
+		return vectorDefault
+	end
+
+	if typeof(vectorRaw) ~= "Vector2" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 Vector2.new(...) 값이어야 해서 기본값으로 보정했습니다.")
+		return vectorDefault
+	end
+
+	if vectorMin and (vectorRaw.X < vectorMin.X or vectorRaw.Y < vectorMin.Y) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 허용 범위 안으로 보정했습니다.")
+	end
+	if vectorMax and (vectorRaw.X > vectorMax.X or vectorRaw.Y > vectorMax.Y) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 허용 범위 안으로 보정했습니다.")
+	end
+
+	return Vector2.new(
+		common.clampNumber(vectorRaw.X, vectorMin and vectorMin.X, vectorMax and vectorMax.X),
+		common.clampNumber(vectorRaw.Y, vectorMin and vectorMin.Y, vectorMax and vectorMax.Y)
+	)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectVector3(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax, tblValidationMessages, strSourceName)
+	local vectorRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if vectorRaw ~= nil and typeof(vectorRaw) ~= "Vector3" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 Vector3.new(...) 값이어야 해서 기본값으로 보정했습니다.")
+		return vectorDefault
+	end
+
+	return common.readConfigVector3(tblEffectConfig, strKey, vectorDefault, vectorMin, vectorMax)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.createOrderedNumberRange(numberMin, numberMax, strLabel, tblValidationMessages, strSourceName)
+	if numberMin <= numberMax then
+		return NumberRange.new(numberMin, numberMax)
+	end
+
+	common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strLabel .. "Min이 Max보다 커서 두 값을 서로 바꿨습니다.")
+	return NumberRange.new(numberMax, numberMin)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectNumberRange(tblEffectConfig, strKey, strMinKey, strMaxKey, numberDefaultMin, numberDefaultMax, numberMin, numberMax, tblValidationMessages, strSourceName)
+	local rangeRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if rangeRaw ~= nil then
+		if typeof(rangeRaw) ~= "NumberRange" then
+			common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 NumberRange.new(...) 값이어야 해서 기본값으로 보정했습니다.")
+			return NumberRange.new(numberDefaultMin, numberDefaultMax)
+		end
+
+		if rangeRaw.Min < numberMin or rangeRaw.Max > numberMax then
+			common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 " .. numberMin .. "~" .. numberMax .. " 범위로 보정했습니다.")
+		end
+
+		return common.createOrderedNumberRange(
+			common.clampNumber(rangeRaw.Min, numberMin, numberMax),
+			common.clampNumber(rangeRaw.Max, numberMin, numberMax),
+			strKey,
+			tblValidationMessages,
+			strSourceName
+		)
+	end
+
+	local numberRangeMin = common.readEffectNumber(tblEffectConfig, strMinKey, numberDefaultMin, numberMin, numberMax, tblValidationMessages, strSourceName)
+	local numberRangeMax = common.readEffectNumber(tblEffectConfig, strMaxKey, numberDefaultMax, numberMin, numberMax, tblValidationMessages, strSourceName)
+	return common.createOrderedNumberRange(numberRangeMin, numberRangeMax, strKey, tblValidationMessages, strSourceName)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEffectNumberSequence(tblEffectConfig, strKey, numberDefault, numberMin, numberMax, tblValidationMessages, strSourceName)
+	local sequenceRaw = tblEffectConfig and tblEffectConfig[strKey]
+	if sequenceRaw == nil then
+		return NumberSequence.new(numberDefault)
+	end
+
+	if typeof(sequenceRaw) == "NumberSequence" then
+		local tblKeypoints = {}
+		local boolWasClamped = false
+		for _, keypoint in ipairs(sequenceRaw.Keypoints) do
+			local numberValue = common.clampNumber(keypoint.Value, numberMin, numberMax)
+			local numberMaxEnvelope = math.max(0, math.min(numberValue - numberMin, numberMax - numberValue))
+			local numberEnvelope = common.clampNumber(keypoint.Envelope, 0, numberMaxEnvelope)
+			if numberValue ~= keypoint.Value or numberEnvelope ~= keypoint.Envelope then
+				boolWasClamped = true
+			end
+			table.insert(tblKeypoints, NumberSequenceKeypoint.new(keypoint.Time, numberValue, numberEnvelope))
+		end
+		if boolWasClamped then
+			common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. " 내부 숫자는 " .. numberMin .. "~" .. numberMax .. " 범위로 보정했습니다.")
+		end
+		return NumberSequence.new(tblKeypoints)
+	end
+
+	if type(sequenceRaw) ~= "number" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 숫자 또는 NumberSequence.new(...) 값이어야 해서 기본값으로 보정했습니다.")
+		return NumberSequence.new(numberDefault)
+	end
+
+	if sequenceRaw < numberMin or sequenceRaw > numberMax then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect." .. strKey .. "는 " .. numberMin .. "~" .. numberMax .. " 범위로 보정했습니다.")
+	end
+
+	return NumberSequence.new(common.clampNumber(sequenceRaw, numberMin, numberMax))
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readParticleEffectConfig(tblConfig, strKey, tblValidationMessages, strSourceName)
+	local valueEffect = tblConfig and tblConfig[strKey]
+	if valueEffect == nil or valueEffect == false then
+		return nil
+	end
+
+	if type(valueEffect) ~= "table" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "Effect는 table이어야 해서 효과를 끕니다.")
+		return nil
+	end
+
+	return {
+		Texture = common.readEffectTexture(valueEffect, "Texture", common.eParticleTexture.SPARKLES, tblValidationMessages, strSourceName),
+		Rate = common.readEffectNumber(valueEffect, "Rate", 24, 0, 60, tblValidationMessages, strSourceName),
+		LightEmission = common.readEffectNumber(valueEffect, "LightEmission", 0.4, 0, 1, tblValidationMessages, strSourceName),
+		LightInfluence = common.readEffectNumber(valueEffect, "LightInfluence", 0, 0, 1, tblValidationMessages, strSourceName),
+		Brightness = common.readEffectNumber(valueEffect, "Brightness", 1, 0, 10, tblValidationMessages, strSourceName),
+		Color = common.readEffectColor(valueEffect, "Color", ColorSequence.new(Color3.fromRGB(255, 112, 36)), tblValidationMessages, strSourceName),
+		Transparency = common.readEffectNumberSequence(valueEffect, "Transparency", 0, 0, 1, tblValidationMessages, strSourceName),
+		Lifetime = common.readEffectNumberRange(valueEffect, "Lifetime", "LifetimeMin", "LifetimeMax", 0.25, 0.7, 0.05, 3, tblValidationMessages, strSourceName),
+		Speed = common.readEffectNumberRange(valueEffect, "Speed", "SpeedMin", "SpeedMax", 0.5, 2, 0, 20, tblValidationMessages, strSourceName),
+		Size = common.readEffectNumberSequence(valueEffect, "Size", 0.35, 0.05, 3, tblValidationMessages, strSourceName),
+		SpreadAngle = common.readEffectVector2(valueEffect, "SpreadAngle", Vector2.new(
+			common.readEffectNumber(valueEffect, "SpreadX", 20, 0, 180, tblValidationMessages, strSourceName),
+			common.readEffectNumber(valueEffect, "SpreadY", 20, 0, 180, tblValidationMessages, strSourceName)
+		), Vector2.new(0, 0), Vector2.new(180, 180), tblValidationMessages, strSourceName),
+		Acceleration = common.readEffectVector3(valueEffect, "Acceleration", Vector3.new(0, 0, 0), Vector3.new(-50, -50, -50), Vector3.new(50, 50, 50), tblValidationMessages, strSourceName),
+		Drag = common.readEffectNumber(valueEffect, "Drag", 0, 0, 20, tblValidationMessages, strSourceName),
+		Rotation = common.readEffectNumberRange(valueEffect, "Rotation", "RotationMin", "RotationMax", 0, 0, -360, 360, tblValidationMessages, strSourceName),
+		RotSpeed = common.readEffectNumberRange(valueEffect, "RotSpeed", "RotSpeedMin", "RotSpeedMax", 0, 0, -360, 360, tblValidationMessages, strSourceName),
+		VelocityInheritance = common.readEffectNumber(valueEffect, "VelocityInheritance", 0, 0, 1, tblValidationMessages, strSourceName),
+		ZOffset = common.readEffectNumber(valueEffect, "ZOffset", 0, -5, 5, tblValidationMessages, strSourceName),
+		TimeScale = common.readEffectNumber(valueEffect, "TimeScale", 1, 0, 2, tblValidationMessages, strSourceName),
+		Shape = common.readEffectEnumItem(valueEffect, "Shape", Enum.ParticleEmitterShape.Sphere, tblValidationMessages, strSourceName),
+		ShapeStyle = common.readEffectEnumItem(valueEffect, "ShapeStyle", Enum.ParticleEmitterShapeStyle.Surface, tblValidationMessages, strSourceName),
+		ShapeInOut = common.readEffectEnumItem(valueEffect, "ShapeInOut", Enum.ParticleEmitterShapeInOut.Outward, tblValidationMessages, strSourceName),
+		ShapePartial = common.readEffectNumber(valueEffect, "ShapePartial", 1, 0, 1, tblValidationMessages, strSourceName),
+		EmissionDirection = common.readEffectEnumItem(valueEffect, "EmissionDirection", Enum.NormalId.Top, tblValidationMessages, strSourceName),
+		Orientation = common.readEffectEnumItem(valueEffect, "Orientation", Enum.ParticleOrientation.FacingCamera, tblValidationMessages, strSourceName),
+		LockedToPart = common.readEffectBoolean(valueEffect, "LockedToPart", false, tblValidationMessages, strSourceName),
+	}
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readEquipmentSize(tblConfig, strKey, strEquipmentRuleName, tblValidationMessages, strSourceName)
+	local tblSizeRule = common.tblEquipmentSizeRule[strEquipmentRuleName]
+	local vectorDefault = tblSizeRule.Default
+	local vectorMin = tblSizeRule.Min
+	local vectorMax = tblSizeRule.Max
+	local valueSize = tblConfig and tblConfig[strKey]
+
+	if valueSize ~= nil and typeof(valueSize) ~= "Vector3" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 Vector3.new(...) 값이어야 해서 기본 크기로 보정했습니다.")
+		return vectorDefault
+	end
+
+	if typeof(valueSize) == "Vector3" and common.isVector3OutsideRange(valueSize, vectorMin, vectorMax) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, strKey .. "는 장비 기준 범위를 벗어나 " .. tostring(vectorMin) .. " ~ " .. tostring(vectorMax) .. " 안으로 보정했습니다.")
+	end
+
+	return common.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.hashTextToInteger(strText)
+	local intHash = 0
+	for index = 1, #strText do
+		intHash = (intHash * 31 + string.byte(strText, index)) % 2147483647
+	end
+
+	return intHash
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.createFlatSpawnJitter(strSeedText, intIndex, numberRadius)
+	if numberRadius <= 0 then
+		return Vector3.new(0, 0, 0)
+	end
+
+	local randomJitter = Random.new(common.hashTextToInteger(strSeedText .. "_" .. intIndex))
+	local numberDistance = math.sqrt(randomJitter:NextNumber()) * numberRadius
+	local numberAngle = randomJitter:NextNumber() * math.pi * 2
+	return Vector3.new(math.cos(numberAngle) * numberDistance, 0, math.sin(numberAngle) * numberDistance)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.createAutoRockVariantId()
+	intAutoRockDesignId += 1
+	return "RockAuto_" .. intAutoRockDesignId
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.createRockDesign(strDisplayName) -- [의미/의도] 학생용 돌멩이 디자인 객체 생성 함수 정의 ➔ 학생마다 독립된 table을 받아 = 대입으로 외형과 컨셉만 바꾸게 하기 위함
+	local strSafeDisplayName = common.readConfigString({DisplayName = strDisplayName}, "DisplayName", "전장 돌멩이")
+	return {
+		DesignKind = "ThrowingStone",
+		VariantId = common.createAutoRockVariantId(),
+		DisplayName = strSafeDisplayName,
+		SpawnCount = 3,
+		SpawnRadius = 4,
+		Appearance = {
+			BrickColor = BrickColor.new("Dark stone grey"),
+			Material = Enum.Material.Slate,
+			Size = Vector3.new(1.2, 1.2, 1.2),
+			CollisionShape = Enum.PartType.Ball,
+			LookShape = "",
+		},
+		Trait = "Balanced",
+	}
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.getThrowingStoneMaterialProfile(enumMaterial)
+	if enumMaterial == Enum.Material.Metal then
+		return {Mass = 1.45, Hardness = 1.2}
+	elseif enumMaterial == Enum.Material.Wood then
+		return {Mass = 0.7, Hardness = 0.75}
+	elseif enumMaterial == Enum.Material.Neon then
+		return {Mass = 0.85, Hardness = 0.8}
+	elseif enumMaterial == Enum.Material.Ice then
+		return {Mass = 0.8, Hardness = 1}
+	elseif enumMaterial == Enum.Material.Concrete then
+		return {Mass = 1.25, Hardness = 1.05}
+	end
+
+	return {Mass = 1, Hardness = 1}
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.getThrowingStoneTraitProfile(strTrait)
+	if strTrait == "Heavy" then
+		return {Mass = 1.35, Hardness = 1.1, Speed = 0.82, Cooldown = 1.18, Knockback = 1.25}
+	elseif strTrait == "Light" then
+		return {Mass = 0.75, Hardness = 0.9, Speed = 1.18, Cooldown = 0.88, Knockback = 0.8}
+	elseif strTrait == "Bouncy" then
+		return {Mass = 0.95, Hardness = 0.85, Speed = 1, Cooldown = 1, Knockback = 1.35}
+	elseif strTrait == "Sharp" then
+		return {Mass = 1, Hardness = 1.25, Speed = 0.95, Cooldown = 1.12, Knockback = 0.95}
+	end
+
+	return {Mass = 1, Hardness = 1, Speed = 1, Cooldown = 1, Knockback = 1}
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.calculateThrowingStoneStats(vectorSize, enumMaterial, strTrait)
+	local tblMaterialProfile = common.getThrowingStoneMaterialProfile(enumMaterial)
+	local tblTraitProfile = common.getThrowingStoneTraitProfile(strTrait)
+	local numberVolume = vectorSize.X * vectorSize.Y * vectorSize.Z
+	local numberSizeMass = common.clampNumber(numberVolume / 1.728, 0.25, 5)
+	local numberMass = numberSizeMass * tblMaterialProfile.Mass * tblTraitProfile.Mass
+	local numberHardness = tblMaterialProfile.Hardness * tblTraitProfile.Hardness
+
+	return {
+		Damage = common.clampNumber(9 + numberMass * numberHardness * 5.5, 8, 30),
+		Cooldown = common.clampNumber((0.55 + numberMass * 0.22) * tblTraitProfile.Cooldown, 0.45, 2.4),
+		Speed = common.clampNumber((105 / math.sqrt(numberMass)) * tblTraitProfile.Speed, 45, 135),
+		Arc = common.clampNumber(18 - numberMass * 1.8, 5, 35),
+		KnockbackForward = common.clampNumber((28 + numberMass * 10) * tblTraitProfile.Knockback, 18, 80),
+		KnockbackUp = common.clampNumber(12 + numberMass * 3, 8, 35),
+		Lifetime = common.clampNumber(4 + numberMass * 0.35, 3, 8),
+	}
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.resolveThrowingStoneDesign(tblConfig, tblValidationMessages, strSourceName)
+	local strVariantId = tblConfig and tblConfig.VariantId
+	if type(strVariantId) ~= "string" or strVariantId == "" then
+		strVariantId = common.createAutoRockVariantId()
+	end
+
+	local tblAppearance = common.readConfigTable(tblConfig, "Appearance", nil, tblValidationMessages, strSourceName)
+	local tblAppearanceConfig = common.mergeConfigTables(tblConfig, tblAppearance)
+	local vectorSize = common.readEquipmentSize(tblAppearanceConfig, "Size", "ThrowingStone", tblValidationMessages, strSourceName)
+	if tblAppearanceConfig and tblAppearanceConfig.Size == nil and tblAppearanceConfig.CollisionSize ~= nil then
+		vectorSize = common.readEquipmentSize(tblAppearanceConfig, "CollisionSize", "ThrowingStone", tblValidationMessages, strSourceName)
+	end
+	local enumMaterial = common.readThrowingStoneMaterial(tblAppearanceConfig, "Material", Enum.Material.Slate, tblValidationMessages, strSourceName)
+	local enumShape = common.readConfigEnumItem(tblAppearanceConfig, "CollisionShape", Enum.PartType.Ball)
+	local valueShape = tblAppearanceConfig and tblAppearanceConfig.CollisionShape
+	if tblAppearanceConfig and tblAppearanceConfig.CollisionShape == nil and tblAppearanceConfig.Shape ~= nil then
+		enumShape = common.readConfigEnumItem(tblAppearanceConfig, "Shape", Enum.PartType.Ball)
+		valueShape = tblAppearanceConfig.Shape
+	end
+	if valueShape ~= nil and enumShape == Enum.PartType.Ball and valueShape ~= Enum.PartType.Ball then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShape는 Enum.PartType 값을 써야 해서 Ball로 보정했습니다.")
+	end
+	local brickColor = common.readConfigBrickColor(tblAppearanceConfig, "BrickColor", "Dark stone grey")
+	local colorProjectile = brickColor.Color
+	if tblAppearanceConfig and tblAppearanceConfig.Color ~= nil then
+		colorProjectile = common.readConfigColor3(tblAppearanceConfig, "Color", colorProjectile, tblValidationMessages, strSourceName)
+		brickColor = common.createBrickColorFromColor3(colorProjectile)
+	end
+	local strTrait = common.readConfigString(tblConfig, "Trait", "Balanced")
+	local strLookShape = common.readConfigString(tblAppearanceConfig, "LookShape", "")
+	if strLookShape == "" then
+		strLookShape = common.readConfigString(tblAppearanceConfig, "Look", "")
+	end
+	if strLookShape ~= "" and not common.findRockLookTemplate(strLookShape) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "LookShape '" .. strLookShape .. "'를 ReplicatedStorage/OutpostAssets/RockLooks에서 찾지 못해 기본 모양을 사용합니다.")
+	end
+	local valueSpawnCount = tblConfig and tblConfig.SpawnCount
+	if type(valueSpawnCount) == "number" and (valueSpawnCount < 1 or valueSpawnCount > 10) then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 1~10 범위로 보정했습니다.")
+	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
+		common.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 3으로 보정했습니다.")
+	end
+	local tblStats = common.calculateThrowingStoneStats(vectorSize, enumMaterial, strTrait)
+
+	return {
+		VariantId = strVariantId,
+		DisplayName = common.readConfigString(tblConfig, "DisplayName", "전장 돌멩이"),
+		SpawnCount = common.readConfigInteger(tblConfig, "SpawnCount", 3, 1, 10),
+		SpawnOffset = common.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8)),
+		SpawnRadius = common.readConfigNumber(tblConfig, "SpawnRadius", 4, 0, 8),
+		Damage = tblStats.Damage,
+		Cooldown = tblStats.Cooldown,
+		Speed = tblStats.Speed,
+		Arc = tblStats.Arc,
+		KnockbackForward = tblStats.KnockbackForward,
+		KnockbackUp = tblStats.KnockbackUp,
+		Lifetime = tblStats.Lifetime,
+		LookShape = strLookShape,
+		Look = strLookShape,
+		ProjectileSize = vectorSize,
+		ProjectileMaterial = enumMaterial,
+		ProjectileBrickColor = brickColor,
+		ProjectileColor = colorProjectile,
+		ProjectileShape = enumShape,
+		Handle = {
+			Size = vectorSize,
+			Material = enumMaterial,
+			BrickColor = brickColor,
+			Color = colorProjectile,
+			Shape = enumShape,
+		},
+	}
+end
+
+-- --------------------------------------------------------------------------------
+
 function common.applyToolHandleStudentStyle(toolTarget, tblConfig) -- [의미/의도] Tool Handle 학생 스타일 적용 함수 정의 ➔ 학생이 외형만 바꿀 수 있게 크기/재질/색을 제한적으로 반영하기 위함
 	local tblHandleConfig = tblConfig and tblConfig.Handle or {} -- [의미/의도] Handle 설정 테이블 준비 ➔ 학생이 생략한 값은 기존 기본값을 쓰기 위함
 	local partHandle = common.ensureNamedInstance(common.eEnginePhysicalType.PART, common.eEngineLogicalType.RESERVED_HANDLE, toolTarget)
 	partHandle.Size = common.readConfigVector3(tblHandleConfig, "Size", partHandle.Size, Vector3.new(0.2, 0.2, 0.2), Vector3.new(8, 8, 8))
 	partHandle.Material = common.readConfigEnumItem(tblHandleConfig, "Material", partHandle.Material)
-	partHandle.BrickColor = common.readConfigBrickColor(tblHandleConfig, "Color", partHandle.BrickColor.Name)
+	local brickHandleColor = common.readConfigBrickColor(tblHandleConfig, "BrickColor", partHandle.BrickColor.Name)
+	local colorHandle = brickHandleColor.Color
+	if tblHandleConfig.Color ~= nil then
+		colorHandle = common.readConfigColor3(tblHandleConfig, "Color", colorHandle)
+		brickHandleColor = common.createBrickColorFromColor3(colorHandle, partHandle.BrickColor.Name)
+	end
+
+	partHandle.BrickColor = brickHandleColor
+	partHandle.Color = colorHandle
+	partHandle.Shape = common.readConfigEnumItem(tblHandleConfig, "Shape", partHandle.Shape)
 	return partHandle
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.findRockLookTemplate(strLook)
+	if type(strLook) ~= "string" or strLook == "" then
+		return nil
+	end
+
+	local eLogical = common.eEngineLogicalType
+	local svcReplicatedStorage = game:GetService(common.eEngineServiceSingleton.REPLICATED_STORAGE)
+	local fldOutpostAssets = svcReplicatedStorage:FindFirstChild(eLogical.OUTPOST_ASSETS)
+	local fldRockLooks = fldOutpostAssets and fldOutpostAssets:FindFirstChild(eLogical.ROCK_LOOKS)
+	if not fldRockLooks then
+		return nil
+	end
+
+	return fldRockLooks:FindFirstChild(strLook)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.removeLuaSourceDescendants(instanceTarget)
+	for _, instanceDescendant in ipairs(instanceTarget:GetDescendants()) do
+		if instanceDescendant:IsA("LuaSourceContainer") then
+			instanceDescendant:Destroy()
+		end
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.calculateFitScaleWithinBounds(vectorSourceSize, vectorTargetSize)
+	if vectorSourceSize.X <= 0 or vectorSourceSize.Y <= 0 or vectorSourceSize.Z <= 0 then
+		return 1
+	end
+
+	return math.min(
+		vectorTargetSize.X / vectorSourceSize.X,
+		vectorTargetSize.Y / vectorSourceSize.Y,
+		vectorTargetSize.Z / vectorSourceSize.Z
+	)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.fitBasePartWithinBounds(partVisual, vectorTargetSize)
+	local numberScale = common.calculateFitScaleWithinBounds(partVisual.Size, vectorTargetSize)
+	if numberScale <= 0 then
+		return false
+	end
+
+	partVisual.Size = partVisual.Size * numberScale
+	return true
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.fitModelWithinBounds(modelVisual, vectorTargetSize)
+	local _, vectorBoundsSize = modelVisual:GetBoundingBox()
+	local numberScale = common.calculateFitScaleWithinBounds(vectorBoundsSize, vectorTargetSize)
+	if numberScale <= 0 then
+		return false
+	end
+
+	local boolSuccess = pcall(function()
+		modelVisual:ScaleTo(modelVisual:GetScale() * numberScale)
+	end)
+	if not boolSuccess then
+		return false
+	end
+
+	return true
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.pivotModelBoundsToTarget(modelVisual, cframeTarget)
+	local cframePivot = modelVisual:GetPivot()
+	local cframeBounds = modelVisual:GetBoundingBox()
+	local cframeBoundsFromPivot = cframePivot:ToObjectSpace(cframeBounds)
+	modelVisual:PivotTo(cframeTarget * cframeBoundsFromPivot:Inverse())
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.prepareRockLookPart(partVisual, partTarget, boolKeepCurrentCFrame)
+	partVisual.Anchored = false
+	partVisual.CanCollide = false
+	partVisual.CanTouch = false
+	partVisual.CanQuery = false
+	partVisual.Massless = true
+	if not boolKeepCurrentCFrame then
+		partVisual.CFrame = partTarget.CFrame
+	end
+
+	local weldVisual = Instance.new(common.eEnginePhysicalType.WELD_CONSTRAINT)
+	weldVisual.Part0 = partTarget
+	weldVisual.Part1 = partVisual
+	weldVisual.Parent = partVisual
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.clearRockLook(partTarget)
+	local instanceOldLook = partTarget:FindFirstChild(common.eEngineLogicalType.THROWING_STONE_LOOK)
+	if instanceOldLook then
+		instanceOldLook:Destroy()
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.applyRockLook(partTarget, strLookShape)
+	common.clearRockLook(partTarget)
+
+	local instanceTemplate = common.findRockLookTemplate(strLookShape)
+	if not instanceTemplate then
+		partTarget.Transparency = 0
+		return
+	end
+
+	local instanceLook = instanceTemplate:Clone()
+	instanceLook.Name = common.eEngineLogicalType.THROWING_STONE_LOOK
+	common.removeLuaSourceDescendants(instanceLook)
+	instanceLook.Parent = partTarget
+	partTarget.Transparency = 1
+
+	if instanceLook:IsA(common.eEnginePhysicalType.BASE_PART) then
+		if not common.fitBasePartWithinBounds(instanceLook, partTarget.Size) then
+			instanceLook:Destroy()
+			partTarget.Transparency = 0
+			return
+		end
+		common.prepareRockLookPart(instanceLook, partTarget)
+		return
+	end
+
+	if instanceLook:IsA(common.eEnginePhysicalType.MODEL) then
+		if not common.fitModelWithinBounds(instanceLook, partTarget.Size) then
+			instanceLook:Destroy()
+			partTarget.Transparency = 0
+			return
+		end
+		common.pivotModelBoundsToTarget(instanceLook, partTarget.CFrame)
+		for _, instanceDescendant in ipairs(instanceLook:GetDescendants()) do
+			if instanceDescendant:IsA(common.eEnginePhysicalType.BASE_PART) then
+				common.prepareRockLookPart(instanceDescendant, partTarget, true)
+			end
+		end
+		return
+	end
+
+	instanceLook:Destroy()
+	partTarget.Transparency = 0
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.applyParticleEffect(partTarget, tblEffectConfig)
+	local emitEffect = partTarget:FindFirstChild(common.eEngineLogicalType.PARTICLE_EFFECT)
+	if not tblEffectConfig then
+		if emitEffect then
+			emitEffect:Destroy()
+		end
+		return
+	end
+
+	emitEffect = common.ensureNamedInstance(common.eEnginePhysicalType.PARTICLE_EMITTER, common.eEngineLogicalType.PARTICLE_EFFECT, partTarget)
+	emitEffect.Enabled = true
+	emitEffect.Texture = tblEffectConfig.Texture
+	emitEffect.LockedToPart = tblEffectConfig.LockedToPart
+	emitEffect.SpreadAngle = tblEffectConfig.SpreadAngle
+	emitEffect.Lifetime = tblEffectConfig.Lifetime
+	emitEffect.Speed = tblEffectConfig.Speed
+	emitEffect.Size = tblEffectConfig.Size
+	emitEffect.Transparency = tblEffectConfig.Transparency
+	emitEffect.Rate = tblEffectConfig.Rate
+	emitEffect.LightEmission = tblEffectConfig.LightEmission
+	emitEffect.LightInfluence = tblEffectConfig.LightInfluence
+	emitEffect.Brightness = tblEffectConfig.Brightness
+	emitEffect.Color = tblEffectConfig.Color
+	emitEffect.Acceleration = tblEffectConfig.Acceleration
+	emitEffect.Drag = tblEffectConfig.Drag
+	emitEffect.Rotation = tblEffectConfig.Rotation
+	emitEffect.RotSpeed = tblEffectConfig.RotSpeed
+	emitEffect.VelocityInheritance = tblEffectConfig.VelocityInheritance
+	emitEffect.ZOffset = tblEffectConfig.ZOffset
+	emitEffect.TimeScale = tblEffectConfig.TimeScale
+	emitEffect.Shape = tblEffectConfig.Shape
+	emitEffect.ShapeStyle = tblEffectConfig.ShapeStyle
+	emitEffect.ShapeInOut = tblEffectConfig.ShapeInOut
+	emitEffect.ShapePartial = tblEffectConfig.ShapePartial
+	emitEffect.EmissionDirection = tblEffectConfig.EmissionDirection
+	emitEffect.Orientation = tblEffectConfig.Orientation
 end
 
 -- --------------------------------------------------------------------------------
@@ -478,6 +1354,62 @@ function common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, strToolName, tblSp
 			Transparency = 0.35,
 			BrickColor = brickColor,
 		})
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.formatStudentRockValidationText(tblValidationMessages)
+	if #tblValidationMessages == 0 then
+		return "돌멩이 설정 검사 완료\n오류나 보정 항목이 없습니다."
+	end
+
+	local tblLines = {"돌멩이 설정 검사 결과"}
+	for index, strMessage in ipairs(tblValidationMessages) do
+		if index <= 10 then
+			table.insert(tblLines, index .. ". " .. strMessage)
+		end
+	end
+	if #tblValidationMessages > 10 then
+		table.insert(tblLines, "...외 " .. (#tblValidationMessages - 10) .. "건은 Output 창을 확인하세요.")
+	end
+
+	return table.concat(tblLines, "\n")
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
+	local ePhysical = common.eEnginePhysicalType
+	local eLogical = common.eEngineLogicalType
+	local tblOutpostWorld = common.waitForOutpostBattleWorld(svcWorkspace)
+	local partBoard = common.ensureStaticPart(eLogical.STUDENT_ROCK_VALIDATION_BOARD, tblOutpostWorld.fldBattlefield, {
+		Size = Vector3.new(36, 12, 1),
+		Position = Vector3.new(0, 9, -46),
+		CanCollide = false,
+		Material = Enum.Material.SmoothPlastic,
+		BrickColor = BrickColor.new(#tblValidationMessages == 0 and "Lime green" or "Bright yellow"),
+	})
+
+	local guiBoard = common.ensureNamedInstance(ePhysical.SURFACE_GUI, eLogical.STUDENT_ROCK_VALIDATION_GUI, partBoard, {
+		Face = Enum.NormalId.Front,
+		CanvasSize = Vector2.new(1200, 420),
+	})
+	local labelBoard = common.ensureNamedInstance(ePhysical.TEXT_LABEL, eLogical.STUDENT_ROCK_VALIDATION_TEXT, guiBoard, {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 0.15,
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextSize = 24,
+		Font = Enum.Font.Gotham,
+	})
+	labelBoard.Text = common.formatStudentRockValidationText(tblValidationMessages)
+
+	for _, strMessage in ipairs(tblValidationMessages) do
+		warn("학생 돌멩이 설정 검사: " .. strMessage)
 	end
 end
 
@@ -508,9 +1440,11 @@ function common.installFieldToolPickups(svcWorkspace, strToolName, strToolTip, t
 	local strDisplayName = common.readConfigString(tblConfig, "DisplayName", strToolName)
 	local strVariantId = common.readConfigString(tblConfig, "VariantId", strToolName)
 	local vectorSpawnOffset = common.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8))
+	local numberSpawnRadius = common.readConfigNumber(tblConfig, "SpawnRadius", 0, 0, 12)
 
 	for index = 1, intSpawnCount do
-		local vectorSpawnPosition = tblSpawnPositions[((index - 1) % #tblSpawnPositions) + 1] + vectorSpawnOffset
+		local vectorSpawnJitter = common.createFlatSpawnJitter(strVariantId, index, numberSpawnRadius)
+		local vectorSpawnPosition = tblSpawnPositions[((index - 1) % #tblSpawnPositions) + 1] + vectorSpawnOffset + vectorSpawnJitter
 		local toolPickup = common.ensureToolWithHandle(eLogical.FIELD_ITEM_PREFIX .. strToolName .. "_" .. strVariantId .. "_" .. index, strToolTip, fldItemSpawnArea, tblDefaultHandleProperties)
 		toolPickup.ToolTip = strDisplayName .. " - 클릭해서 줍기"
 		toolPickup.CanBeDropped = true
@@ -587,7 +1521,26 @@ end
 
 function common.installThrowingStonePickups(svcWorkspace, tblConfig) -- [의미/의도] 투척 돌 파밍 설치 함수 정의 ➔ 1회차 기본 무기를 맵에서 찾아 줍는 루프로 제공하기 위함
 	local eLogical = common.eEngineLogicalType
-	return common.installFieldToolPickups(svcWorkspace, eLogical.THROWING_STONE, "클릭해서 주운 뒤 전초기지 목표에 던집니다", tblConfig, {
+	local tblThrowingStoneConfig = tblConfig
+	local boolAlreadyResolved = tblConfig and tblConfig.ProjectileSize ~= nil and tblConfig.ProjectileMaterial ~= nil
+	local boolLooksLikeStudentDesign = tblConfig and (
+		tblConfig.DesignKind == "ThrowingStone"
+		or tblConfig.Appearance
+		or tblConfig.CollisionSize
+		or tblConfig.CollisionShape
+		or tblConfig.LookShape
+		or tblConfig.Size
+		or tblConfig.Material
+		or tblConfig.BrickColor
+		or tblConfig.Color
+		or tblConfig.Shape
+		or tblConfig.Trait
+	)
+	if boolLooksLikeStudentDesign and not boolAlreadyResolved then
+		tblThrowingStoneConfig = common.resolveThrowingStoneDesign(tblConfig)
+	end
+
+	return common.installFieldToolPickups(svcWorkspace, eLogical.THROWING_STONE, "클릭해서 주운 뒤 전초기지 목표에 던집니다", tblThrowingStoneConfig, {
 		Vector3.new(-24, 0.1, 8),
 		Vector3.new(0, 0.1, 4),
 		Vector3.new(24, 0.1, 8),
@@ -597,6 +1550,202 @@ function common.installThrowingStonePickups(svcWorkspace, tblConfig) -- [의미/
 		Material = Enum.Material.Slate,
 		BrickColor = BrickColor.new("Dark stone grey"),
 	}, common.installThrowingStoneTool)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.createFallbackRockDesign(strSourceName)
+	local tblRockDesign = common.createRockDesign(strSourceName .. " 기본 돌")
+	tblRockDesign.Appearance.BrickColor = BrickColor.new("Medium stone grey")
+	tblRockDesign.Appearance.Material = Enum.Material.Slate
+	tblRockDesign.Appearance.Size = Vector3.new(1.1, 1.1, 1.1)
+	tblRockDesign.Appearance.CollisionShape = Enum.PartType.Ball
+	tblRockDesign.Trait = "Balanced"
+	return tblRockDesign
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readStudentRockDesignModule(moduleRockDesign, tblValidationMessages)
+	if not moduleRockDesign:IsA(common.eEnginePhysicalType.MODULE_SCRIPT) then
+		return nil
+	end
+
+	local boolSuccess, tblRockDesign = pcall(require, moduleRockDesign)
+	if not boolSuccess then
+		common.addValidationMessage(tblValidationMessages, moduleRockDesign.Name, "코드 실행 오류가 있어 기본 돌로 대체했습니다. " .. tostring(tblRockDesign))
+		return common.createFallbackRockDesign(moduleRockDesign.Name)
+	end
+
+	if type(tblRockDesign) ~= "table" then
+		common.addValidationMessage(tblValidationMessages, moduleRockDesign.Name, "마지막 줄에서 table을 return해야 해서 기본 돌로 대체했습니다.")
+		return common.createFallbackRockDesign(moduleRockDesign.Name)
+	end
+
+	return tblRockDesign
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.installStudentThrowingStoneDesigns(svcWorkspace, fldStudentRockDesigns)
+	local tblModules = {}
+	local tblValidationMessages = {}
+	if fldStudentRockDesigns then
+		for _, instanceChild in ipairs(fldStudentRockDesigns:GetChildren()) do
+			if instanceChild:IsA(common.eEnginePhysicalType.MODULE_SCRIPT) then
+				table.insert(tblModules, instanceChild)
+			end
+		end
+	end
+
+	table.sort(tblModules, function(moduleLeft, moduleRight)
+		return moduleLeft.Name < moduleRight.Name
+	end)
+
+	if #tblModules == 0 then
+		common.addValidationMessage(tblValidationMessages, "StudentRockDesigns", "학생 ModuleScript가 없어 전장 기본 돌을 설치했습니다.")
+		common.installThrowingStonePickups(svcWorkspace, common.resolveThrowingStoneDesign(common.createFallbackRockDesign("전장"), tblValidationMessages, "전장"))
+		common.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
+		return 1
+	end
+
+	for _, moduleRockDesign in ipairs(tblModules) do
+		local tblRockDesign = common.readStudentRockDesignModule(moduleRockDesign, tblValidationMessages)
+		if tblRockDesign then
+			common.installThrowingStonePickups(svcWorkspace, common.resolveThrowingStoneDesign(tblRockDesign, tblValidationMessages, moduleRockDesign.Name))
+		end
+	end
+
+	common.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
+	return #tblModules
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+	if not moduleLessonConfig:IsA(common.eEnginePhysicalType.MODULE_SCRIPT) then
+		return nil
+	end
+
+	local boolSuccess, tblLessonConfig = pcall(require, moduleLessonConfig)
+	if not boolSuccess then
+		common.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "코드 실행 오류가 있어 이 설정을 건너뜁니다. " .. tostring(tblLessonConfig))
+		return nil
+	end
+
+	if type(tblLessonConfig) ~= "table" then
+		common.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "마지막 줄에서 table을 return해야 해서 이 설정을 건너뜁니다.")
+		return nil
+	end
+
+	return tblLessonConfig
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+	local strModuleName = moduleLessonConfig.Name
+	local valueDayNumber = tonumber(strModuleName:match("^(%d+)") or strModuleName:match("(%d+)$"))
+	if type(valueDayNumber) ~= "number" then
+		common.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "파일명 앞이나 뒤에 회차 숫자가 없어 건너뜁니다. 예: 02_student_answer 또는 StudentAnswer02")
+		return nil
+	end
+
+	return math.floor(valueDayNumber)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.readStudentLessonConceptConfig(tblLessonConfig, strConceptKey)
+	local tblConceptConfig = tblLessonConfig[strConceptKey]
+	if type(tblConceptConfig) == "table" then
+		return tblConceptConfig
+	end
+
+	return tblLessonConfig
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, strSourceName)
+	local eConfigKey = common.eStudentLessonConfigKey
+
+	if intDayNumber == 2 then
+		common.installStudentCoverDesign(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.COVER_DESIGN))
+	elseif intDayNumber == 3 then
+		common.installResourceWallSystem(svcWorkspace, svcPlayers, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.RESOURCE_WALL))
+	elseif intDayNumber == 4 then
+		common.installFieldSwordPickups(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
+	elseif intDayNumber == 5 then
+		common.installFieldBowPickups(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.BOW))
+	elseif intDayNumber == 6 then
+		common.installFieldShieldPickups(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SHIELD))
+	elseif intDayNumber == 7 then
+		common.installFieldArmorPickups(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.ARMOR))
+	elseif intDayNumber == 8 then
+		common.installGateDamageSystem(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.GATE))
+	elseif intDayNumber == 9 then
+		common.installStoneWallDamageSystem(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STONE_WALL))
+	elseif intDayNumber == 10 then
+		common.installSiegeEngineSystem(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SIEGE_ENGINE))
+	elseif intDayNumber == 11 then
+		common.installMagicStaffPickups(svcWorkspace, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.STAFF))
+		common.installMagicServerSystem(svcReplicatedStorage, svcPlayers, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.MAGIC))
+	elseif intDayNumber == 12 then
+		common.installFinalBattleSystem(svcWorkspace, svcPlayers, common.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.FINAL_BATTLE))
+	else
+		common.addValidationMessage(tblValidationMessages, strSourceName, "지원하지 않는 " .. tostring(intDayNumber) .. "회차 설정이라 건너뜁니다.")
+		return false
+	end
+
+	return true
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages)
+	local tblLessonConfig = common.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+	if not tblLessonConfig then
+		return false
+	end
+
+	local intDayNumber = common.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
+	if not intDayNumber then
+		return false
+	end
+
+	return common.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, moduleLessonConfig.Name)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs)
+	local tblModules = {}
+	local tblValidationMessages = {}
+	if fldStudentLessonConfigs then
+		for _, instanceChild in ipairs(fldStudentLessonConfigs:GetChildren()) do
+			if instanceChild:IsA(common.eEnginePhysicalType.MODULE_SCRIPT) then
+				table.insert(tblModules, instanceChild)
+			end
+		end
+	end
+
+	table.sort(tblModules, function(moduleLeft, moduleRight)
+		return moduleLeft.Name < moduleRight.Name
+	end)
+
+	local intInstalledCount = 0
+	for _, moduleLessonConfig in ipairs(tblModules) do
+		if common.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages) then
+			intInstalledCount += 1
+		end
+	end
+
+	for _, strMessage in ipairs(tblValidationMessages) do
+		warn("학생 수업 설정 검사: " .. strMessage)
+	end
+
+	return intInstalledCount
 end
 
 -- --------------------------------------------------------------------------------
@@ -695,7 +1844,9 @@ end
 -- --------------------------------------------------------------------------------
 
 function common.canPlayerDamageModel(playerAttacker, modelTarget)
-	if not playerAttacker or not modelTarget or not playerAttacker.Team then return true end
+	if not modelTarget then return false end
+	if not playerAttacker then return true end
+	if not playerAttacker.Team then return false end
 
 	local svcPlayers = game:GetService(common.eEngineServiceSingleton.PLAYERS)
 	local playerTarget = svcPlayers:GetPlayerFromCharacter(modelTarget)
@@ -723,7 +1874,7 @@ function common.installThrowingStoneTool(toolThrowingStone, tblConfig) -- [의�
 	local eLogical = common.eEngineLogicalType
 	local svcDebris = game:GetService(eService.DEBRIS)
 	local svcPlayers = game:GetService(eService.PLAYERS)
-	common.applyToolHandleStudentStyle(toolThrowingStone, tblConfig)
+	local partHandle = common.applyToolHandleStudentStyle(toolThrowingStone, tblConfig)
 
 	local numberDamage = common.readConfigNumber(tblConfig, "Damage", 15, 1, 30)
 	local numberCooldown = common.readConfigNumber(tblConfig, "Cooldown", 0.8, 0.2, 3)
@@ -733,9 +1884,12 @@ function common.installThrowingStoneTool(toolThrowingStone, tblConfig) -- [의�
 	local numberKnockbackUp = common.readConfigNumber(tblConfig, "KnockbackUp", 18, 0, 60)
 	local numberLifetime = common.readConfigNumber(tblConfig, "Lifetime", 5, 1, 12)
 	local vectorProjectileSize = common.readConfigVector3(tblConfig, "ProjectileSize", Vector3.new(1.2, 1.2, 1.2), Vector3.new(0.3, 0.3, 0.3), Vector3.new(4, 4, 4))
-	local enumProjectileMaterial = common.readConfigEnumItem(tblConfig, "ProjectileMaterial", Enum.Material.Slate)
-	local brickProjectileColor = common.readConfigBrickColor(tblConfig, "ProjectileColor", "Dark stone grey")
+	local enumProjectileMaterial = common.readThrowingStoneMaterial(tblConfig, "ProjectileMaterial", Enum.Material.Slate)
+	local colorProjectile = common.readConfigColor3(tblConfig, "ProjectileColor", BrickColor.new("Dark stone grey").Color)
+	local enumProjectileShape = common.readConfigEnumItem(tblConfig, "ProjectileShape", Enum.PartType.Ball)
+	local strLookShape = common.readConfigString(tblConfig, "LookShape", common.readConfigString(tblConfig, "Look", ""))
 	local boolReady = true
+	common.applyRockLook(partHandle, strLookShape)
 
 	toolThrowingStone.Activated:Connect(function()
 		if not boolReady then return end
@@ -751,12 +1905,13 @@ function common.installThrowingStoneTool(toolThrowingStone, tblConfig) -- [의�
 
 		local partRock = Instance.new(ePhysical.PART)
 		partRock.Name = eLogical.THROWN_STONE
-		partRock.Shape = Enum.PartType.Ball
+		partRock.Shape = enumProjectileShape
 		partRock.Size = vectorProjectileSize
 		partRock.Material = enumProjectileMaterial
-		partRock.BrickColor = brickProjectileColor
+		partRock.Color = colorProjectile
 		partRock.Position = partHumanoidRoot.Position + partHumanoidRoot.CFrame.LookVector * 3 + Vector3.new(0, 1.5, 0)
 		partRock.Parent = workspace
+		common.applyRockLook(partRock, strLookShape)
 		partRock.AssemblyLinearVelocity = partHumanoidRoot.CFrame.LookVector * numberSpeed + Vector3.new(0, numberArc, 0)
 		svcDebris:AddItem(partRock, numberLifetime)
 
@@ -1280,8 +2435,11 @@ end
 -- --------------------------------------------------------------------------------
 
 function common.installMagicServerSystem(svcReplicatedStorage, svcPlayers, tblConfig) -- [의미/의도] 마법 서버 시스템 설치 함수 정의 ➔ 클라이언트 입력은 요청으로만 받고 거리/쿨타임/피해는 서버가 판정하기 위함
+	local eService = common.eEngineServiceSingleton
 	local ePhysical = common.eEnginePhysicalType
 	local eLogical = common.eEngineLogicalType
+	local svcDebris = game:GetService(eService.DEBRIS)
+	local svcWorkspace = game:GetService(eService.WORKSPACE)
 	local eventCastMagic = svcReplicatedStorage:WaitForChild(eLogical.CAST_MAGIC)
 	if not common.markRuntimeInstalled(eventCastMagic, "RuntimeInstalled_MagicServer") then
 		return
@@ -1291,7 +2449,33 @@ function common.installMagicServerSystem(svcReplicatedStorage, svcPlayers, tblCo
 	local numberRadius = common.readConfigNumber(tblConfig, "Radius", 12, 2, 30)
 	local numberDamage = common.readConfigNumber(tblConfig, "Damage", 25, 1, 60)
 	local numberCooldown = common.readConfigNumber(tblConfig, "Cooldown", 1.8, 0.3, 8)
+	local numberEffectLifetime = common.readConfigNumber(tblConfig, "EffectLifetime", 2, 0.5, 6)
+	local tblEffectValidationMessages = {}
+	local tblEffectConfig = common.readParticleEffectConfig(tblConfig, "Effect", tblEffectValidationMessages, "MagicEffect")
 	local tableLastCastByPlayer = {}
+
+	for _, strMessage in ipairs(tblEffectValidationMessages) do
+		warn("마법 이펙트 설정 검사: " .. strMessage)
+	end
+
+	local function spawn_magic_effect(vectorPosition)
+		if not tblEffectConfig then
+			return
+		end
+
+		local partEffectAnchor = Instance.new(ePhysical.PART)
+		partEffectAnchor.Name = eLogical.PARTICLE_EFFECT
+		partEffectAnchor.Anchored = true
+		partEffectAnchor.CanCollide = false
+		partEffectAnchor.CanTouch = false
+		partEffectAnchor.CanQuery = false
+		partEffectAnchor.Transparency = 1
+		partEffectAnchor.Size = Vector3.new(1, 1, 1)
+		partEffectAnchor.Position = vectorPosition
+		partEffectAnchor.Parent = svcWorkspace
+		common.applyParticleEffect(partEffectAnchor, tblEffectConfig)
+		svcDebris:AddItem(partEffectAnchor, numberEffectLifetime)
+	end
 
 	local function cast_magic(player, targetPosition)
 		if typeof(targetPosition) ~= "Vector3" then return end
@@ -1313,9 +2497,10 @@ function common.installMagicServerSystem(svcReplicatedStorage, svcPlayers, tblCo
 		explMagic.BlastRadius = numberRadius
 		explMagic.BlastPressure = 0
 		explMagic.DestroyJointRadiusPercent = 0
-		explMagic.Parent = workspace
+		explMagic.Parent = svcWorkspace
+		spawn_magic_effect(targetPosition)
 
-		for _, object in ipairs(workspace:GetDescendants()) do
+		for _, object in ipairs(svcWorkspace:GetDescendants()) do
 			if object:IsA(ePhysical.HUMANOID) then
 				local humanoidTarget = object
 				local modelTarget = humanoidTarget.Parent
@@ -1339,6 +2524,334 @@ end
 
 -- --------------------------------------------------------------------------------
 
+function common.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
+	local ePhysical = common.eEnginePhysicalType
+	local eLogical = common.eEngineLogicalType
+
+	local fldOutpostAssets = common.ensureNamedInstance(ePhysical.FOLDER, eLogical.OUTPOST_ASSETS, svcReplicatedStorage)
+	local fldRockLooks = common.ensureNamedInstance(ePhysical.FOLDER, eLogical.ROCK_LOOKS, fldOutpostAssets)
+	local fldStudentRockDesigns = common.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_ROCK_DESIGNS, svcServerScriptService)
+	local fldStudentLessonConfigs = common.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_LESSON_CONFIGS, svcServerScriptService)
+
+	return {
+		fldOutpostAssets = fldOutpostAssets,
+		fldRockLooks = fldRockLooks,
+		fldStudentRockDesigns = fldStudentRockDesigns,
+		fldStudentLessonConfigs = fldStudentLessonConfigs,
+	}
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumCoreTargets(fldObjectiveArea)
+	local eLogical = common.eEngineLogicalType
+
+	for _, tblCoreConfig in ipairs({
+		{Name = eLogical.TEAM_BLUE, Position = Vector3.new(0, 3, 32), Color = "Bright blue"},
+		{Name = eLogical.TEAM_RED, Position = Vector3.new(0, 3, -32), Color = "Bright red"},
+	}) do
+		common.ensureHumanoidTarget(eLogical.OUTPOST_CORE_PREFIX .. tblCoreConfig.Name, fldObjectiveArea, {
+			Size = Vector3.new(6, 6, 4),
+			Position = tblCoreConfig.Position,
+			BrickColor = BrickColor.new(tblCoreConfig.Color),
+		}, {
+			MaxHealth = 160,
+			Health = 160,
+		})
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumPracticeTargets(fldObjectiveArea)
+	local eLogical = common.eEngineLogicalType
+
+	for index, vectorPosition in ipairs({
+		Vector3.new(-16, 2.5, 24),
+		Vector3.new(16, 2.5, 24),
+		Vector3.new(-16, 2.5, -24),
+		Vector3.new(16, 2.5, -24),
+	}) do
+		common.ensureHumanoidTarget(eLogical.OUTPOST_GUARD_PREFIX .. index, fldObjectiveArea, {
+			Size = Vector3.new(3, 5, 2),
+			Position = vectorPosition,
+			BrickColor = BrickColor.new(index <= 2 and "Bright blue" or "Bright red"),
+		}, {
+			MaxHealth = 100,
+			Health = 100,
+		})
+	end
+
+	for index, vectorPosition in ipairs({
+		Vector3.new(-18, 2.5, -8),
+		Vector3.new(-9, 2.5, -8),
+		Vector3.new(0, 2.5, -8),
+		Vector3.new(9, 2.5, -8),
+		Vector3.new(18, 2.5, -8),
+	}) do
+		common.ensureHumanoidTarget(eLogical.DUEL_GUARD_PREFIX .. index, fldObjectiveArea, {
+			Size = Vector3.new(3, 5, 2),
+			Position = vectorPosition,
+			BrickColor = BrickColor.new("Bright orange"),
+		}, {
+			MaxHealth = 120,
+			Health = 120,
+		})
+	end
+
+	for index, vectorPosition in ipairs({
+		Vector3.new(-32, 3, -30),
+		Vector3.new(-20, 3, -34),
+		Vector3.new(-8, 3, -38),
+		Vector3.new(8, 3, -38),
+		Vector3.new(20, 3, -34),
+		Vector3.new(32, 3, -30),
+	}) do
+		common.ensureStaticPart(eLogical.RANGE_TARGET_PREFIX .. index, fldObjectiveArea, {
+			Size = Vector3.new(4, 6, 1),
+			Position = vectorPosition,
+			BrickColor = BrickColor.new("Bright red"),
+		})
+	end
+
+	for index, vectorPosition in ipairs({
+		Vector3.new(-21, 2.5, -26),
+		Vector3.new(-14, 2.5, -30),
+		Vector3.new(-7, 2.5, -34),
+		Vector3.new(7, 2.5, -34),
+		Vector3.new(14, 2.5, -30),
+		Vector3.new(21, 2.5, -26),
+	}) do
+		common.ensureHumanoidTarget(eLogical.ARCANE_GUARD_PREFIX .. index, fldObjectiveArea, {
+			Size = Vector3.new(3, 5, 2),
+			Position = vectorPosition,
+			BrickColor = BrickColor.new("Royal purple"),
+		}, {
+			MaxHealth = 100,
+			Health = 100,
+		})
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumBattlefieldMarkers(fldBattlefield)
+	local eLogical = common.eEngineLogicalType
+
+	for index, vectorPosition in ipairs({
+		Vector3.new(-28, 0.1, 0),
+		Vector3.new(-14, 0.1, -4),
+		Vector3.new(0, 0.1, 0),
+		Vector3.new(14, 0.1, 4),
+		Vector3.new(28, 0.1, 0),
+	}) do
+		common.ensureStaticPart(eLogical.COVER_MARKER_PREFIX .. index, fldBattlefield, {
+			Size = Vector3.new(2, 0.2, 2),
+			Position = vectorPosition,
+			BrickColor = BrickColor.new("Bright yellow"),
+		})
+	end
+
+	local partRoundStartButton = common.ensureStaticPart(eLogical.ROUND_START_BUTTON, fldBattlefield, {
+		Size = Vector3.new(8, 1, 8),
+		Position = Vector3.new(0, 0.5, 0),
+		BrickColor = BrickColor.new("Lime green"),
+	})
+	common.ensureClickDetector(partRoundStartButton, 30)
+
+	for _, tblSpawnConfig in ipairs({
+		{Team = eLogical.TEAM_BLUE, Position = Vector3.new(0, 0.5, 38), Color = "Bright blue"},
+		{Team = eLogical.TEAM_RED, Position = Vector3.new(0, 0.5, -38), Color = "Bright red"},
+	}) do
+		common.ensureStaticPart(eLogical.SPAWN_POINT_PREFIX .. tblSpawnConfig.Team, fldBattlefield, {
+			Size = Vector3.new(8, 1, 8),
+			Position = tblSpawnConfig.Position,
+			BrickColor = BrickColor.new(tblSpawnConfig.Color),
+			Material = Enum.Material.Neon,
+		})
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumBuildArea(fldBuildArea)
+	local eLogical = common.eEngineLogicalType
+
+	local partBuildButton = common.ensureStaticPart(eLogical.BUILD_BUTTON, fldBuildArea, {
+		Size = Vector3.new(6, 1, 6),
+		Position = Vector3.new(0, 0.5, 18),
+		BrickColor = BrickColor.new("Bright green"),
+	})
+	common.ensureClickDetector(partBuildButton, 24)
+
+	common.ensureStaticPart(eLogical.WALL_SPAWN, fldBuildArea, {
+		Size = Vector3.new(2, 0.2, 2),
+		Position = Vector3.new(0, 0.1, 24),
+		Transparency = 0.35,
+		BrickColor = BrickColor.new("Bright yellow"),
+	})
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumItemSpawnMarkers(fldItemSpawnArea)
+	local eLogical = common.eEngineLogicalType
+
+	common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.THROWING_STONE, {
+		Vector3.new(-24, 0.1, 8),
+		Vector3.new(0, 0.1, 4),
+		Vector3.new(24, 0.1, 8),
+	}, "Bright yellow")
+
+	common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_SWORD, {
+		Vector3.new(-18, 0.1, -2),
+		Vector3.new(18, 0.1, -2),
+	}, "Really red")
+
+	common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_BOW, {
+		Vector3.new(-34, 0.1, -6),
+		Vector3.new(34, 0.1, -6),
+	}, "Bright blue")
+
+	common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_SHIELD, {
+		Vector3.new(-12, 0.1, 18),
+		Vector3.new(12, 0.1, -18),
+	}, "Dark stone grey")
+
+	common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.FIELD_ARMOR, {
+		Vector3.new(-30, 0.1, 22),
+		Vector3.new(30, 0.1, -22),
+	}, "Really black")
+
+	common.ensureFieldItemSpawnMarkers(fldItemSpawnArea, eLogical.MAGIC_STAFF, {
+		Vector3.new(-8, 0.1, -30),
+		Vector3.new(8, 0.1, -30),
+	}, "Royal purple")
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumFortification(fldFortification)
+	local ePhysical = common.eEnginePhysicalType
+	local eLogical = common.eEngineLogicalType
+	local modelGate = common.ensureNamedInstance(ePhysical.MODEL, eLogical.GATE, fldFortification)
+
+	for index = 1, 5 do
+		common.ensureStaticPart(eLogical.GATE_PLANK_PREFIX .. index, modelGate, {
+			Size = Vector3.new(2, 10, 1),
+			Position = Vector3.new((index - 3) * 2, 5, -26),
+			Material = Enum.Material.WoodPlanks,
+			BrickColor = BrickColor.new("Reddish brown"),
+		})
+	end
+
+	local modelStoneWall = common.ensureNamedInstance(ePhysical.MODEL, eLogical.STONE_WALL, fldFortification)
+	for section = 1, 5 do
+		local modelWallSection = common.ensureNamedInstance(ePhysical.MODEL, eLogical.WALL_SECTION_PREFIX .. section, modelStoneWall)
+		for height = 1, 4 do
+			common.ensureStaticPart(eLogical.STONE_BLOCK_PREFIX .. height, modelWallSection, {
+				Size = Vector3.new(6, 2, 2),
+				Position = Vector3.new((section - 3) * 6, height * 2 - 1, -30),
+				Material = Enum.Material.Slate,
+				BrickColor = BrickColor.new("Dark stone grey"),
+			})
+		end
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumSiegeEngine(fldSiegeEngine)
+	local eLogical = common.eEngineLogicalType
+
+	local partLaunchButton = common.ensureStaticPart(eLogical.LAUNCH_BUTTON, fldSiegeEngine, {
+		Size = Vector3.new(6, 1, 6),
+		Position = Vector3.new(0, 0.5, 12),
+		BrickColor = BrickColor.new("Bright blue"),
+	})
+	common.ensureClickDetector(partLaunchButton, 24)
+
+	common.ensureStaticPart(eLogical.LAUNCH_POINT, fldSiegeEngine, {
+		Size = Vector3.new(2, 2, 2),
+		Position = Vector3.new(0, 4, 4),
+		Transparency = 0.4,
+	})
+
+	common.ensureStaticPart(eLogical.TARGET_POINT, fldSiegeEngine, {
+		Size = Vector3.new(4, 4, 4),
+		Position = Vector3.new(0, 4, -34),
+		Transparency = 0.4,
+		BrickColor = BrickColor.new("Bright red"),
+	})
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumRemoteEvents(svcReplicatedStorage)
+	local ePhysical = common.eEnginePhysicalType
+	local eLogical = common.eEngineLogicalType
+	common.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage)
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.ensureCurriculumTeams(svcTeams)
+	local ePhysical = common.eEnginePhysicalType
+	local eLogical = common.eEngineLogicalType
+
+	for _, tblTeamConfig in ipairs({
+		{Name = eLogical.TEAM_BLUE, Color = "Bright blue"},
+		{Name = eLogical.TEAM_RED, Color = "Bright red"},
+	}) do
+		common.ensureNamedInstance(ePhysical.TEAM, tblTeamConfig.Name, svcTeams, {
+			TeamColor = BrickColor.new(tblTeamConfig.Color),
+			AutoAssignable = false,
+		})
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+function common.setupCurriculumWorld(gameRoot, tblConfig)
+	local eService = common.eEngineServiceSingleton
+	local dataModel = gameRoot or game
+	local svcWorkspace = dataModel:GetService(eService.WORKSPACE)
+	local svcPlayers = dataModel:GetService(eService.PLAYERS)
+	local svcReplicatedStorage = dataModel:GetService(eService.REPLICATED_STORAGE)
+	local svcServerScriptService = dataModel:GetService(eService.SERVER_SCRIPT_SERVICE)
+	local svcTeams = dataModel:GetService(eService.TEAMS)
+	local tblOutpostWorld = common.ensureOutpostBattleWorld(svcWorkspace)
+	local tblSharedAssets = common.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
+	local boolInstallStudentThrowingStones = tblConfig == nil or tblConfig.InstallStudentThrowingStones ~= false
+	local boolInstallStudentLessonConfigs = tblConfig == nil or tblConfig.InstallStudentLessonConfigs ~= false
+
+	common.ensureCurriculumRemoteEvents(svcReplicatedStorage)
+	common.ensureCurriculumTeams(svcTeams)
+	common.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
+	common.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea)
+	common.ensureCurriculumBattlefieldMarkers(tblOutpostWorld.fldBattlefield)
+	common.ensureCurriculumBuildArea(tblOutpostWorld.fldBuildArea)
+	common.ensureCurriculumItemSpawnMarkers(tblOutpostWorld.fldItemSpawnArea)
+	common.ensureCurriculumFortification(tblOutpostWorld.fldFortification)
+	common.ensureCurriculumSiegeEngine(tblOutpostWorld.fldSiegeEngine)
+
+	if boolInstallStudentThrowingStones then
+		common.installStudentThrowingStoneDesigns(svcWorkspace, tblSharedAssets.fldStudentRockDesigns)
+	end
+
+	if boolInstallStudentLessonConfigs then
+		common.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs)
+	end
+
+	print("수업 월드 준비 완료")
+	return {
+		tblOutpostWorld = tblOutpostWorld,
+		tblSharedAssets = tblSharedAssets,
+	}
+end
+
+-- --------------------------------------------------------------------------------
+
 function common.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) -- [의미/의도] 최종 라운드 서버 시스템 설치 함수 정의 ➔ 팀 스폰/라운드 타이머/상태 Attribute를 공통 서버 코드가 책임지게 하기 위함
 	local eService = common.eEngineServiceSingleton
 	local ePhysical = common.eEnginePhysicalType
@@ -1357,7 +2870,6 @@ function common.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) --
 
 	local intRoundTime = common.readConfigInteger(tblConfig, "RoundTime", 180, 30, 600)
 	local numberRespawnHeight = common.readConfigNumber(tblConfig, "RespawnHeight", 4, 1, 12)
-	local intMaxPlayersPerTeam = common.readConfigInteger(tblConfig, "MaxPlayersPerTeam", 5, 1, 5)
 	local numberCoreHealth = common.readConfigNumber(tblConfig, "CoreHealth", 160, 50, 500)
 	local boolRoundRunning = false
 
@@ -1407,6 +2919,7 @@ function common.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) --
 	local teamRed = ensure_team(eLogical.TEAM_RED, "Bright red")
 	local partSpawnBlue = ensure_team_spawn(eLogical.TEAM_BLUE, Vector3.new(0, 0.5, 38), "Bright blue")
 	local partSpawnRed = ensure_team_spawn(eLogical.TEAM_RED, Vector3.new(0, 0.5, -38), "Bright red")
+	local boolPreferBlueForOddRound = true
 
 	local function count_team_players(teamTarget)
 		local intCount = 0
@@ -1418,46 +2931,42 @@ function common.installFinalBattleSystem(svcWorkspace, svcPlayers, tblConfig) --
 		return intCount
 	end
 
-	local function assign_player_to_open_team(playerPlayer)
-		local intBlueCount = count_team_players(teamBlue)
-		local intRedCount = count_team_players(teamRed)
+	local function pick_open_team(intBlueCount, intRedCount, boolPreferBlue)
+		if intBlueCount < intRedCount then return teamBlue end
+		if intRedCount < intBlueCount then return teamRed end
+		if boolPreferBlue then return teamBlue end
+		return teamRed
+	end
 
-		if intBlueCount < intMaxPlayersPerTeam and intBlueCount <= intRedCount then
-			playerPlayer.Neutral = false
-			playerPlayer.Team = teamBlue
-		elseif intRedCount < intMaxPlayersPerTeam then
-			playerPlayer.Neutral = false
-			playerPlayer.Team = teamRed
-		elseif intBlueCount < intMaxPlayersPerTeam then
-			playerPlayer.Neutral = false
-			playerPlayer.Team = teamBlue
-		else
-			playerPlayer.Neutral = true
-			playerPlayer.Team = nil
-		end
+	local function apply_player_team(playerPlayer, teamTarget)
+		playerPlayer.Neutral = false
+		playerPlayer.Team = teamTarget
+	end
+
+	local function assign_player_to_open_team(playerPlayer)
+		local teamTarget = pick_open_team(count_team_players(teamBlue), count_team_players(teamRed), boolPreferBlueForOddRound)
+		apply_player_team(playerPlayer, teamTarget)
 	end
 
 	local function assign_round_teams()
 		local intBlueCount = 0
 		local intRedCount = 0
 
-		for index, playerPlayer in ipairs(svcPlayers:GetPlayers()) do
-			if index <= intMaxPlayersPerTeam * 2 and intBlueCount <= intRedCount then
-				playerPlayer.Neutral = false
-				playerPlayer.Team = teamBlue
+		for _, playerPlayer in ipairs(svcPlayers:GetPlayers()) do
+			local teamTarget = pick_open_team(intBlueCount, intRedCount, boolPreferBlueForOddRound)
+			apply_player_team(playerPlayer, teamTarget)
+			if teamTarget == teamBlue then
 				intBlueCount += 1
-			elseif index <= intMaxPlayersPerTeam * 2 then
-				playerPlayer.Neutral = false
-				playerPlayer.Team = teamRed
+			elseif teamTarget == teamRed then
 				intRedCount += 1
-			else
-				playerPlayer.Neutral = true
-				playerPlayer.Team = nil
 			end
 		end
 
 		svcWorkspace:SetAttribute(eAttrKey.ROUND_BLUE_PLAYER_COUNT_RUNTIME, intBlueCount)
 		svcWorkspace:SetAttribute(eAttrKey.ROUND_RED_PLAYER_COUNT_RUNTIME, intRedCount)
+		if (intBlueCount + intRedCount) % 2 == 1 then
+			boolPreferBlueForOddRound = not boolPreferBlueForOddRound
+		end
 	end
 
 	local function get_spawn_for_player(playerPlayer)

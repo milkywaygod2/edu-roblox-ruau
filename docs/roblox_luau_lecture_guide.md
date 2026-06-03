@@ -62,58 +62,36 @@ Players.PlayerAdded:Connect(assign_team)
 
 **[선생님 Studio 준비 가이드]**
 
-* `Workspace/OutpostBattleWorld/ItemSpawns`에 Tool을 놓고 이름을 `FieldItem_ThrowingStone_학생버전`처럼 둡니다.
-* Tool 안에 `Handle` Part를 넣고 손에 잡히는 크기로 줄입니다.
-* 플레이어가 클릭해서 주우면 Backpack으로 이동하고, 서버에서 데미지를 처리하게 합니다.
+* `Workspace/OutpostBattleWorld/ItemSpawns`에 돌멩이 스폰 마커를 둡니다.
+* `ServerScriptService/StudentRockDesigns`에 학생별 ModuleScript를 둡니다.
+* `ReplicatedStorage/OutpostAssets/RockLooks`에는 선택형 돌멩이 외형 MeshPart/Model을 둡니다.
+* `Common`이 Tool 생성, 클릭 획득, Backpack 이동, 데미지와 속도 계산을 처리합니다.
+* 설정 오류와 보정 내용은 `StudentRockValidationBoard`와 Output에서 확인합니다.
 
 **게임 설명:** 학생은 맵에서 돌멩이를 찾아 줍고, 장착한 뒤 클릭해 전초기지 목표를 공격합니다.
 
-* **수동 플레이:** 파트를 직접 들고 던지는 흉내만 냅니다.
-* **스마트 플레이:** Tool.Activated 이벤트로 투사체를 만들고 데미지를 적용합니다.
+* **수동 플레이:** 색, 크기, 재질을 바꾼 돌을 맵에서 찾아 줍습니다.
+* **스마트 플레이:** 서버가 크기, 재질, 성격을 읽고 데미지, 속도, 쿨타임, 넉백을 계산합니다.
 
 ```lua
-local tool = script.Parent
-local DAMAGE = 15
-local COOLDOWN = 0.8
-local ready = true
+local rock = {}
+local appearance = {}
 
-local function throw_rock()
-    if not ready then
-        return
-    end
+appearance.BrickColor = BrickColor.new("Really black")
+appearance.Material = Enum.Material.Slate
+appearance.Size = Vector3.new(1.4, 1.1, 1.2)
+appearance.CollisionShape = Enum.PartType.Ball
+appearance.LookShape = ""
 
-    ready = false
+rock.DisplayName = "검은 운석"
+rock.Appearance = appearance
+rock.Trait = "Heavy"
+rock.SpawnCount = 3
 
-    local character = tool.Parent
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then
-        ready = true
-        return
-    end
-
-    local rock = Instance.new("Part")
-    rock.Name = "날아가는_돌멩이"
-    rock.Shape = Enum.PartType.Ball
-    rock.Size = Vector3.new(1, 1, 1)
-    rock.Material = Enum.Material.Slate
-    rock.Position = root.Position + root.CFrame.LookVector * 3
-    rock.Parent = workspace
-    rock.AssemblyLinearVelocity = root.CFrame.LookVector * 80 + Vector3.new(0, 10, 0)
-
-    rock.Touched:Connect(function(hit)
-        local target = hit.Parent:FindFirstChildOfClass("Humanoid")
-        if target and hit.Parent ~= character then
-            target:TakeDamage(DAMAGE)
-            rock:Destroy()
-        end
-    end)
-
-    task.wait(COOLDOWN)
-    ready = true
-end
-
-tool.Activated:Connect(throw_rock)
+return rock
 ```
+
+`appearance`에는 색, 재질, `Size`, `CollisionShape`, `LookShape`만 넣습니다. 1회차에서는 이펙트보다 "전장에 놓인 돌을 줍고 던진다"는 플레이 루프를 우선합니다.
 
 ---
 
@@ -421,6 +399,31 @@ remote.OnServerEvent:Connect(function(player, target_position)
 end)
 ```
 
+11회차부터는 마법 피드백을 위해 `ParticleEmitter` 세부 속성을 다룹니다. Roblox 기본 Enum을 그대로 쓰되, 서버 Common이 모든 숫자값을 안전 범위 안으로 보정합니다.
+
+```lua
+local eParticleTexture = common.eParticleTexture
+
+local effect = {
+    Texture = eParticleTexture.SPARKLES,
+    Rate = 24,
+    Color = Color3.fromRGB(255, 112, 36),
+    LightEmission = 0.4,
+    LightInfluence = 0,
+    Lifetime = NumberRange.new(0.25, 0.7),
+    Speed = NumberRange.new(0.5, 2),
+    Size = NumberSequence.new(0.35),
+    SpreadAngle = Vector2.new(20, 20),
+    Shape = Enum.ParticleEmitterShape.Sphere,
+    ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface,
+    ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+    EmissionDirection = Enum.NormalId.Top,
+    Orientation = Enum.ParticleOrientation.FacingCamera,
+}
+```
+
+`Texture`는 Roblox Enum이 아니라 ContentId 리소스입니다. 수업에서는 Studio 기본 `content/textures/particles` 중 단독 사용하기 좋은 완성형 파츠 11개만 `common.eParticleTexture`에 모아 검증 가능한 리소스 목록으로 사용합니다. `*_COLOR`, `*_ALPHA` 같은 재료 레이어는 제외하고, `SPARKLES`, `FIRE`, `SMOKE`는 자주 쓰는 `*_MAIN` 텍스처 별칭으로 유지합니다. `Rate`는 초당 입자 생성 빈도입니다. 수업 코드에서는 `Rate` 0~60, `Lifetime` 0.05~3, `Speed` 0~20, `Size` 0.05~3, `SpreadAngle` 0~180처럼 성능과 플레이를 해치지 않는 범위로 제한합니다.
+
 ---
 
 ### **9. 투석기 버튼과 원격 발사**
@@ -465,7 +468,7 @@ button.ClickDetector.MouseClick:Connect(launch)
 
 * 전투 시작 전에는 모든 학생의 무기, 스폰, 팀 배정을 점검합니다.
 * ServerScriptService에 최종전 학생 설정 Script를 두고 라운드 시작/종료를 관리합니다.
-* `Blue`와 `Red`는 최대 5명씩 배정하고, 각 팀은 자기 코어 근처 스폰에서 시작합니다.
+* `Blue`와 `Red`는 접속한 모든 플레이어를 균등하게 나누고, 각 팀은 자기 코어 근처 스폰에서 시작합니다.
 * 라운드 시작 시 플레이어가 들고 있던 파밍 장비는 맵의 원래 위치로 돌아갑니다.
 * 승패는 상대 코어 파괴를 우선하고, 시간이 끝나면 남은 코어 체력이 높은 팀이 이깁니다.
 * 버그가 발생하면 즉시 멈추기보다, Output 창을 함께 보고 원인을 찾아 고칩니다.
@@ -480,7 +483,6 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 
 common.installFinalBattleSystem(workspace, game:GetService("Players"), {
     RoundTime = 180,
-    MaxPlayersPerTeam = 5,
     CoreHealth = 160,
 })
 ```
@@ -567,8 +569,16 @@ Workspace
 ReplicatedStorage
   Common
   CastMagic
+  OutpostAssets
+    RockLooks
 ServerScriptService
-  StudentAnswer*
+  TeacherSetup
+  StudentRockDesigns
+    StudentRock01
+  StudentLessonConfigs
+    StudentAnswer02
+    StudentAnswer03
+    ...
 StarterPlayer
   StarterPlayerScripts
     MagicClient11
@@ -610,6 +620,7 @@ StarterGui
 
 * 무료 모델은 수업 초반에는 최소화합니다.
 * 모델을 가져오면 Script가 숨어 있는지 Explorer에서 확인합니다.
+* 학생 돌멩이 외형은 `ReplicatedStorage/OutpostAssets/RockLooks`에 넣고 이름으로 참조합니다. Common은 Script류를 제거하고, 실제 충돌은 단순 Part가 맡게 합니다.
 * 가능하면 파트와 기본 스크립트로 직접 만드는 경험을 우선합니다.
 
 **3. 서버/클라이언트 분리**
