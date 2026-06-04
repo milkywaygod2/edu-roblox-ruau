@@ -21,6 +21,7 @@ local CAMERA_MOUSE_SENSITIVITY = 0.003
 local CAMERA_MIN_PITCH = math.rad(-55)
 local CAMERA_MAX_PITCH = math.rad(30)
 local CAMERA_AIM_DISTANCE = 500
+local RESPAWN_COUNTDOWN_SECONDS = 5
 
 -- --------------------------------------------------------------------------------
 
@@ -69,6 +70,8 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local numberCameraYaw = 0
 	local numberCameraPitch = math.rad(-10)
 	local set_default_aim_control_enabled = nil
+	local connectionHumanoidDied = nil
+	local intRespawnCountdownToken = 0
 
 	local eventSpecializationSelect = svcReplicatedStorage:WaitForChild(eLogical.SPECIALIZATION_SELECT, 5)
 	if eventSpecializationSelect and not playerLocal:GetAttribute("Specialization") then
@@ -363,6 +366,54 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	labelWeaponStats.TextXAlignment = Enum.TextXAlignment.Left
 	labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
 	labelWeaponStats.Parent = frameWeaponHud
+
+	local guiRespawnCountdown = Instance.new(ePhysical.SCREEN_GUI)
+	guiRespawnCountdown.Name = "PlayerRespawnCountdownGui"
+	guiRespawnCountdown.ResetOnSpawn = false
+	guiRespawnCountdown.Enabled = false
+	guiRespawnCountdown.Parent = playerLocal:WaitForChild("PlayerGui")
+
+	local frameRespawnCountdown = Instance.new(ePhysical.FRAME)
+	frameRespawnCountdown.Name = "RespawnCountdownFrame"
+	frameRespawnCountdown.AnchorPoint = Vector2.new(0.5, 0.5)
+	frameRespawnCountdown.Size = UDim2.fromOffset(180, 150)
+	frameRespawnCountdown.Position = UDim2.fromScale(0.5, 0.45)
+	frameRespawnCountdown.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+	frameRespawnCountdown.BackgroundTransparency = 0.25
+	frameRespawnCountdown.BorderSizePixel = 0
+	frameRespawnCountdown.Parent = guiRespawnCountdown
+
+	local cornerRespawnCountdown = Instance.new("UICorner")
+	cornerRespawnCountdown.CornerRadius = UDim.new(0, 8)
+	cornerRespawnCountdown.Parent = frameRespawnCountdown
+
+	local strokeRespawnCountdown = Instance.new("UIStroke")
+	strokeRespawnCountdown.Color = Color3.fromRGB(220, 220, 230)
+	strokeRespawnCountdown.Thickness = 2
+	strokeRespawnCountdown.Transparency = 0.35
+	strokeRespawnCountdown.Parent = frameRespawnCountdown
+
+	local labelRespawnTitle = Instance.new(ePhysical.TEXT_LABEL)
+	labelRespawnTitle.Name = "RespawnTitle"
+	labelRespawnTitle.Size = UDim2.new(1, 0, 0, 28)
+	labelRespawnTitle.Position = UDim2.fromOffset(0, 18)
+	labelRespawnTitle.BackgroundTransparency = 1
+	labelRespawnTitle.TextColor3 = Color3.fromRGB(220, 220, 230)
+	labelRespawnTitle.TextSize = 15
+	labelRespawnTitle.Font = Enum.Font.GothamBold
+	labelRespawnTitle.Text = "부활까지"
+	labelRespawnTitle.Parent = frameRespawnCountdown
+
+	local labelRespawnNumber = Instance.new(ePhysical.TEXT_LABEL)
+	labelRespawnNumber.Name = "RespawnNumber"
+	labelRespawnNumber.Size = UDim2.new(1, 0, 0, 82)
+	labelRespawnNumber.Position = UDim2.fromOffset(0, 45)
+	labelRespawnNumber.BackgroundTransparency = 1
+	labelRespawnNumber.TextColor3 = Color3.fromRGB(255, 255, 255)
+	labelRespawnNumber.TextSize = 72
+	labelRespawnNumber.Font = Enum.Font.GothamBlack
+	labelRespawnNumber.Text = tostring(RESPAWN_COUNTDOWN_SECONDS)
+	labelRespawnNumber.Parent = frameRespawnCountdown
 
 	local frameCrosshair = Instance.new(ePhysical.FRAME)
 	frameCrosshair.Name = "Crosshair"
@@ -1022,6 +1073,49 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 	end
 
+	local function stop_respawn_countdown()
+		intRespawnCountdownToken += 1
+		guiRespawnCountdown.Enabled = false
+	end
+
+	local function start_respawn_countdown()
+		intRespawnCountdownToken += 1
+		local intCountdownToken = intRespawnCountdownToken
+		guiRespawnCountdown.Enabled = true
+
+		task.spawn(function()
+			for intSecondsLeft = RESPAWN_COUNTDOWN_SECONDS, 1, -1 do
+				if intRespawnCountdownToken ~= intCountdownToken then
+					return
+				end
+
+				labelRespawnNumber.Text = tostring(intSecondsLeft)
+				task.wait(1)
+			end
+		end)
+	end
+
+	local function bind_respawn_countdown_for_character(modelCharacter)
+		stop_respawn_countdown()
+		if connectionHumanoidDied then
+			connectionHumanoidDied:Disconnect()
+			connectionHumanoidDied = nil
+		end
+
+		local humanoidPlayer = modelCharacter and modelCharacter:WaitForChild(ePhysical.HUMANOID, 5)
+		if not humanoidPlayer or not humanoidPlayer:IsA(ePhysical.HUMANOID) then
+			return
+		end
+
+		connectionHumanoidDied = humanoidPlayer.Died:Connect(function()
+			toolActiveThrowingStone = nil
+			set_throw_charge_visible(false)
+			reset_fist_action_visuals()
+			set_default_aim_control_enabled(false)
+			start_respawn_countdown()
+		end)
+	end
+
 	svcRunService.RenderStepped:Connect(function()
 		local cameraCurrent = svcWorkspace.CurrentCamera
 		if cameraCurrent then
@@ -1048,6 +1142,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	watch_container(playerLocal:WaitForChild("Backpack"))
 	if playerLocal.Character then
 		watch_container(playerLocal.Character)
+		bind_respawn_countdown_for_character(playerLocal.Character)
 		task.defer(start_default_aim_control_for_character, playerLocal.Character)
 	end
 
@@ -1057,6 +1152,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		reset_fist_action_visuals()
 		set_default_aim_control_enabled(false)
 		watch_container(modelCharacter)
+		bind_respawn_countdown_for_character(modelCharacter)
 		task.defer(start_default_aim_control_for_character, modelCharacter)
 	end)
 

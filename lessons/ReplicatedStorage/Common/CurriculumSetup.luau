@@ -23,6 +23,7 @@ local MAX_ACTIVE_LESSON_DAY = 12
 local DEFAULT_WORKSPACE_GRAVITY = 130
 local DEFAULT_PLAYER_JUMP_POWER = 30
 local DEFAULT_PLAYER_JUMP_HEIGHT = 3.6
+local DEFAULT_PLAYER_RESPAWN_SECONDS = 5
 
 -- --------------------------------------------------------------------------------
 
@@ -840,6 +841,7 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	local boolInstallStudentLessonConfigs = tblSetupConfig == nil or tblSetupConfig.InstallStudentLessonConfigs ~= false
 
 	svcWorkspace.Gravity = DEFAULT_WORKSPACE_GRAVITY
+	svcPlayers.RespawnTime = DEFAULT_PLAYER_RESPAWN_SECONDS
 	EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace)
 	EngineEnsure.removeDefaultWorkspaceBaseplate(svcWorkspace)
 	CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage, intActiveLessonDay)
