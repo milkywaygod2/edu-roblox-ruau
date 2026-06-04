@@ -318,4 +318,4 @@ StarterPlayer
 
 ## 11. 원본 문서
 
-`docs/curriculum_12_weeks.md`는 12주 계획 문서입니다. 실제 실행 코드와 운영 설명은 `lessons/`와 강의 가이드에서 관리합니다.
+`docs/GUIDE_커리큘럼_12주차.md`는 12주 계획 문서입니다. 실제 실행 코드와 운영 설명은 `lessons/`와 강의 가이드에서 관리합니다.

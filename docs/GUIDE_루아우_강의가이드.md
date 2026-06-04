@@ -65,6 +65,7 @@ Players.PlayerAdded:Connect(assign_team)
 * `Workspace/OutpostBattleWorld/ItemSpawns`에 돌멩이 스폰 마커를 둡니다.
 * `ServerScriptService/StudentRockDesigns`에 학생별 ModuleScript를 둡니다.
 * `ReplicatedStorage/OutpostAssets/RockLooks`에는 선택형 돌멩이 외형 MeshPart/Model을 둡니다.
+* 아바타 룩, 액세서리, 신체 부위, 3D 에셋 임포트 기준은 `docs/ROBLOX_아바타_에셋_액세서리_신체부위_가이드.md`를 참고합니다.
 * `Common`이 Tool 생성, 클릭 획득, Backpack 이동, 데미지와 속도 계산을 처리합니다.
 * 설정 오류와 보정 내용은 `StudentRockValidationBoard`와 Output에서 확인합니다.
 
