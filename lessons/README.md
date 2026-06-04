@@ -9,8 +9,8 @@ Blue/Red는 공수 고정이 없는 대칭 팀입니다. 접속한 모든 플레
 ## 1. 핵심 구조
 
 - `lessons/ReplicatedStorage/Common/init.luau` + `lessons/ReplicatedStorage/Common/*.luau`: `ReplicatedStorage > Common` ModuleScript와 그 하위 ModuleScript들로 두는 공통 상수/헬퍼, 클라이언트 입력 런타임, 서버 권한 게임 시스템입니다.
-- `lessons/ServerScriptService/TeacherSetup.server.luau`: 선생님 전용 단일 준비 코드입니다. 공통 전장, 목표물, 아이템 스폰 마커, 버튼, 방어 구조물, 팀 같은 기준 오브젝트를 `ensure*` 방식으로 한 번에 보장합니다.
-- `lessons/ServerScriptService/StudentRockDesigns/01_student_answer.luau`와 `lessons/ServerScriptService/StudentLessonConfigs/02_student_answer.luau` ~ `12_student_answer.luau`: 일자별 학생용 설정 ModuleScript입니다. 허용된 데이터 값만 수정하고, 실제 아이템 생성, 획득, 데미지, 자원, 쿨타임, 라운드 판정은 `Common`이 처리합니다.
+- `lessons/ServerScriptService/TeacherSetup.server.luau`: 선생님 전용 단일 준비 코드입니다. 공통 전장, 목표물, 아이템 스폰 마커, 버튼, 방어 구조물, 팀 같은 기준 오브젝트를 `ensure*` 방식으로 한 번에 보장합니다. 상단의 `ACTIVE_LESSON_DAY`로 회차를, `ACTIVE_CLASS`(`"Dobong"`(도봉)/`"Nowon"`(노원)/`"Example"`(예시))로 수업할 반을 고릅니다.
+- `lessons/ServerScriptService/StudentRockDesigns/01_student_answer.luau`와 `lessons/ServerScriptService/StudentLessonConfigs/02_student_answer.luau` ~ `12_student_answer.luau`: 일자별 학생용 설정 ModuleScript입니다. 각 답안은 반별 폴더(`Dobong`/`Nowon`/`Example`) 아래에 있고, `TeacherSetup`의 `ACTIVE_CLASS`로 지정한 반의 폴더만 적용되며 다른 반은 없는 것처럼 무시됩니다. 허용된 데이터 값만 수정하고, 실제 아이템 생성, 획득, 데미지, 자원, 쿨타임, 라운드 판정은 `Common`이 처리합니다.
 - `lessons/StarterPlayerScripts/StudentSetup.local.luau`: 학생 클라이언트에서 `Common/PlayerCombatClient` 기본 조준, 빈손 주먹 공격, 돌멩이 충전 투척 입력 런타임을 켜는 부트스트랩입니다.
 - `lessons/StarterPlayerScripts/11_student_answer.local.luau`: 11일차 마법 클라이언트 입력 코드입니다. 클라이언트는 입력과 요청만 담당하고 데미지, 자원, 라운드 상태는 서버가 판정합니다.
 
@@ -84,7 +84,7 @@ Workspace
 2. Studio Script Sync를 켜고 `ReplicatedStorage`, `ServerScriptService`, `StarterPlayer > StarterPlayerScripts`를 동기화 대상으로 잡습니다.
 3. `Script Sync > Sync with Directory`에서 repo의 `lessons` 폴더를 지정합니다. 루트 이름이 디스크에 한 번 포함되므로 `ReplicatedStorage`를 `lessons/ReplicatedStorage`에 연결하지 않습니다.
 4. 이미 `lessons/ReplicatedStorage/ReplicatedStorage` 같은 중첩 폴더가 생겼다면 Studio에서 해당 sync를 끊고 `lessons`를 다시 지정합니다.
-5. Explorer에서 `ReplicatedStorage/Common`, `ServerScriptService/TeacherSetup`, `StudentRockDesigns`, `StudentLessonConfigs`가 만들어졌는지 확인합니다.
+5. Explorer에서 `ReplicatedStorage/Common`, `ServerScriptService/TeacherSetup`, `StudentRockDesigns/<반>`, `StudentLessonConfigs/<반>`가 만들어졌는지 확인합니다. (반 = `ACTIVE_CLASS` 값에 해당하는 폴더)
 6. `TeacherSetup`은 매일 같은 파일을 사용합니다. Play마다 `Workspace/OutpostBattleWorld`를 새로 만들고, 설정한 회차까지의 기준 구조를 누적 생성합니다.
 7. 학생 답안은 연결된 로컬 `.luau` 파일을 수정하고, 수업에서 허용한 데이터 값만 바꿔 Play로 검증합니다.
 

@@ -10,4 +10,7 @@ local common = require(game:GetService("ReplicatedStorage"):WaitForChild("Common
 -- 오늘 실행할 회차만 이 숫자로 바꿉니다. 1~12 밖의 값은 Common에서 보정됩니다.
 local ACTIVE_LESSON_DAY = 1
 
-common.setupCurriculumWorld(game, ACTIVE_LESSON_DAY)
+-- 오늘 수업할 반: "Dobong"(도봉) / "Nowon"(노원) / "Example"(예시)
+local ACTIVE_CLASS = "Dobong"
+
+common.setupCurriculumWorld(game, { ActiveLessonDay = ACTIVE_LESSON_DAY, ActiveClass = ACTIVE_CLASS })

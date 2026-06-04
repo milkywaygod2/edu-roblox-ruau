@@ -24,6 +24,7 @@ local DEFAULT_WORKSPACE_GRAVITY = 130
 local DEFAULT_PLAYER_JUMP_POWER = 30
 local DEFAULT_PLAYER_JUMP_HEIGHT = 3.6
 local DEFAULT_PLAYER_RESPAWN_SECONDS = 5
+local DEFAULT_ACTIVE_CLASS = "Example"
 
 -- --------------------------------------------------------------------------------
 
@@ -40,6 +41,21 @@ function CurriculumSetup.readCurriculumActiveLessonDay(valueConfig)
 	end
 
 	return math.clamp(math.floor(numberActiveLessonDay), MIN_ACTIVE_LESSON_DAY, MAX_ACTIVE_LESSON_DAY)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.readCurriculumActiveClass(valueConfig)
+	local valueActiveClass = nil
+	if type(valueConfig) == "table" then
+		valueActiveClass = valueConfig.ActiveClass
+	end
+	if type(valueActiveClass) == "string" and valueActiveClass ~= "" then
+		return valueActiveClass
+	end
+	return DEFAULT_ACTIVE_CLASS
 end
 
 
@@ -263,14 +279,17 @@ end
 
 
 -- --------------------------------------------------------------------------------
-function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
+function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService, strActiveClass)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
 
 	local fldOutpostAssets = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.OUTPOST_ASSETS, svcReplicatedStorage)
 	local fldRockLooks = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.ROCK_LOOKS, fldOutpostAssets)
-	local fldStudentRockDesigns = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_ROCK_DESIGNS, svcServerScriptService)
-	local fldStudentLessonConfigs = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_LESSON_CONFIGS, svcServerScriptService)
+	local strClassFolderName = strActiveClass or DEFAULT_ACTIVE_CLASS
+	local fldStudentRockDesignsRoot = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_ROCK_DESIGNS, svcServerScriptService)
+	local fldStudentRockDesigns = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, strClassFolderName, fldStudentRockDesignsRoot)
+	local fldStudentLessonConfigsRoot = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_LESSON_CONFIGS, svcServerScriptService)
+	local fldStudentLessonConfigs = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, strClassFolderName, fldStudentLessonConfigsRoot)
 
 	return {
 		fldOutpostAssets = fldOutpostAssets,
@@ -829,6 +848,7 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	local dataModel = gameRoot or game
 	local tblSetupConfig = type(valueConfig) == "table" and valueConfig or nil
 	local intActiveLessonDay = CurriculumSetup.readCurriculumActiveLessonDay(valueConfig)
+	local strActiveClass = CurriculumSetup.readCurriculumActiveClass(valueConfig)
 	local svcWorkspace = dataModel:GetService(eService.WORKSPACE)
 	local svcPlayers = dataModel:GetService(eService.PLAYERS)
 	local svcReplicatedStorage = dataModel:GetService(eService.REPLICATED_STORAGE)
@@ -836,7 +856,7 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	local svcTeams = dataModel:GetService(eService.TEAMS)
 	CurriculumSetup.resetCurriculumWorld(svcWorkspace)
 	local tblOutpostWorld = EngineEnsure.ensureOutpostBattleWorld(svcWorkspace)
-	local tblSharedAssets = CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService)
+	local tblSharedAssets = CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService, strActiveClass)
 	local boolInstallStudentThrowingStones = tblSetupConfig == nil or tblSetupConfig.InstallStudentThrowingStones ~= false
 	local boolInstallStudentLessonConfigs = tblSetupConfig == nil or tblSetupConfig.InstallStudentLessonConfigs ~= false
 
