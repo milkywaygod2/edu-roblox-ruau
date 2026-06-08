@@ -5,6 +5,7 @@ local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
 local StudentConfig = require(script.Parent.StudentConfig)
 local CoreBlock = require(script.Parent.CoreBlock)
+local FieldItem = require(script.Parent.FieldItem)
 local Appearance = require(script.Parent.Appearance)
 local ThrowingStone = require(script.Parent.ThrowingStone)
 
@@ -16,6 +17,8 @@ local tblStudentBrickSpawnOrigins = {
 	Vector3.new(28, 0, 18),
 }
 
+local STUDENT_BRICK_SPAWN_GRID_COLUMNS = 3
+local STUDENT_BRICK_SPAWN_GRID_GAP = 1.25
 local STUDENT_BRICK_DROP_RUNTIME_ATTRIBUTE = "RuntimeInstalled_StudentBrickDrop"
 
 -- --------------------------------------------------------------------------------
@@ -27,7 +30,7 @@ function BuildSystems.createFallbackBrickDesign(strSourceName)
 	tblBrickDesign.DisplayName = strSourceName .. " 기본 벽돌"
 	tblBrickDesign.SpawnCount = 10
 	tblBrickDesign.Appearance.Material = Enum.Material.Brick
-	tblBrickDesign.Appearance.Size = Vector3.new(4, 2, 2)
+	tblBrickDesign.Appearance.Size = Vector3.new(2, 0.8, 0.8)
 	tblBrickDesign.Appearance.CollisionShape = Enum.PartType.Block
 	tblBrickDesign.Appearance.CollisionShapeMode = "Auto"
 	tblBrickDesign.Appearance.LookShape = ""
@@ -97,6 +100,28 @@ end
 -- --------------------------------------------------------------------------------
 
 
+local function calculate_student_brick_grid_offset(vectorSize, intBrickIndex, intBrickCount)
+	local intSafeBrickCount = math.max(1, intBrickCount or 1)
+	local intColumns = math.min(STUDENT_BRICK_SPAWN_GRID_COLUMNS, intSafeBrickCount)
+	local intRow = math.floor((intBrickIndex - 1) / intColumns)
+	local intRows = math.ceil(intSafeBrickCount / intColumns)
+	local intItemsBeforeRow = intRow * intColumns
+	local intItemsInRow = math.min(intColumns, intSafeBrickCount - intItemsBeforeRow)
+	local intColumnInRow = intBrickIndex - intItemsBeforeRow - 1
+	local numberSpacingX = math.max(vectorSize.X + STUDENT_BRICK_SPAWN_GRID_GAP, 1.5)
+	local numberSpacingZ = math.max(vectorSize.Z + STUDENT_BRICK_SPAWN_GRID_GAP, 1.5)
+
+	return Vector3.new(
+		(intColumnInRow - ((intItemsInRow - 1) * 0.5)) * numberSpacingX,
+		0,
+		(intRow - ((intRows - 1) * 0.5)) * numberSpacingZ
+	)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function BuildSystems.installStudentBrickDropSystem(svcReplicatedStorage)
 	if not svcReplicatedStorage then
 		return false
@@ -109,8 +134,8 @@ function BuildSystems.installStudentBrickDropSystem(svcReplicatedStorage)
 		return false
 	end
 
-	eventDropCarriedBlock.OnServerEvent:Connect(function(playerPlayer)
-		CoreBlock.dropCarriedBlock(playerPlayer)
+	eventDropCarriedBlock.OnServerEvent:Connect(function(playerPlayer, ...)
+		FieldItem.placeEquippedBuildTool(playerPlayer, ...)
 	end)
 	return true
 end
@@ -119,11 +144,20 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function BuildSystems.clearStudentBrickParts(fldBattlefield)
+function BuildSystems.clearStudentBrickParts(fldBattlefield, fldItemSpawnArea)
 	local eLogical = CoreEnums.eEngineLogicalType
 	for _, instanceChild in ipairs(fldBattlefield:GetChildren()) do
 		if CoreEnums.hasEngineLogicalNamePrefix(instanceChild.Name, eLogical.STACK_BRICK_PREFIX) then
 			instanceChild:Destroy()
+		end
+	end
+
+	if fldItemSpawnArea then
+		local strToolPrefix = eLogical.FIELD_ITEM_PREFIX .. eLogical.STACK_BRICK .. "_"
+		for _, instanceChild in ipairs(fldItemSpawnArea:GetChildren()) do
+			if CoreEnums.hasEngineLogicalNamePrefix(instanceChild.Name, strToolPrefix) then
+				instanceChild:Destroy()
+			end
 		end
 	end
 end
@@ -132,52 +166,54 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function BuildSystems.createStudentBrickPart(fldBattlefield, tblResolvedDesign, intDesignIndex, intBrickIndex)
+function BuildSystems.createStudentBrickTool(fldItemSpawnArea, tblResolvedDesign, intDesignIndex, intBrickIndex, intBrickCount)
 	local eLogical = CoreEnums.eEngineLogicalType
-	local eAttr = CoreEnums.eEngineAttributeKey
 	local vectorSize = tblResolvedDesign.ProjectileSize
 	local vectorBase = tblStudentBrickSpawnOrigins[((intDesignIndex - 1) % #tblStudentBrickSpawnOrigins) + 1]
-	local vectorJitter = ThrowingStone.createFlatSpawnJitter(tblResolvedDesign.VariantId, intBrickIndex, tblResolvedDesign.SpawnRadius)
+	local vectorGridOffset = calculate_student_brick_grid_offset(vectorSize, intBrickIndex, intBrickCount)
 	local vectorPosition = Vector3.new(
-		vectorBase.X + vectorJitter.X,
+		vectorBase.X + vectorGridOffset.X,
 		vectorSize.Y * 0.5 + 0.08,
-		vectorBase.Z + vectorJitter.Z
+		vectorBase.Z + vectorGridOffset.Z
 	) + tblResolvedDesign.SpawnOffset
-	local cframeBrick = CFrame.new(vectorPosition) * CFrame.Angles(0, math.rad((intBrickIndex % 4) * 8), 0)
 
-	local partBrick = CoreBlock.create(fldBattlefield, cframeBrick, {
+	local tblBrickToolConfig = {
 		DisplayName = tblResolvedDesign.DisplayName,
-		Size = vectorSize,
-		Material = tblResolvedDesign.ProjectileMaterial,
-		BrickColor = tblResolvedDesign.ProjectileBrickColor,
-		Shape = tblResolvedDesign.ProjectileShape,
+		VariantId = tblResolvedDesign.VariantId,
+		WorldAnchored = tblResolvedDesign.WorldAnchored,
+		WorldCanCollide = tblResolvedDesign.WorldCanCollide,
+		WorldMassless = tblResolvedDesign.WorldMassless,
+		RealMaterial = tblResolvedDesign.RealMaterial,
+		CollisionShapeMode = tblResolvedDesign.CollisionShapeMode,
+		CollisionShapeModeResolved = tblResolvedDesign.CollisionShapeModeResolved,
 		LookShape = tblResolvedDesign.LookShape,
-		CanMine = true,
-		CanTakeDamage = true,
-		MaxHealth = 140,
-		ResourceYield = 10,
-		ResourceType = tblResolvedDesign.RealMaterial,
-		Anchored = tblResolvedDesign.WorldAnchored,
-		CanCollide = tblResolvedDesign.WorldCanCollide,
-		CanTouch = true,
-		CanQuery = true,
-		Massless = tblResolvedDesign.WorldMassless,
-	})
+		Look = tblResolvedDesign.LookShape,
+		Damage = tblResolvedDesign.Damage,
+		Cooldown = tblResolvedDesign.Cooldown,
+		Speed = tblResolvedDesign.Speed,
+		Arc = tblResolvedDesign.Arc,
+		KnockbackForward = tblResolvedDesign.KnockbackForward,
+		KnockbackUp = tblResolvedDesign.KnockbackUp,
+		Lifetime = tblResolvedDesign.Lifetime,
+		ProjectileSize = vectorSize,
+		ProjectileMaterial = tblResolvedDesign.ProjectileMaterial,
+		ProjectileBrickColor = tblResolvedDesign.ProjectileBrickColor,
+		ProjectileColor = tblResolvedDesign.ProjectileColor,
+		ProjectileShape = tblResolvedDesign.ProjectileShape,
+		ProjectileTransparency = tblResolvedDesign.ProjectileTransparency,
+		Handle = tblResolvedDesign.Handle,
+	}
 
-	partBrick.Name = eLogical.STACK_BRICK_PREFIX .. tblResolvedDesign.VariantId .. "_" .. intBrickIndex
-	partBrick:SetAttribute("CollisionShapeMode", tblResolvedDesign.CollisionShapeMode)
-	partBrick:SetAttribute("CollisionShapeModeResolved", tblResolvedDesign.CollisionShapeModeResolved)
-	partBrick:SetAttribute("RealMaterial", tblResolvedDesign.RealMaterial)
-	partBrick:SetAttribute("MassKg", StudentConfig.calculateEquipmentMassKg(
-		vectorSize,
-		ThrowingStone.getThrowingStoneMaterialProfile(tblResolvedDesign.ProjectileMaterial).Density
-	))
-	partBrick:SetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME, tblResolvedDesign.DisplayName)
-
-	pcall(function()
-		partBrick:SetNetworkOwner(nil)
-	end)
-	return partBrick
+	return FieldItem.installFieldToolPickupInArea(
+		fldItemSpawnArea,
+		eLogical.STACK_BRICK,
+		"클릭해서 주운 뒤 던지거나 Q로 쌓습니다",
+		tblBrickToolConfig,
+		tblResolvedDesign.VariantId .. "_" .. intBrickIndex,
+		vectorPosition,
+		tblResolvedDesign.Handle,
+		ThrowingStone.installThrowingStoneTool
+	)
 end
 
 
@@ -187,11 +223,12 @@ end
 function BuildSystems.installStudentBrickDesigns(svcWorkspace, svcReplicatedStorage, fldStudentBrickDesigns)
 	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
 	local fldBattlefield = tblOutpostWorld.fldBattlefield
+	local fldItemSpawnArea = tblOutpostWorld.fldItemSpawnArea
 	local tblModules = {}
 	local tblValidationMessages = {}
 
 	BuildSystems.installStudentBrickDropSystem(svcReplicatedStorage)
-	BuildSystems.clearStudentBrickParts(fldBattlefield)
+	BuildSystems.clearStudentBrickParts(fldBattlefield, fldItemSpawnArea)
 
 	if fldStudentBrickDesigns then
 		for _, instanceChild in ipairs(fldStudentBrickDesigns:GetChildren()) do
@@ -235,7 +272,7 @@ function BuildSystems.installStudentBrickDesigns(svcWorkspace, svcReplicatedStor
 	for intDesignIndex, tblBrickDesignEntry in ipairs(tblBrickDesignEntries) do
 		local tblResolvedDesign = ThrowingStone.resolveThrowingStoneDesign(tblBrickDesignEntry.Config, tblValidationMessages, tblBrickDesignEntry.SourceName)
 		for intBrickIndex = 1, tblResolvedDesign.SpawnCount do
-			BuildSystems.createStudentBrickPart(fldBattlefield, tblResolvedDesign, intDesignIndex, intBrickIndex)
+			BuildSystems.createStudentBrickTool(fldItemSpawnArea, tblResolvedDesign, intDesignIndex, intBrickIndex, tblResolvedDesign.SpawnCount)
 			intInstalledCount += 1
 		end
 	end
