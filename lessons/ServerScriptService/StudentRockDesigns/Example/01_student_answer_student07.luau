@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Marble
 appearance.Size = Vector3.new(46, 44, 46) * CM
 appearance.CollisionShape = Enum.PartType.Block
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "11240927504"
 
 rock.DisplayName = "대리석 방패돌"

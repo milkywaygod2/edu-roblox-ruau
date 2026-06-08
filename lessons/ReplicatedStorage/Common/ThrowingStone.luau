@@ -10,6 +10,19 @@ local FieldItem = require(script.Parent.FieldItem)
 local StudentConfig = require(script.Parent.StudentConfig)
 
 local intAutoRockDesignId = 0
+local THROWING_STONE_SPAWN_RADIUS_DEFAULT = 4
+local THROWING_STONE_SPAWN_RADIUS_MAX = 24
+local THROWING_STONE_SPAWN_RADIUS_SIZE_MULTIPLIER = 1.2
+local THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE = "Shape"
+local THROWING_STONE_COLLISION_SHAPE_MODE_AUTO = "Auto"
+local THROWING_STONE_COLLISION_SHAPE_MODE_LOOK_MESH = "LookMesh"
+local THROWING_STONE_COLLISION_SHAPE_MODE_LOOK_BOUNDS = "LookBounds"
+local tblThrowingStoneCollisionShapeModeByKey = {
+	shape = THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE,
+	auto = THROWING_STONE_COLLISION_SHAPE_MODE_AUTO,
+	lookmesh = THROWING_STONE_COLLISION_SHAPE_MODE_LOOK_MESH,
+	lookbounds = THROWING_STONE_COLLISION_SHAPE_MODE_LOOK_BOUNDS,
+}
 
 -- --------------------------------------------------------------------------------
 
@@ -62,12 +75,12 @@ function ThrowingStone.createRockDesign(strDisplayName) -- [의미/의도] 학�
 		VariantId = ThrowingStone.createAutoRockVariantId(),
 		DisplayName = strSafeDisplayName,
 		SpawnCount = 10,
-		SpawnRadius = 4,
 		Appearance = {
 			BrickColor = BrickColor.new("Dark stone grey"),
 			Material = ThrowingStone.RealMaterial.Rock,
 			Size = Vector3.new(1.2, 1.2, 1.2),
 			CollisionShape = Enum.PartType.Ball,
+			CollisionShapeMode = THROWING_STONE_COLLISION_SHAPE_MODE_AUTO,
 			LookShape = "",
 		},
 	}
@@ -197,6 +210,95 @@ end
 
 
 -- --------------------------------------------------------------------------------
+
+
+function ThrowingStone.calculateThrowingStoneSpawnRadius(tblConfig, vectorSize)
+	local numberAutoRadius = THROWING_STONE_SPAWN_RADIUS_DEFAULT
+	if typeof(vectorSize) == "Vector3" then
+		local numberHorizontalSize = math.max(vectorSize.X, vectorSize.Z)
+		numberAutoRadius = math.max(
+			THROWING_STONE_SPAWN_RADIUS_DEFAULT,
+			numberHorizontalSize * THROWING_STONE_SPAWN_RADIUS_SIZE_MULTIPLIER
+		)
+	end
+
+	return StudentConfig.readConfigNumber(
+		tblConfig,
+		"SpawnRadius",
+		numberAutoRadius,
+		0,
+		THROWING_STONE_SPAWN_RADIUS_MAX
+	)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function ThrowingStone.readThrowingStoneCollisionShapeMode(tblConfig, tblValidationMessages, strSourceName)
+	local valueMode = tblConfig and tblConfig.CollisionShapeMode
+	if valueMode ~= nil and type(valueMode) ~= "string" then
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShapeMode는 \"Shape\", \"Auto\", \"LookMesh\", \"LookBounds\" 중 문자열이어야 해서 Shape로 보정했습니다.")
+		return THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE
+	end
+
+	local strMode = StudentConfig.readConfigString(tblConfig, "CollisionShapeMode", THROWING_STONE_COLLISION_SHAPE_MODE_AUTO)
+	local strModeKey = string.lower((strMode:gsub("[%s_%-]", "")))
+	local strResolvedMode = tblThrowingStoneCollisionShapeModeByKey[strModeKey]
+	if strResolvedMode then
+		return strResolvedMode
+	end
+
+	StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShapeMode는 \"Shape\", \"Auto\", \"LookMesh\", \"LookBounds\" 중 하나여야 해서 Shape로 보정했습니다.")
+	return THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function ThrowingStone.resolveThrowingStoneCollisionShapeMode(tblAppearanceConfig, enumShape, vectorSize, strLookShape, tblValidationMessages, strSourceName)
+	local strCollisionShapeMode = ThrowingStone.readThrowingStoneCollisionShapeMode(tblAppearanceConfig, tblValidationMessages, strSourceName)
+	if strCollisionShapeMode == THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE then
+		return strCollisionShapeMode, strCollisionShapeMode, enumShape, vectorSize
+	end
+
+	if type(strLookShape) ~= "string" or strLookShape == "" then
+		if strCollisionShapeMode == THROWING_STONE_COLLISION_SHAPE_MODE_AUTO then
+			return strCollisionShapeMode, THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE, enumShape, vectorSize
+		end
+
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShapeMode " .. strCollisionShapeMode .. "는 LookShape가 필요해서 Shape 모드로 보정했습니다.")
+		return strCollisionShapeMode, THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE, enumShape, vectorSize
+	end
+
+	local tblLookInfo = Appearance.inspectRockLookTemplate(strLookShape, vectorSize)
+	if not tblLookInfo then
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShapeMode " .. strCollisionShapeMode .. "에서 LookShape '" .. strLookShape .. "'를 검사하지 못해 Shape 모드로 보정했습니다.")
+		return strCollisionShapeMode, THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE, enumShape, vectorSize
+	end
+
+	if typeof(tblLookInfo.BoundsSize) ~= "Vector3"
+		or tblLookInfo.BoundsSize.X <= 0
+		or tblLookInfo.BoundsSize.Y <= 0
+		or tblLookInfo.BoundsSize.Z <= 0 then
+		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "CollisionShapeMode " .. strCollisionShapeMode .. "에서 LookShape 바운딩 크기를 계산하지 못해 Shape 모드로 보정했습니다.")
+		return strCollisionShapeMode, THROWING_STONE_COLLISION_SHAPE_MODE_SHAPE, enumShape, vectorSize
+	end
+
+	if strCollisionShapeMode == THROWING_STONE_COLLISION_SHAPE_MODE_LOOK_MESH then
+		if tblLookInfo.IsSingleMeshPart then
+			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "LookMesh 후보 MeshPart를 찾았지만 서버 런타임에서 Hull 충돌 세팅이 제한될 수 있어 LookBounds로 안전 적용했습니다.")
+		else
+			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "LookMesh는 단일 MeshPart 룩에서만 의미가 있어 LookBounds로 안전 적용했습니다.")
+		end
+	end
+
+	return strCollisionShapeMode, THROWING_STONE_COLLISION_SHAPE_MODE_LOOK_BOUNDS, Enum.PartType.Block, tblLookInfo.BoundsSize
+end
+
+
+-- --------------------------------------------------------------------------------
 function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessages, strSourceName)
 	local strVariantId = tblConfig and tblConfig.VariantId
 	if type(strVariantId) ~= "string" or strVariantId == "" then
@@ -248,20 +350,31 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 			StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "LookShape '" .. strLookShape .. "'를 ReplicatedStorage/OutpostAssets/RockLooks에서 찾지 못해 기본 모양을 사용합니다.")
 		end
 	end
+	local strCollisionShapeMode, strCollisionShapeModeResolved, enumCollisionShape, vectorCollisionSize = ThrowingStone.resolveThrowingStoneCollisionShapeMode(
+		tblAppearanceConfig,
+		enumShape,
+		vectorSize,
+		strLookShape,
+		tblValidationMessages,
+		strSourceName
+	)
 	local valueSpawnCount = tblConfig and tblConfig.SpawnCount
 	if type(valueSpawnCount) == "number" and (valueSpawnCount < 1 or valueSpawnCount > 10) then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 1~10 범위로 보정했습니다.")
 	elseif valueSpawnCount ~= nil and type(valueSpawnCount) ~= "number" then
 		StudentConfig.addValidationMessage(tblValidationMessages, strSourceName, "SpawnCount는 숫자여야 해서 기본 10으로 보정했습니다.")
 	end
-	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorSize, matchedEnum)
+	local tblStats = ThrowingStone.calculateThrowingStoneStats(vectorCollisionSize, matchedEnum)
 
 	return {
 		VariantId = strVariantId,
 		DisplayName = StudentConfig.readConfigString(tblConfig, "DisplayName", "전장 돌멩이"),
 		SpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", 10, 1, 10),
 		SpawnOffset = StudentConfig.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8)),
-		SpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 4, 0, 8),
+		SpawnRadius = ThrowingStone.calculateThrowingStoneSpawnRadius(tblConfig, vectorSize),
+		WorldAnchored = StudentConfig.readConfigBoolean(tblConfig, "WorldAnchored", false),
+		WorldCanCollide = StudentConfig.readConfigBoolean(tblConfig, "WorldCanCollide", true),
+		WorldMassless = StudentConfig.readConfigBoolean(tblConfig, "WorldMassless", false),
 		RealMaterial = matchedEnum.Name,
 		Damage = tblStats.Damage,
 		Cooldown = tblStats.Cooldown,
@@ -272,18 +385,20 @@ function ThrowingStone.resolveThrowingStoneDesign(tblConfig, tblValidationMessag
 		Lifetime = tblStats.Lifetime,
 		LookShape = strLookShape,
 		Look = strLookShape,
-		ProjectileSize = vectorSize,
+		CollisionShapeMode = strCollisionShapeMode,
+		CollisionShapeModeResolved = strCollisionShapeModeResolved,
+		ProjectileSize = vectorCollisionSize,
 		ProjectileMaterial = enumMaterial,
 		ProjectileBrickColor = brickColor,
 		ProjectileColor = colorProjectile,
-		ProjectileShape = enumShape,
+		ProjectileShape = enumCollisionShape,
 		ProjectileTransparency = tblMaterialProfile.Transparency or 0,
 		Handle = {
-			Size = vectorSize,
+			Size = vectorCollisionSize,
 			Material = enumMaterial,
 			BrickColor = brickColor,
 			Color = colorProjectile,
-			Shape = enumShape,
+			Shape = enumCollisionShape,
 			Transparency = tblMaterialProfile.Transparency or 0,
 		},
 	}
@@ -302,6 +417,7 @@ function ThrowingStone.installThrowingStonePickups(svcWorkspace, tblConfig) -- [
 		or tblConfig.Appearance
 		or tblConfig.CollisionSize
 		or tblConfig.CollisionShape
+		or tblConfig.CollisionShapeMode
 		or tblConfig.LookShape
 		or tblConfig.Size
 		or tblConfig.Material
@@ -309,6 +425,9 @@ function ThrowingStone.installThrowingStonePickups(svcWorkspace, tblConfig) -- [
 		or tblConfig.Color
 		or tblConfig.Shape
 		or tblConfig.RealMaterial
+		or tblConfig.WorldAnchored ~= nil
+		or tblConfig.WorldCanCollide ~= nil
+		or tblConfig.WorldMassless ~= nil
 	)
 	if boolLooksLikeStudentDesign and not boolAlreadyResolved then
 		tblThrowingStoneConfig = ThrowingStone.resolveThrowingStoneDesign(tblConfig)
@@ -316,6 +435,15 @@ function ThrowingStone.installThrowingStonePickups(svcWorkspace, tblConfig) -- [
 
 	tblThrowingStoneConfig = tblThrowingStoneConfig or {}
 	tblThrowingStoneConfig.SpawnCount = 10
+	if tblThrowingStoneConfig.WorldAnchored == nil then
+		tblThrowingStoneConfig.WorldAnchored = false
+	end
+	if tblThrowingStoneConfig.WorldCanCollide == nil then
+		tblThrowingStoneConfig.WorldCanCollide = true
+	end
+	if tblThrowingStoneConfig.WorldMassless == nil then
+		tblThrowingStoneConfig.WorldMassless = false
+	end
 
 	return FieldItem.installFieldToolPickups(svcWorkspace, eLogical.THROWING_STONE, "클릭해서 주운 뒤 전초기지 목표에 던집니다", tblThrowingStoneConfig, BattlefieldLayout.tblThrowingStoneSpawnPositions, {
 		Shape = Enum.PartType.Ball,
@@ -489,12 +617,19 @@ function ThrowingStone.installThrowingStoneTool(toolThrowingStone, tblConfig) --
 	local enumProjectileMaterial = StudentConfig.readThrowingStoneMaterial(tblConfig, "ProjectileMaterial", Enum.Material.Slate)
 	local colorProjectile = StudentConfig.readConfigColor3(tblConfig, "ProjectileColor", BrickColor.new("Dark stone grey").Color)
 	local enumProjectileShape = StudentConfig.readConfigEnumItem(tblConfig, "ProjectileShape", Enum.PartType.Ball)
+	local strCollisionShapeMode = StudentConfig.readConfigString(tblConfig, "CollisionShapeMode", THROWING_STONE_COLLISION_SHAPE_MODE_AUTO)
+	local strCollisionShapeModeResolved = StudentConfig.readConfigString(tblConfig, "CollisionShapeModeResolved", strCollisionShapeMode)
 	local strLookShape = StudentConfig.readConfigString(tblConfig, "LookShape", StudentConfig.readConfigString(tblConfig, "Look", ""))
 	local strDisplayName = StudentConfig.readConfigString(
 		{DisplayName = toolThrowingStone:GetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME)},
 		"DisplayName",
 		toolThrowingStone.Name
 	)
+	local tblProjectileMaterialProfile = ThrowingStone.getThrowingStoneMaterialProfile(enumProjectileMaterial)
+	local numberProjectileMassKg = StudentConfig.calculateEquipmentMassKg(vectorProjectileSize, tblProjectileMaterialProfile.Density)
+	toolThrowingStone:SetAttribute("MassKg", numberProjectileMassKg)
+	toolThrowingStone:SetAttribute("CollisionShapeMode", strCollisionShapeMode)
+	toolThrowingStone:SetAttribute("CollisionShapeModeResolved", strCollisionShapeModeResolved)
 	local boolReady = true
 	Appearance.applyRockLook(partHandle, strLookShape)
 	partHandle.CanCollide = false

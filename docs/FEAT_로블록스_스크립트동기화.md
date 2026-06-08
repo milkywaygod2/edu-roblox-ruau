@@ -56,9 +56,12 @@ lessons/
     TeacherSetup.server.luau
     StudentRockDesigns/
       01_student_answer.luau
-    StudentLessonConfigs/
+    StudentBrickDesigns/
       02_student_answer.luau
-      ...
+    StudentResourceWallDesigns/
+      03_student_answer.luau
+    ...
+    StudentFinalBattleDesigns/
       12_student_answer.luau
   StarterPlayerScripts/
     11_student_answer.local.luau

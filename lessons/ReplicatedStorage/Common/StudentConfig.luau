@@ -66,6 +66,19 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function StudentConfig.readConfigBoolean(tblConfig, strKey, boolDefault)
+	local boolValue = tblConfig and tblConfig[strKey]
+	if type(boolValue) ~= "boolean" then
+		return boolDefault
+	end
+
+	return boolValue
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function StudentConfig.readConfigVector3(tblConfig, strKey, vectorDefault, vectorMin, vectorMax) -- [의미/의도] 학생 설정 Vector3 읽기 함수 정의 ➔ 위치와 크기 설정을 안전하게 받기 위함
 	local vectorValue = tblConfig and tblConfig[strKey] -- [의미/의도] 설정 테이블에서 Vector3 조회 ➔ 없는 값은 기본값으로 대체하기 위함
 	if typeof(vectorValue) ~= "Vector3" then -- [의미/의도] Vector3가 아니라면 ➔ 잘못된 값으로 Part 위치/크기 설정이 실패하지 않게 하기 위함

@@ -8,15 +8,32 @@ local StudentConfig = require(script.Parent.StudentConfig)
 
 local FIELD_ITEM_OUTSIDE_CHECK_SECONDS = 0.25
 local FIELD_ITEM_REST_SURFACE_PADDING = 0.05
+local FIELD_ITEM_SPAWN_RADIUS_MAX = 24
+local FIELD_ITEM_PICKUP_PROMPT_BASE_DISTANCE = 10
+local FIELD_ITEM_PICKUP_CLICK_BASE_DISTANCE = 18
+local FIELD_ITEM_PICKUP_INTERACTION_DISTANCE_MAX = 80
 local randomFieldItemRespawn = Random.new()
 
 -- --------------------------------------------------------------------------------
-function FieldItem.applyFieldToolBasePartState(partTarget, boolAnchored, boolCanTouch, boolCanQuery)
+function FieldItem.applyFieldToolBasePartState(partTarget, boolAnchored, boolCanTouch, boolCanQuery, boolCanCollide, boolMassless)
 	partTarget.Anchored = boolAnchored
-	partTarget.CanCollide = false
+	partTarget.CanCollide = boolCanCollide == true
 	partTarget.CanTouch = boolCanTouch == true
 	partTarget.CanQuery = boolCanQuery == true
-	partTarget.Massless = true
+	partTarget.Massless = boolMassless ~= false
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function FieldItem.calculateFieldToolPickupDistance(partHandle, numberBaseDistance)
+	local numberDistance = numberBaseDistance
+	if partHandle and typeof(partHandle.Size) == "Vector3" then
+		numberDistance += partHandle.Size.Magnitude / 2
+	end
+
+	return math.min(numberDistance, FIELD_ITEM_PICKUP_INTERACTION_DISTANCE_MAX)
 end
 
 
@@ -35,6 +52,24 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function FieldItem.refreshFieldToolPickupInteractionDistance(partHandle)
+	if not partHandle then return end
+
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local numberClickDistance = FieldItem.calculateFieldToolPickupDistance(partHandle, FIELD_ITEM_PICKUP_CLICK_BASE_DISTANCE)
+	EngineEnsure.ensureClickDetector(partHandle, numberClickDistance)
+	FieldItem.setFieldToolClickDistance(partHandle, numberClickDistance)
+
+	local promptPickup = partHandle:FindFirstChildOfClass(ePhysical.PROXIMITY_PROMPT)
+	if promptPickup then
+		promptPickup.MaxActivationDistance = FieldItem.calculateFieldToolPickupDistance(partHandle, FIELD_ITEM_PICKUP_PROMPT_BASE_DISTANCE)
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function FieldItem.ensureFieldToolPickupPrompt(partHandle, strDisplayName)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local promptPickup = partHandle:FindFirstChildOfClass(ePhysical.PROXIMITY_PROMPT)
@@ -46,7 +81,7 @@ function FieldItem.ensureFieldToolPickupPrompt(partHandle, strDisplayName)
 	promptPickup.ObjectText = strDisplayName or "전장 아이템"
 	promptPickup.ActionText = "줍기"
 	promptPickup.HoldDuration = 0
-	promptPickup.MaxActivationDistance = 10
+	promptPickup.MaxActivationDistance = FieldItem.calculateFieldToolPickupDistance(partHandle, FIELD_ITEM_PICKUP_PROMPT_BASE_DISTANCE)
 	promptPickup.RequiresLineOfSight = false
 	promptPickup.Enabled = true
 	return promptPickup
@@ -115,16 +150,25 @@ function FieldItem.applyFieldToolWorldState(toolPickup, partHandle, vectorHomePo
 	if not partHandle then return end
 
 	local eAttrKey = CoreEnums.eEngineAttributeKey
+	local boolWorldAnchored = toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_WORLD_ANCHORED) ~= false
+	local boolWorldCanCollide = toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_WORLD_CAN_COLLIDE) == true
+	local boolWorldMassless = toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_WORLD_MASSLESS) ~= false
 	toolPickup:SetAttribute(eAttrKey.BLOCK_IS_PROJECTILE, false)
-	FieldItem.applyFieldToolBasePartState(partHandle, true, false, true)
+	FieldItem.applyFieldToolBasePartState(partHandle, boolWorldAnchored, false, true, boolWorldCanCollide, boolWorldMassless)
 
 	-- [물리 순간이동 강제 보장]
 	-- Position 대신 CFrame을 설정하여 물리 고착 관계를 무시하고 스폰 좌표로 확실하게 강제 텔레포트시킵니다.
+	partHandle.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+	partHandle.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 	partHandle.CFrame = CFrame.new(vectorHomePosition)
+	if boolWorldCanCollide and not boolWorldAnchored then
+		pcall(function()
+			partHandle:SetNetworkOwner(nil)
+		end)
+	end
 
 	FieldItem.applyFieldToolVisualState(toolPickup, partHandle)
-	EngineEnsure.ensureClickDetector(partHandle, 18)
-	FieldItem.setFieldToolClickDistance(partHandle, 18)
+	FieldItem.refreshFieldToolPickupInteractionDistance(partHandle)
 	FieldItem.setFieldToolPromptEnabled(partHandle, true)
 end
 
@@ -152,9 +196,7 @@ function FieldItem.applyFieldToolThrownState(toolPickup, partHandle)
 
 	local eAttrKey = CoreEnums.eEngineAttributeKey
 	toolPickup:SetAttribute(eAttrKey.BLOCK_IS_PROJECTILE, true)
-	FieldItem.applyFieldToolBasePartState(partHandle, false, true, false)
-	partHandle.CanCollide = true
-	partHandle.Massless = false
+	FieldItem.applyFieldToolBasePartState(partHandle, false, true, false, true, false)
 	FieldItem.applyFieldToolVisualState(toolPickup, partHandle)
 	FieldItem.setFieldToolClickDistance(partHandle, 0)
 	FieldItem.setFieldToolPromptEnabled(partHandle, false)
@@ -328,7 +370,7 @@ function FieldItem.bindFieldToolDropToWorld(toolPickup, fldItemSpawnArea)
 			toolPickup.Parent = fldItemSpawnArea
 			toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_HOME_POSITION, vectorDropPosition)
 			FieldItem.applyFieldToolWorldState(toolPickup, partHandle, vectorDropPosition)
-			EngineEnsure.ensureClickDetector(partHandle, 18)
+			FieldItem.refreshFieldToolPickupInteractionDistance(partHandle)
 		end)
 	end)
 end
@@ -433,6 +475,9 @@ function FieldItem.installFieldToolPickupInArea(fldItemSpawnArea, strToolName, s
 	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_TYPE, strToolName)
 	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_DISPLAY_NAME, strDisplayName)
 	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_HOME_NAME, strToolHomeName)
+	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_WORLD_ANCHORED, StudentConfig.readConfigBoolean(tblConfig, "WorldAnchored", true))
+	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_WORLD_CAN_COLLIDE, StudentConfig.readConfigBoolean(tblConfig, "WorldCanCollide", false))
+	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_WORLD_MASSLESS, StudentConfig.readConfigBoolean(tblConfig, "WorldMassless", true))
 
 	local partHandle = Appearance.applyToolHandleStudentStyle(toolPickup, tblConfig)
 	if fnInstallToolSystem then
@@ -446,7 +491,7 @@ function FieldItem.installFieldToolPickupInArea(fldItemSpawnArea, strToolName, s
 	FieldItem.bindFieldToolDropToWorld(toolPickup, fldItemSpawnArea)
 	FieldItem.bindFieldToolOutOfBoundsRespawn(toolPickup, fldItemSpawnArea)
 
-	local clickPickup = EngineEnsure.ensureClickDetector(partHandle, 18)
+	local clickPickup = EngineEnsure.ensureClickDetector(partHandle, FieldItem.calculateFieldToolPickupDistance(partHandle, FIELD_ITEM_PICKUP_CLICK_BASE_DISTANCE))
 	local promptPickup = FieldItem.ensureFieldToolPickupPrompt(partHandle, strDisplayName)
 	if EngineEnsure.markRuntimeInstalled(toolPickup, "RuntimeInstalled_FieldPickup") then
 		local function pickup_tool(player)
@@ -534,7 +579,7 @@ function FieldItem.installFieldToolPickups(svcWorkspace, strToolName, strToolTip
 	local intSpawnCount = StudentConfig.readConfigInteger(tblConfig, "SpawnCount", #tblSpawnPositions, 1, 12)
 	local strVariantId = StudentConfig.readConfigString(tblConfig, "VariantId", strToolName)
 	local vectorSpawnOffset = StudentConfig.readConfigVector3(tblConfig, "SpawnOffset", Vector3.new(0, 0, 0), Vector3.new(-8, 0, -8), Vector3.new(8, 4, 8))
-	local numberSpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 0, 0, 12)
+	local numberSpawnRadius = StudentConfig.readConfigNumber(tblConfig, "SpawnRadius", 0, 0, FIELD_ITEM_SPAWN_RADIUS_MAX)
 	local tblRandomizedSpawnPositions = FieldItem.createShuffledSpawnPositions(tblSpawnPositions)
 
 	for index = 1, intSpawnCount do
@@ -576,7 +621,7 @@ function FieldItem.resetFieldToolPickupsToWorld(svcPlayers, fldItemSpawnArea) --
 		local partHandle = toolPickup:FindFirstChild(eLogical.RESERVED_HANDLE)
 		if partHandle and partHandle:IsA(ePhysical.BASE_PART) then
 			FieldItem.applyFieldToolWorldState(toolPickup, partHandle, vectorHomePosition)
-			EngineEnsure.ensureClickDetector(partHandle, 18)
+			FieldItem.refreshFieldToolPickupInteractionDistance(partHandle)
 		end
 	end
 

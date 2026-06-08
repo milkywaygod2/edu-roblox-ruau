@@ -89,7 +89,8 @@ return module
 | --- | --- | --- |
 | `CoreEnums` | Roblox 서비스명, ClassName, 논리 이름, Attribute, 라운드 상태 enum | `eEngineServiceSingleton`, `eEnginePhysicalType`, `eEngineLogicalType`, `eEngineAttributeKey` |
 | `EngineEnsure` | Instance 생성/보장, 공통 월드 폴더 보장 | `ensureNamedInstance`, `ensureStaticPart`, `ensureClickDetector`, `ensureOutpostBattleWorld` |
-| `StudentConfig` | 학생 ModuleScript 로딩, 파일명 기반 회차 라우팅, 설정값 타입 검증, validation message | `readConfigNumber`, `readStudentLessonConfigModule`, `installStudentLessonConfigs`, `addValidationMessage` |
+| `StudentConfig` | 학생 설정값 타입 검증, validation message | `readConfigNumber`, `readConfigTable`, `addValidationMessage` |
+| `CurriculumSetup` | 회차별 학생 디자인 폴더 라우팅, ModuleScript 로딩, 1~12일차 전체 기준 오브젝트 보장 | `setupCurriculumWorld`, `ensureCurriculum*`, `installStudentLessonDesignFolders` |
 | `Appearance` | 장비 외형, Handle 스타일, RockLooks 모델 fit, LookShape 적용 | `applyToolHandleStudentStyle`, `findRockLookTemplate`, `applyRockLook` |
 | `Effect` | ParticleEmitter 설정 읽기, 텍스처 enum, 이펙트 적용 | `eParticleTexture`, `readParticleEffectConfig`, `applyParticleEffect` |
 | `FieldItem` | 전장 파밍 Tool 생성, 스폰 마커, 라운드 시작 시 Tool 복귀 | `ensureFieldItemSpawnMarkers`, `installFieldToolPickups`, `resetFieldToolPickupsToWorld` |
@@ -100,7 +101,6 @@ return module
 | `Fortification` | 문, 석벽 체력과 피해 처리 | `installGateDamageSystem`, `installStoneWallDamageSystem` |
 | `SiegeEngine` | 투석기 버튼, 탄환 생성, 중장비 쿨타임 | `installSiegeEngineSystem` |
 | `MagicSystem` | 지팡이 Tool, `CastMagic`, 마법 서버 판정 | `installMagicStaffTool`, `installMagicServerSystem` |
-| `CurriculumSetup` | 1~12일차 전체 기준 오브젝트 보장 | `setupCurriculumWorld`, `ensureCurriculum*` |
 | `FinalBattle` | 팀 배정, 라운드 시작/종료, 코어 체력, 승패 판정 | `installFinalBattleSystem` |
 
 ## 의존성 방향

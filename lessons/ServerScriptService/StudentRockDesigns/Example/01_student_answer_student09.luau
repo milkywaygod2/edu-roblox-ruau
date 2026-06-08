@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Granite
 appearance.Size = Vector3.new(48, 44, 48) * CM
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "105190628650251"
 
 rock.DisplayName = "화강암 결전돌"

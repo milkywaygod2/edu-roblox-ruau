@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Wood
 appearance.Size = Vector3.new(160, 100, 120) * CM
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "18224914749"
 
 rock.DisplayName = "작은 책상"

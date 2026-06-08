@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Basalt
 appearance.Size = Vector3.new(46, 46, 46) * CM
 appearance.CollisionShape = Enum.PartType.Cylinder
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "2057018794"
 
 rock.DisplayName = "비치발리볼"

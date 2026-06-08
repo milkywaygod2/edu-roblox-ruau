@@ -4,15 +4,56 @@ local CoreBlock = {}
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
 local StudentConfig = require(script.Parent.StudentConfig)
+local Appearance = require(script.Parent.Appearance)
 local Effect = require(script.Parent.Effect)
 local CombatRules = require(script.Parent.CombatRules)
 
 local MAX_STACK = 5 -- 등에 짊어질 수 있는 벽돌 최대 개수
 local RESOURCE_PIECE_VALUE = 5 -- 자원 한 조각당 가치
 local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds" -- 스파크 피드백 텍스처
+local BLOCK_PICKUP_BASE_DISTANCE = 12
+local BLOCK_PICKUP_DISTANCE_MAX = 80
 
 -- Attribute는 function을 저장할 수 없으므로, 블록별 대미지 핸들러는 모듈 내 weak-key 테이블로 보관한다.
 local mapBlockDamageHandlers = setmetatable({}, { __mode = "k" })
+
+-- --------------------------------------------------------------------------------
+-- [Helper] 큰 블록도 중심점에 바짝 붙지 않고 집을 수 있게 상호작용 거리를 보정
+-- --------------------------------------------------------------------------------
+local function calculateBlockInteractionDistance(partBlock, numberBaseDistance)
+	if not partBlock then
+		return numberBaseDistance
+	end
+
+	return math.min(numberBaseDistance + partBlock.Size.Magnitude * 0.5, BLOCK_PICKUP_DISTANCE_MAX)
+end
+
+-- --------------------------------------------------------------------------------
+
+
+local function cacheBlockWorldPhysicalState(partBlock)
+	local eAttr = CoreEnums.eEngineAttributeKey
+	if partBlock:GetAttribute(eAttr.FIELD_ITEM_WORLD_ANCHORED) == nil then
+		partBlock:SetAttribute(eAttr.FIELD_ITEM_WORLD_ANCHORED, partBlock.Anchored)
+	end
+	if partBlock:GetAttribute(eAttr.FIELD_ITEM_WORLD_CAN_COLLIDE) == nil then
+		partBlock:SetAttribute(eAttr.FIELD_ITEM_WORLD_CAN_COLLIDE, partBlock.CanCollide)
+	end
+	if partBlock:GetAttribute(eAttr.FIELD_ITEM_WORLD_MASSLESS) == nil then
+		partBlock:SetAttribute(eAttr.FIELD_ITEM_WORLD_MASSLESS, partBlock.Massless)
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function restoreBlockWorldPhysicalState(partBlock)
+	local eAttr = CoreEnums.eEngineAttributeKey
+	partBlock.Anchored = partBlock:GetAttribute(eAttr.FIELD_ITEM_WORLD_ANCHORED) == true
+	partBlock.CanCollide = partBlock:GetAttribute(eAttr.FIELD_ITEM_WORLD_CAN_COLLIDE) ~= false
+	partBlock.Massless = partBlock:GetAttribute(eAttr.FIELD_ITEM_WORLD_MASSLESS) == true
+end
 
 -- --------------------------------------------------------------------------------
 -- [Helper] 파티클 스파크 피드백 이펙트
@@ -123,9 +164,12 @@ local function ensureCarryFolder(character)
 
 					part.Parent = workspace
 					part.Size = part:GetAttribute(eAttr.BLOCK_ORIGINAL_SIZE) or Vector3.new(3, 3, 3)
-					part.CanCollide = true
-					part.Anchored = false
+					restoreBlockWorldPhysicalState(part)
 					part:SetAttribute(eAttr.BLOCK_IS_CARRIED, false)
+					local strLookShape = part:GetAttribute(eAttr.FIELD_ITEM_LOOK_SHAPE)
+					if type(strLookShape) == "string" and strLookShape ~= "" then
+						Appearance.applyRockLook(part, strLookShape)
+					end
 
 					-- 드롭 물리 탄도
 					local angle = math.rad(math.random(0, 360))
@@ -160,17 +204,30 @@ function CoreBlock.create(instanceParent, cframeOrPosition, tblConfig)
 
 	local partBlock = Instance.new(ePhysical.PART)
 	partBlock.Name = eLogical.CORE_BLOCK
+	local strDisplayName = StudentConfig.readConfigString(tblProps, "DisplayName", eLogical.CORE_BLOCK)
+	local strLookShape = StudentConfig.readConfigString(tblProps, "LookShape", StudentConfig.readConfigString(tblProps, "Look", ""))
 
 	local tblDefaultProps = {
 		Size = tblProps.Size or Vector3.new(3, 3, 3),
 		CFrame = (typeof(cframeOrPosition) == "Vector3" and CFrame.new(cframeOrPosition) or cframeOrPosition),
 		Anchored = (tblProps.Anchored ~= nil and tblProps.Anchored or true),
 		Material = tblProps.Material or Enum.Material.Rock,
-		BrickColor = tblProps.BrickColor or BrickColor.new("Dark stone grey")
+		BrickColor = tblProps.BrickColor or BrickColor.new("Dark stone grey"),
+		Shape = tblProps.Shape or Enum.PartType.Block,
+		CanCollide = (tblProps.CanCollide ~= nil and tblProps.CanCollide or true),
+		CanTouch = (tblProps.CanTouch ~= nil and tblProps.CanTouch or true),
+		CanQuery = (tblProps.CanQuery ~= nil and tblProps.CanQuery or true),
+		Massless = (tblProps.Massless ~= nil and tblProps.Massless or false),
 	}
 
 	EngineEnsure.applyInstanceProperties(partBlock, tblDefaultProps)
 	partBlock.Parent = instanceParent or workspace
+	partBlock:SetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME, strDisplayName)
+	cacheBlockWorldPhysicalState(partBlock)
+	if strLookShape ~= "" then
+		partBlock:SetAttribute(eAttr.FIELD_ITEM_LOOK_SHAPE, strLookShape)
+		Appearance.applyRockLook(partBlock, strLookShape)
+	end
 
 	-- 속성 정의
 	local maxHealth = tblProps.MaxHealth or 100
@@ -225,13 +282,20 @@ function CoreBlock.create(instanceParent, cframeOrPosition, tblConfig)
 	-- 자원 상호작용 바인딩 (등에 짊어지기 수행 혹은 골드 즉시 채굴)
 	-- 자원 상호작용 바인딩 (등에 짊어지기 수행)
 	if canMine then
-		local clickDetector = EngineEnsure.ensureClickDetector(partBlock, 15)
+		local numberInteractionDistance = StudentConfig.readConfigNumber(
+			tblProps,
+			"InteractDistance",
+			calculateBlockInteractionDistance(partBlock, BLOCK_PICKUP_BASE_DISTANCE),
+			4,
+			BLOCK_PICKUP_DISTANCE_MAX
+		)
+		local clickDetector = EngineEnsure.ensureClickDetector(partBlock, numberInteractionDistance)
 
 		local proximityPrompt = Instance.new(ePhysical.PROXIMITY_PROMPT)
-		proximityPrompt.ObjectText = "CoreBlock" -- UI 표시 텍스트(.Name 계약이 아니므로 enum 미적용)
+		proximityPrompt.ObjectText = strDisplayName
 		proximityPrompt.ActionText = "등에 메기"
 		proximityPrompt.HoldDuration = 0.5
-		proximityPrompt.MaxActivationDistance = 12
+		proximityPrompt.MaxActivationDistance = numberInteractionDistance
 		proximityPrompt.Parent = partBlock
 
 		local function performCarry(player)
@@ -282,9 +346,14 @@ function CoreBlock.carryBlock(player, partBlock)
 	if click then click.Enabled = false end
 
 	-- 원형 크기 기록 및 짊어지기용 축소
+	cacheBlockWorldPhysicalState(partBlock)
 	local originalSize = partBlock:GetAttribute(eAttr.BLOCK_ORIGINAL_SIZE) or partBlock.Size
 	partBlock:SetAttribute(eAttr.BLOCK_ORIGINAL_SIZE, originalSize)
 	partBlock.Size = Vector3.new(1.8, 0.8, 1.2) -- 등에 붙는 아담한 큐브 형태
+	local strLookShape = partBlock:GetAttribute(eAttr.FIELD_ITEM_LOOK_SHAPE)
+	if type(strLookShape) == "string" and strLookShape ~= "" then
+		Appearance.applyRockLook(partBlock, strLookShape)
+	end
 	partBlock.CanCollide = false
 	partBlock.Anchored = false
 	partBlock.Massless = true
@@ -336,26 +405,32 @@ function CoreBlock.dropCarriedBlock(player)
 	-- 원래 크기 및 충돌 복구
 	local originalSize = partBlock:GetAttribute(eAttr.BLOCK_ORIGINAL_SIZE) or Vector3.new(3, 3, 3)
 	partBlock.Size = originalSize
-	partBlock.CanCollide = true
-	partBlock.Anchored = false
-	partBlock.Massless = false
+	restoreBlockWorldPhysicalState(partBlock)
 	partBlock:SetAttribute(eAttr.BLOCK_IS_CARRIED, false)
 	partBlock.Parent = workspace
 
 	-- 플레이어 전방 3.5스터드 앞에 물리 드랍
 	partBlock.CFrame = root.CFrame * CFrame.new(0, 0.5, -3.5)
 	partBlock.AssemblyLinearVelocity = root.CFrame.LookVector * 10 + Vector3.new(0, 8, 0)
+	local strDisplayName = partBlock:GetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME) or eLogical.CORE_BLOCK
+	local strLookShape = partBlock:GetAttribute(eAttr.FIELD_ITEM_LOOK_SHAPE)
+	if type(strLookShape) == "string" and strLookShape ~= "" then
+		Appearance.applyRockLook(partBlock, strLookShape)
+	end
+	local numberInteractionDistance = calculateBlockInteractionDistance(partBlock, BLOCK_PICKUP_BASE_DISTANCE)
 
 	-- 프롬프트 활성화
 	local prompt = partBlock:FindFirstChildOfClass(ePhysical.PROXIMITY_PROMPT)
 	if prompt then
 		prompt.Enabled = true
+		prompt.ObjectText = strDisplayName
+		prompt.MaxActivationDistance = numberInteractionDistance
 	else
 		prompt = Instance.new(ePhysical.PROXIMITY_PROMPT)
-		prompt.ObjectText = "CoreBlock" -- UI 표시 텍스트(.Name 계약이 아니므로 enum 미적용)
+		prompt.ObjectText = strDisplayName
 		prompt.ActionText = "등에 메기"
 		prompt.HoldDuration = 0.5
-		prompt.MaxActivationDistance = 12
+		prompt.MaxActivationDistance = numberInteractionDistance
 		prompt.Parent = partBlock
 		prompt.Triggered:Connect(function(interactor)
 			CoreBlock.carryBlock(interactor, partBlock)
@@ -365,6 +440,12 @@ function CoreBlock.dropCarriedBlock(player)
 	local click = partBlock:FindFirstChildOfClass(ePhysical.CLICK_DETECTOR)
 	if click then
 		click.Enabled = true
+		click.MaxActivationDistance = numberInteractionDistance
+	else
+		click = EngineEnsure.ensureClickDetector(partBlock, numberInteractionDistance)
+		click.MouseClick:Connect(function(interactor)
+			CoreBlock.carryBlock(interactor, partBlock)
+		end)
 	end
 
 	playBlockEffect(partBlock, partBlock.BrickColor.Name)

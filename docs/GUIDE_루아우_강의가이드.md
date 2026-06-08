@@ -83,6 +83,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Slate
 appearance.Size = Vector3.new(42, 33, 36) * CM -- 센티미터 단위 입력 (가로 42cm, 세로 33cm, 높이 36cm -> 1.4, 1.1, 1.2 studs)
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto" -- "Auto", "Shape", "LookMesh", "LookBounds" 중 선택
 appearance.LookShape = "" -- 외형 모델 이름 또는 크리에이터 상점 에셋 ID (예: "17354921094". 상점 링크: https://create.roblox.com/store/asset/17354921094)
 
 rock.DisplayName = "검은 운석"
@@ -93,7 +94,7 @@ rock.SpawnCount = 3
 return rock
 ```
 
-`appearance`에는 재질, `Size`, `CollisionShape`, `LookShape`만 넣습니다. (학생들이 엉뚱한 색을 직접 지정하는 대신 재질에 적합한 기본 고유 색상이 자동으로 강제 적용됩니다. 또한 학생들이 센티미터(cm) 단위로 감을 잡으며 크기를 설정할 수 있도록 `CM` 상수를 활용합니다. 실제 물리 계산 시에는 돌멩이 비정형성 보정을 위해 20%의 부피 할인이 제공되며, 일반 캐릭터의 들기 제한은 50kg, 힘 특화 캐릭터는 70kg으로 적용됩니다.)
+`appearance`에는 재질, `Size`, `CollisionShape`, `CollisionShapeMode`, `LookShape`만 넣습니다. `CollisionShape`는 `Enum.PartType` 값이고, `CollisionShapeMode`는 `"Auto"`, `"Shape"`, `"LookMesh"`, `"LookBounds"` 중 고르는 문자열이며 기본값은 `"Auto"`입니다. (학생들이 엉뚱한 색을 직접 지정하는 대신 재질에 적합한 기본 고유 색상이 자동으로 강제 적용됩니다. 또한 학생들이 센티미터(cm) 단위로 감을 잡으며 크기를 설정할 수 있도록 `CM` 상수를 활용합니다. 실제 물리 계산 시에는 돌멩이 비정형성 보정을 위해 20%의 부피 할인이 제공되며, 일반 캐릭터의 들기 제한은 50kg, 힘 특화 캐릭터는 70kg으로 적용됩니다.)
 
 ---
 
@@ -577,10 +578,13 @@ ServerScriptService
   TeacherSetup
   StudentRockDesigns
     StudentRock01
-  StudentLessonConfigs
-    StudentAnswer02
-    StudentAnswer03
-    ...
+  StudentBrickDesigns
+    StudentBrick02
+  StudentResourceWallDesigns
+    StudentResourceWall03
+  ...
+  StudentFinalBattleDesigns
+    StudentFinalBattle12
 StarterPlayer
   StarterPlayerScripts
     MagicClient11

@@ -9,8 +9,9 @@ local rock = {}
 local appearance = {}
 
 appearance.Material = Enum.Material.Rock
-appearance.Size = Vector3.new(100, 80, 80) * CM
+appearance.Size = Vector3.new(1000, 800, 800) * CM
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "282758654"
 
 rock.DisplayName = "돌멩이"

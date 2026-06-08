@@ -19,6 +19,7 @@ CoreEnums.eEngineServiceSingleton = { -- [의미/의도] 엔진 서비스 싱글
 
 CoreEnums.eEnginePhysicalType = { -- [의미/의도] 물리(명목) 타입 이넘 정의 ➔ 엔진이 강제하는 .ClassName(실체 타입)을 한곳에서 안전하게 관리하기 위함(Instance.new/IsA에 사용)
 	PART             = "Part",            -- [의미/의도] Part 클래스명 ➔ 기본 물리 블록 인스턴스를 만들거나 IsA로 검사하기 위함
+	MESH_PART        = "MeshPart",        -- [의미/의도] MeshPart 클래스명 ➔ 룩 에셋이 단일 메시 충돌 후보인지 검사하기 위함
 	BASE_PART        = "BasePart",        -- [의미/의도] BasePart 클래스명 ➔ 물리 파트 계열을 포괄적으로 IsA 검사하기 위함
 	SPAWN_LOCATION   = "SpawnLocation",   -- [의미/의도] SpawnLocation 클래스명 ➔ 플레이어 시작 위치를 Roblox 스폰 시스템과 직접 연결하기 위함
 	MODEL            = "Model",           -- [의미/의도] Model 클래스명 ➔ 여러 파트를 묶는 모델 인스턴스를 만들거나 검사하기 위함
@@ -67,7 +68,17 @@ CoreEnums.eEngineLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 
 	STUDENT_ROCK_VALIDATION_GUI_BACK = "StudentRockValidationGuiBack",
 	STUDENT_ROCK_VALIDATION_TEXT = "StudentRockValidationText",
 	STUDENT_ROCK_DESIGNS  = "StudentRockDesigns",
-	STUDENT_LESSON_CONFIGS = "StudentLessonConfigs",
+	STUDENT_BRICK_DESIGNS = "StudentBrickDesigns",
+	STUDENT_RESOURCE_WALL_DESIGNS = "StudentResourceWallDesigns",
+	STUDENT_SWORD_DESIGNS = "StudentSwordDesigns",
+	STUDENT_BOW_DESIGNS = "StudentBowDesigns",
+	STUDENT_SHIELD_DESIGNS = "StudentShieldDesigns",
+	STUDENT_ARMOR_DESIGNS = "StudentArmorDesigns",
+	STUDENT_GATE_DESIGNS = "StudentGateDesigns",
+	STUDENT_STONE_WALL_DESIGNS = "StudentStoneWallDesigns",
+	STUDENT_SIEGE_ENGINE_DESIGNS = "StudentSiegeEngineDesigns",
+	STUDENT_MAGIC_DESIGNS = "StudentMagicDesigns",
+	STUDENT_FINAL_BATTLE_DESIGNS = "StudentFinalBattleDesigns",
 	FORTIFICATION         = "Fortification",      -- [의미/의도] 기지 방어 구조물 폴더 ➔ 문/벽을 양 팀 전초기지 방어 시설로 관리하기 위함
 	GATE                  = "Gate",               -- [의미/의도] 문 모델 이름 ➔ 기지 방어선의 파괴 가능한 진입 목표물을 식별하기 위함
 	STONE_WALL            = "StoneWall",          -- [의미/의도] 석조 벽 모델 이름 ➔ 기지 주변의 부분 파괴 가능한 벽을 식별하기 위함
@@ -102,6 +113,7 @@ CoreEnums.eEngineLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 
 	COVER_MARKER_PREFIX   = "CoverMarker_",  -- [의미/의도] 엄폐물 배치 마커 접두사 ➔ 학생 건축 위치 힌트를 번호로 구분하기 위함
 	COVER_BLOCK_PREFIX    = "CoverBlock_",   -- [의미/의도] 엄폐 블록 접두사 ➔ 엄폐물 모델 내부 블록을 층별로 구분하기 위함
 	COVER_STUDENT_PREFIX  = "StudentCover_", -- [의미/의도] 학생 엄폐물 접두사 ➔ 학생이 만든 엄폐 모델을 구분하기 위함
+	STACK_BRICK_PREFIX    = "StackBrick_",   -- [의미/의도] 2일차 물리 벽돌 접두사 ➔ 학생 벽돌 디자인으로 생성된 쌓기 재료를 구분하기 위함
 	BUILD_BUTTON          = "BuildButton",   -- [의미/의도] 건설 버튼 이름 ➔ 자원 기반 방벽 생성 입력 장치를 식별하기 위함
 	WALL_SPAWN            = "WallSpawn",     -- [의미/의도] 방벽 생성 위치 이름 ➔ 방벽이 실제로 생길 기준 좌표를 식별하기 위함
 	WALL_BLOCK_SUFFIX     = "_WallBlock",    -- [의미/의도] 방벽 블록 접미사 ➔ 플레이어가 만든 방벽 블록을 추적하기 위함
@@ -118,6 +130,7 @@ CoreEnums.eEngineLogicalType = { -- [의미/의도] 논리 타입 이넘 정의 
 	FIST_ATTACK           = "FistAttack",       -- [의미/의도] 빈손 타격 RemoteEvent 이름 ➔ 기본 좌클릭 근접 공격을 서버 판정으로 처리하기 위함
 	CAST_MAGIC            = "CastMagic",    -- [의미/의도] 마법 시전 RemoteEvent 이름 ➔ 클라이언트 입력과 서버 판정을 연결하기 위함
 	SPECIALIZATION_SELECT = "SpecializationSelect", -- [의미/의도] 플레이어 특화(힘/민첩/체력) 선택 RemoteEvent 이름 ➔ 1일차 특화 선택 통신에 사용하기 위함
+	DROP_CARRIED_BLOCK    = "DropCarriedBlock", -- [의미/의도] 등에 멘 벽돌 내려놓기 RemoteEvent 이름 ➔ 2일차 물리 쌓기 입력을 서버와 연결하기 위함
 
 	TEAM_BLUE             = "Blue",             -- [의미/의도] 청팀 이름 ➔ 전초기지 공방전 팀 구분에 사용하기 위함
 	TEAM_RED              = "Red",              -- [의미/의도] 홍팀 이름 ➔ 전초기지 공방전 팀 구분에 사용하기 위함
@@ -151,6 +164,10 @@ CoreEnums.eEngineAttributeKey = { -- [의미/의도] 엔진 Attribute 키 이넘
 	FIELD_ITEM_DISPLAY_NAME = "FieldItemDisplayName",   -- [의미/의도] 파밍 아이템 표시 이름 키 ➔ 학생이 지은 장비 이름을 런타임에 공유하기 위함
 	FIELD_ITEM_HOME_NAME   = "FieldItemHomeName",
 	FIELD_ITEM_HOME_POSITION = "FieldItemHomePosition",
+	FIELD_ITEM_WORLD_ANCHORED = "FieldItemWorldAnchored",
+	FIELD_ITEM_WORLD_CAN_COLLIDE = "FieldItemWorldCanCollide",
+	FIELD_ITEM_WORLD_MASSLESS = "FieldItemWorldMassless",
+	FIELD_ITEM_LOOK_SHAPE = "LookShape",
 	DAMAGE_FEEDBACK_SCORE  = "DamageFeedbackScore",
 
 	BLOCK_MAX_HEALTH       = "MaxHealth",     -- [의미/의도] 블록 최대 체력 키 ➔ CoreBlock 방벽/엄폐물의 내구도 상한을 런타임에 공유하기 위함
@@ -181,7 +198,7 @@ CoreEnums.eRoundStateValue = { -- [의미/의도] 라운드 상태값 이넘 정
 -- --------------------------------------------------------------------------------
 
 
-CoreEnums.eStudentLessonConfigKey = {
+CoreEnums.eStudentLessonDesignConceptKey = {
 	COVER_DESIGN  = "CoverDesign",
 	RESOURCE_WALL = "ResourceWall",
 	SWORD         = "Sword",

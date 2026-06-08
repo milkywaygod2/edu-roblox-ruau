@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.WoodPlanks
 appearance.Size = Vector3.new(80, 64, 80) * CM
 appearance.CollisionShape = Enum.PartType.Cylinder
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "136277359596870"
 
 rock.DisplayName = "나무 회오리돌"

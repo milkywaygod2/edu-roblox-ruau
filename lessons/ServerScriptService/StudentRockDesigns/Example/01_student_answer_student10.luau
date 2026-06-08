@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Salt
 appearance.Size = Vector3.new(56, 48, 56) * CM
 appearance.CollisionShape = Enum.PartType.Block
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "ShoeMesh"
 
 rock.DisplayName = "소금 결정탄"

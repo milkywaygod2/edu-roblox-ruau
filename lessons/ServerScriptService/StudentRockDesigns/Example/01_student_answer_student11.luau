@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Glacier
 appearance.Size = Vector3.new(68, 60, 68) * CM
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "12276007467"
 
 rock.DisplayName = "빙하 파편돌"

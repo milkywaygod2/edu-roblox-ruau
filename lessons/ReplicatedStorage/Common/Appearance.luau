@@ -320,6 +320,85 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function Appearance.findSingleMeshPart(instanceTemplate)
+	if not instanceTemplate then
+		return nil
+	end
+
+	if instanceTemplate:IsA(CoreEnums.eEnginePhysicalType.MESH_PART) then
+		return instanceTemplate
+	end
+
+	if not instanceTemplate:IsA(CoreEnums.eEnginePhysicalType.MODEL) then
+		return nil
+	end
+
+	local meshPartResult = nil
+	local intBasePartCount = 0
+	for _, instanceDescendant in ipairs(instanceTemplate:GetDescendants()) do
+		if instanceDescendant:IsA(CoreEnums.eEnginePhysicalType.BASE_PART) then
+			intBasePartCount += 1
+			if not instanceDescendant:IsA(CoreEnums.eEnginePhysicalType.MESH_PART) then
+				return nil
+			end
+			meshPartResult = instanceDescendant
+		end
+	end
+
+	if intBasePartCount == 1 then
+		return meshPartResult
+	end
+
+	return nil
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function Appearance.inspectRockLookTemplate(strLookShape, vectorTargetSize)
+	local instanceTemplate = Appearance.findRockLookTemplate(strLookShape)
+	if not instanceTemplate then
+		return nil
+	end
+
+	local instanceLook = instanceTemplate:Clone()
+	EngineEnsure.removeLuaSourceDescendants(instanceLook)
+
+	local tblLookInfo = {
+		IsSingleMeshPart = Appearance.findSingleMeshPart(instanceLook) ~= nil,
+		BoundsSize = nil,
+	}
+
+	if typeof(vectorTargetSize) ~= "Vector3" then
+		instanceLook:Destroy()
+		return tblLookInfo
+	end
+
+	if instanceLook:IsA("SpecialMesh") then
+		instanceLook:Destroy()
+		return tblLookInfo
+	end
+
+	if instanceLook:IsA(CoreEnums.eEnginePhysicalType.BASE_PART) then
+		if Appearance.fitBasePartWithinBounds(instanceLook, vectorTargetSize) then
+			tblLookInfo.BoundsSize = instanceLook.Size
+		end
+	elseif instanceLook:IsA(CoreEnums.eEnginePhysicalType.MODEL) then
+		if Appearance.fitModelWithinBounds(instanceLook, vectorTargetSize) then
+			local _, vectorBoundsSize = instanceLook:GetBoundingBox()
+			tblLookInfo.BoundsSize = vectorBoundsSize
+		end
+	end
+
+	instanceLook:Destroy()
+	return tblLookInfo
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function Appearance.pivotModelBoundsToTarget(modelVisual, cframeTarget)
 	local cframePivot = modelVisual:GetPivot()
 	local cframeBounds = modelVisual:GetBoundingBox()

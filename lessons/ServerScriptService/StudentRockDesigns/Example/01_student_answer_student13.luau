@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Pebble
 appearance.Size = Vector3.new(48, 40, 48) * CM
 appearance.CollisionShape = Enum.PartType.Cylinder
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "13324601605"
 
 rock.DisplayName = "조약돌 폭풍탄"

@@ -325,7 +325,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local frameWeaponHud = Instance.new(ePhysical.FRAME)
 	frameWeaponHud.Name = "WeaponHud"
 	frameWeaponHud.AnchorPoint = Vector2.new(1, 1)
-	frameWeaponHud.Size = UDim2.fromOffset(240, 48)
+	frameWeaponHud.Size = UDim2.fromOffset(280, 72)
 	frameWeaponHud.Position = UDim2.new(1, -25, 1, -25) -- 우하단 구석에서 마진
 	frameWeaponHud.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 	frameWeaponHud.BackgroundTransparency = 0.25
@@ -345,7 +345,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local labelWeaponName = Instance.new("TextLabel")
 	labelWeaponName.Name = "WeaponName"
 	labelWeaponName.Position = UDim2.fromOffset(12, 6)
-	labelWeaponName.Size = UDim2.fromOffset(216, 16)
+	labelWeaponName.Size = UDim2.fromOffset(256, 16)
 	labelWeaponName.BackgroundTransparency = 1
 	labelWeaponName.TextColor3 = Color3.fromRGB(240, 240, 245)
 	labelWeaponName.TextSize = 12
@@ -358,13 +358,15 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local labelWeaponStats = Instance.new("TextLabel")
 	labelWeaponStats.Name = "WeaponStats"
 	labelWeaponStats.Position = UDim2.fromOffset(12, 24)
-	labelWeaponStats.Size = UDim2.fromOffset(216, 16)
+	labelWeaponStats.Size = UDim2.fromOffset(256, 42)
 	labelWeaponStats.BackgroundTransparency = 1
 	labelWeaponStats.TextColor3 = Color3.fromRGB(170, 170, 185)
 	labelWeaponStats.TextSize = 10
 	labelWeaponStats.Font = Enum.Font.GothamMedium
 	labelWeaponStats.TextXAlignment = Enum.TextXAlignment.Left
-	labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
+	labelWeaponStats.TextYAlignment = Enum.TextYAlignment.Top
+	labelWeaponStats.TextWrapped = true
+	labelWeaponStats.Text = "데미지: 10 | 재질: 없음\n무게: - | 콜리전: -"
 	labelWeaponStats.Parent = frameWeaponHud
 
 	local guiRespawnCountdown = Instance.new(ePhysical.SCREEN_GUI)
@@ -834,6 +836,11 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	end
 
 	local function get_stone_mass(toolStone)
+		local numberMassKg = toolStone:GetAttribute("MassKg")
+		if type(numberMassKg) == "number" then
+			return numberMassKg
+		end
+
 		local handle = toolStone:FindFirstChild("Handle")
 		local size = handle and handle.Size or Vector3.new(1.2, 1.2, 1.2)
 		local realMaterial = toolStone:GetAttribute("RealMaterial") or "Rock"
@@ -844,6 +851,38 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		local density = profile and profile.Density or 2700
 
 		return StudentConfig.calculateEquipmentMassKg(size, density)
+	end
+
+	local function get_tool_mass_text(toolTarget)
+		if is_throwing_stone(toolTarget) then
+			return string.format("%.1fkg", get_stone_mass(toolTarget))
+		end
+
+		local numberMassKg = toolTarget:GetAttribute("MassKg")
+		if type(numberMassKg) == "number" then
+			return string.format("%.1fkg", numberMassKg)
+		end
+
+		return "-"
+	end
+
+	local function get_tool_collision_mode_text(toolTarget)
+		local strCollisionShapeMode = toolTarget:GetAttribute("CollisionShapeMode")
+		local strCollisionShapeModeResolved = toolTarget:GetAttribute("CollisionShapeModeResolved")
+
+		if type(strCollisionShapeMode) == "string" and type(strCollisionShapeModeResolved) == "string" and strCollisionShapeMode ~= strCollisionShapeModeResolved then
+			return strCollisionShapeMode .. "->" .. strCollisionShapeModeResolved
+		end
+
+		if type(strCollisionShapeModeResolved) == "string" and strCollisionShapeModeResolved ~= "" then
+			return strCollisionShapeModeResolved
+		end
+
+		if type(strCollisionShapeMode) == "string" and strCollisionShapeMode ~= "" then
+			return strCollisionShapeMode
+		end
+
+		return "-"
 	end
 
 	local function show_warning_notification(textMessage)
@@ -1003,6 +1042,17 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		frameChargeFill.Size = UDim2.fromScale(0, 1)
 	end)
 
+	svcUserInputService.InputBegan:Connect(function(inputBegan, boolGameProcessed)
+		if boolGameProcessed then return end
+		if inputBegan.UserInputType ~= Enum.UserInputType.Keyboard then return end
+		if inputBegan.KeyCode ~= Enum.KeyCode.Q then return end
+
+		local eventDropCarriedBlock = svcReplicatedStorage:FindFirstChild(eLogical.DROP_CARRIED_BLOCK)
+		if eventDropCarriedBlock then
+			eventDropCarriedBlock:FireServer()
+		end
+	end)
+
 	svcUserInputService.InputChanged:Connect(function(inputChanged)
 		if not boolCameraFollowEnabled or inputChanged.UserInputType ~= Enum.UserInputType.MouseMovement then return end
 
@@ -1065,10 +1115,12 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 				end
 			end
 
-			labelWeaponStats.Text = string.format("데미지: %d | 재질: %s", numberDamage, strRealMaterial)
+			local strMassText = get_tool_mass_text(toolEquipped)
+			local strCollisionModeText = get_tool_collision_mode_text(toolEquipped)
+			labelWeaponStats.Text = string.format("데미지: %d | 재질: %s\n무게: %s | 콜리전: %s", numberDamage, strRealMaterial, strMassText, strCollisionModeText)
 		else
 			labelWeaponName.Text = "장착: 주먹"
-			labelWeaponStats.Text = "데미지: 10 | 범위: 근접"
+			labelWeaponStats.Text = "데미지: 10 | 재질: 없음\n무게: - | 콜리전: -"
 		end
 
 	end

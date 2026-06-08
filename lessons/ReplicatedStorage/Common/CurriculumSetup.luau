@@ -25,6 +25,48 @@ local DEFAULT_PLAYER_JUMP_POWER = 30
 local DEFAULT_PLAYER_JUMP_HEIGHT = 3.6
 local DEFAULT_PLAYER_RESPAWN_SECONDS = 5
 local DEFAULT_ACTIVE_CLASS = "Example"
+local tblStudentLessonDesignFolderSpecs = {
+	{
+		DayNumber = 3,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_RESOURCE_WALL_DESIGNS,
+	},
+	{
+		DayNumber = 4,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_SWORD_DESIGNS,
+	},
+	{
+		DayNumber = 5,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_BOW_DESIGNS,
+	},
+	{
+		DayNumber = 6,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_SHIELD_DESIGNS,
+	},
+	{
+		DayNumber = 7,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_ARMOR_DESIGNS,
+	},
+	{
+		DayNumber = 8,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_GATE_DESIGNS,
+	},
+	{
+		DayNumber = 9,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_STONE_WALL_DESIGNS,
+	},
+	{
+		DayNumber = 10,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_SIEGE_ENGINE_DESIGNS,
+	},
+	{
+		DayNumber = 11,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_MAGIC_DESIGNS,
+	},
+	{
+		DayNumber = 12,
+		LogicalName = CoreEnums.eEngineLogicalType.STUDENT_FINAL_BATTLE_DESIGNS,
+	},
+}
 
 -- --------------------------------------------------------------------------------
 
@@ -139,6 +181,20 @@ end
 -- --------------------------------------------------------------------------------
 
 
+function CurriculumSetup.removeDescendantsByNamePrefix(instanceRoot, strPrefix)
+	if not instanceRoot then return end
+
+	for _, instanceDescendant in ipairs(instanceRoot:GetDescendants()) do
+		if CoreEnums.hasEngineLogicalNamePrefix(instanceDescendant.Name, strPrefix) then
+			instanceDescendant:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function CurriculumSetup.removeFieldItemToolsFromContainer(instanceContainer, strToolName)
 	if not instanceContainer then return end
 
@@ -220,7 +276,10 @@ function CurriculumSetup.cleanupCurriculumArtifactsAfterActiveLessonDay(svcWorks
 	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 2) then
 		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.COVER_MARKER_PREFIX)
 		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.COVER_STUDENT_PREFIX)
+		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.STACK_BRICK_PREFIX)
+		CurriculumSetup.removeDescendantsByNamePrefix(svcWorkspace, eLogical.STACK_BRICK_PREFIX)
 		CurriculumSetup.removeChildrenByNamePrefix(fldObjectiveArea, eLogical.OUTPOST_GUARD_PREFIX)
+		CurriculumSetup.removeNamedChild(svcReplicatedStorage, eLogical.DROP_CARRIED_BLOCK)
 	end
 
 	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 3) then
@@ -279,6 +338,24 @@ end
 
 
 -- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.ensureStudentLessonDesignFolders(svcServerScriptService, strClassFolderName)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local tblStudentLessonDesignFoldersByDay = {}
+
+	for _, tblFolderSpec in ipairs(tblStudentLessonDesignFolderSpecs) do
+		local fldDesignRoot = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, tblFolderSpec.LogicalName, svcServerScriptService)
+		tblStudentLessonDesignFoldersByDay[tblFolderSpec.DayNumber] = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, strClassFolderName, fldDesignRoot)
+	end
+
+	return tblStudentLessonDesignFoldersByDay
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
 function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService, strActiveClass)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
@@ -288,14 +365,16 @@ function CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcS
 	local strClassFolderName = strActiveClass or DEFAULT_ACTIVE_CLASS
 	local fldStudentRockDesignsRoot = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_ROCK_DESIGNS, svcServerScriptService)
 	local fldStudentRockDesigns = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, strClassFolderName, fldStudentRockDesignsRoot)
-	local fldStudentLessonConfigsRoot = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_LESSON_CONFIGS, svcServerScriptService)
-	local fldStudentLessonConfigs = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, strClassFolderName, fldStudentLessonConfigsRoot)
+	local fldStudentBrickDesignsRoot = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, eLogical.STUDENT_BRICK_DESIGNS, svcServerScriptService)
+	local fldStudentBrickDesigns = EngineEnsure.ensureNamedInstance(ePhysical.FOLDER, strClassFolderName, fldStudentBrickDesignsRoot)
+	local tblStudentLessonDesignFoldersByDay = CurriculumSetup.ensureStudentLessonDesignFolders(svcServerScriptService, strClassFolderName)
 
 	return {
 		fldOutpostAssets = fldOutpostAssets,
 		fldRockLooks = fldRockLooks,
 		fldStudentRockDesigns = fldStudentRockDesigns,
-		fldStudentLessonConfigs = fldStudentLessonConfigs,
+		fldStudentBrickDesigns = fldStudentBrickDesigns,
+		tblStudentLessonDesignFoldersByDay = tblStudentLessonDesignFoldersByDay,
 	}
 end
 
@@ -628,6 +707,10 @@ function CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage, intA
 	local eLogical = CoreEnums.eEngineLogicalType
 	EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.SPECIALIZATION_SELECT, svcReplicatedStorage)
 
+	if intActiveLessonDay == nil or intActiveLessonDay >= 2 then
+		EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.DROP_CARRIED_BLOCK, svcReplicatedStorage)
+	end
+
 	if intActiveLessonDay == nil or intActiveLessonDay >= 11 then
 		EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage)
 	end
@@ -858,7 +941,8 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	local tblOutpostWorld = EngineEnsure.ensureOutpostBattleWorld(svcWorkspace)
 	local tblSharedAssets = CurriculumSetup.ensureCurriculumSharedAssets(svcReplicatedStorage, svcServerScriptService, strActiveClass)
 	local boolInstallStudentThrowingStones = tblSetupConfig == nil or tblSetupConfig.InstallStudentThrowingStones ~= false
-	local boolInstallStudentLessonConfigs = tblSetupConfig == nil or tblSetupConfig.InstallStudentLessonConfigs ~= false
+	local boolInstallStudentBrickDesigns = tblSetupConfig == nil or tblSetupConfig.InstallStudentBrickDesigns ~= false
+	local boolInstallStudentLessonDesigns = tblSetupConfig == nil or tblSetupConfig.InstallStudentLessonDesigns ~= false
 
 	svcWorkspace.Gravity = DEFAULT_WORKSPACE_GRAVITY
 	svcPlayers.RespawnTime = DEFAULT_PLAYER_RESPAWN_SECONDS
@@ -887,8 +971,18 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 		ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, tblSharedAssets.fldStudentRockDesigns)
 	end
 
-	if boolInstallStudentLessonConfigs then
-		CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, tblSharedAssets.fldStudentLessonConfigs, intActiveLessonDay)
+	if boolInstallStudentBrickDesigns and CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 2) then
+		BuildSystems.installStudentBrickDesigns(svcWorkspace, svcReplicatedStorage, tblSharedAssets.fldStudentBrickDesigns)
+	end
+
+	if boolInstallStudentLessonDesigns then
+		CurriculumSetup.installStudentLessonDesignFolders(
+			svcWorkspace,
+			svcPlayers,
+			svcReplicatedStorage,
+			tblSharedAssets.tblStudentLessonDesignFoldersByDay,
+			intActiveLessonDay
+		)
 	end
 
 	CurriculumSetup.cleanupCurriculumArtifactsAfterActiveLessonDay(svcWorkspace, svcPlayers, svcReplicatedStorage, tblOutpostWorld, intActiveLessonDay)
@@ -904,41 +998,26 @@ end
 -- --------------------------------------------------------------------------------
 
 -- --------------------------------------------------------------------------------
--- Student Config Installation Services (Moved to resolve circular dependencies)
+-- Student Design Installation Services (Moved to resolve circular dependencies)
 -- --------------------------------------------------------------------------------
 
-function CurriculumSetup.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
-	if not moduleLessonConfig:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
+function CurriculumSetup.readStudentLessonDesignModule(moduleLessonDesign, tblValidationMessages)
+	if not moduleLessonDesign:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
 		return nil
 	end
 
-	local boolSuccess, tblLessonConfig = pcall(require, moduleLessonConfig)
+	local boolSuccess, tblLessonConfig = pcall(require, moduleLessonDesign)
 	if not boolSuccess then
-		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "코드 실행 오류가 있어 이 설정을 건너뜁니다. " .. tostring(tblLessonConfig))
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonDesign.Name, "코드 실행 오류가 있어 이 디자인을 건너뜁니다. " .. tostring(tblLessonConfig))
 		return nil
 	end
 
 	if type(tblLessonConfig) ~= "table" then
-		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "마지막 줄에서 table을 return해야 해서 이 설정을 건너뜁니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonDesign.Name, "마지막 줄에서 table을 return해야 해서 이 디자인을 건너뜁니다.")
 		return nil
 	end
 
 	return tblLessonConfig
-end
-
-
--- --------------------------------------------------------------------------------
-
-
-function CurriculumSetup.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
-	local strModuleName = moduleLessonConfig.Name
-	local valueDayNumber = tonumber(strModuleName:match("^(%d+)") or strModuleName:match("(%d+)$"))
-	if type(valueDayNumber) ~= "number" then
-		StudentConfig.addValidationMessage(tblValidationMessages, moduleLessonConfig.Name, "파일명 앞이나 뒤에 회차 숫자가 없어 건너뜁니다. 예: 02_student_answer 또는 StudentAnswer02")
-		return nil
-	end
-
-	return math.floor(valueDayNumber)
 end
 
 
@@ -958,12 +1037,10 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, strSourceName)
-	local eConfigKey = CoreEnums.eStudentLessonConfigKey
+function CurriculumSetup.installStudentLessonDesignByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, strSourceName)
+	local eConfigKey = CoreEnums.eStudentLessonDesignConceptKey
 
-	if intDayNumber == 2 then
-		BuildSystems.installStudentCoverDesign(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.COVER_DESIGN))
-	elseif intDayNumber == 3 then
+	if intDayNumber == 3 then
 		BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.RESOURCE_WALL))
 	elseif intDayNumber == 4 then
 		WeaponSystems.installFieldSwordPickups(svcWorkspace, CurriculumSetup.readStudentLessonConceptConfig(tblLessonConfig, eConfigKey.SWORD))
@@ -996,33 +1073,23 @@ end
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages, intActiveLessonDay)
-	local intDayNumber = CurriculumSetup.readStudentLessonConfigDayNumber(moduleLessonConfig, tblValidationMessages)
-	if not intDayNumber then
-		return false
-	end
-
-	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, intDayNumber) then
-		return false
-	end
-
-	local tblLessonConfig = CurriculumSetup.readStudentLessonConfigModule(moduleLessonConfig, tblValidationMessages)
+function CurriculumSetup.installStudentLessonDesign(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonDesign, tblValidationMessages, intDayNumber)
+	local tblLessonConfig = CurriculumSetup.readStudentLessonDesignModule(moduleLessonDesign, tblValidationMessages)
 	if not tblLessonConfig then
 		return false
 	end
 
-	return CurriculumSetup.installStudentLessonConfigByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, moduleLessonConfig.Name)
+	return CurriculumSetup.installStudentLessonDesignByDayNumber(svcWorkspace, svcPlayers, svcReplicatedStorage, intDayNumber, tblLessonConfig, tblValidationMessages, moduleLessonDesign.Name)
 end
 
 
 -- --------------------------------------------------------------------------------
 
 
-function CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonConfigs, intActiveLessonDay)
+function CurriculumSetup.installStudentLessonDesignFolder(svcWorkspace, svcPlayers, svcReplicatedStorage, fldStudentLessonDesigns, intDayNumber, tblValidationMessages)
 	local tblModules = {}
-	local tblValidationMessages = {}
-	if fldStudentLessonConfigs then
-		for _, instanceChild in ipairs(fldStudentLessonConfigs:GetChildren()) do
+	if fldStudentLessonDesigns then
+		for _, instanceChild in ipairs(fldStudentLessonDesigns:GetChildren()) do
 			if instanceChild:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
 				table.insert(tblModules, instanceChild)
 			end
@@ -1034,14 +1101,38 @@ function CurriculumSetup.installStudentLessonConfigs(svcWorkspace, svcPlayers, s
 	end)
 
 	local intInstalledCount = 0
-	for _, moduleLessonConfig in ipairs(tblModules) do
-		if CurriculumSetup.installStudentLessonConfig(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonConfig, tblValidationMessages, intActiveLessonDay) then
+	for _, moduleLessonDesign in ipairs(tblModules) do
+		if CurriculumSetup.installStudentLessonDesign(svcWorkspace, svcPlayers, svcReplicatedStorage, moduleLessonDesign, tblValidationMessages, intDayNumber) then
 			intInstalledCount += 1
 		end
 	end
 
+	return intInstalledCount
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function CurriculumSetup.installStudentLessonDesignFolders(svcWorkspace, svcPlayers, svcReplicatedStorage, tblStudentLessonDesignFoldersByDay, intActiveLessonDay)
+	local intInstalledCount = 0
+	local tblValidationMessages = {}
+
+	for _, tblFolderSpec in ipairs(tblStudentLessonDesignFolderSpecs) do
+		if CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, tblFolderSpec.DayNumber) then
+			intInstalledCount += CurriculumSetup.installStudentLessonDesignFolder(
+				svcWorkspace,
+				svcPlayers,
+				svcReplicatedStorage,
+				tblStudentLessonDesignFoldersByDay and tblStudentLessonDesignFoldersByDay[tblFolderSpec.DayNumber] or nil,
+				tblFolderSpec.DayNumber,
+				tblValidationMessages
+			)
+		end
+	end
+
 	for _, strMessage in ipairs(tblValidationMessages) do
-		warn("학생 수업 설정 검사: " .. strMessage)
+		warn("학생 수업 디자인 검사: " .. strMessage)
 	end
 
 	return intInstalledCount

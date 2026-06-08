@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Neon
 appearance.Size = Vector3.new(72, 60, 72) * CM
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "13653465679"
 
 rock.DisplayName = "네온 불꽃돌"

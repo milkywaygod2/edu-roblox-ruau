@@ -5,6 +5,248 @@ local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
 local StudentConfig = require(script.Parent.StudentConfig)
 local CoreBlock = require(script.Parent.CoreBlock)
+local Appearance = require(script.Parent.Appearance)
+local ThrowingStone = require(script.Parent.ThrowingStone)
+
+local tblStudentBrickSpawnOrigins = {
+	Vector3.new(-28, 0, 18),
+	Vector3.new(-14, 0, 18),
+	Vector3.new(0, 0, 18),
+	Vector3.new(14, 0, 18),
+	Vector3.new(28, 0, 18),
+}
+
+local STUDENT_BRICK_DROP_RUNTIME_ATTRIBUTE = "RuntimeInstalled_StudentBrickDrop"
+
+-- --------------------------------------------------------------------------------
+-- [Role 1] 학생 벽돌 디자인 설치 (2일차 물리 쌓기 실습)
+-- --------------------------------------------------------------------------------
+function BuildSystems.createFallbackBrickDesign(strSourceName)
+	local tblBrickDesign = ThrowingStone.createRockDesign(strSourceName .. " 기본 벽돌")
+	tblBrickDesign.DesignKind = "StackBrick"
+	tblBrickDesign.DisplayName = strSourceName .. " 기본 벽돌"
+	tblBrickDesign.SpawnCount = 10
+	tblBrickDesign.Appearance.Material = Enum.Material.Brick
+	tblBrickDesign.Appearance.Size = Vector3.new(4, 2, 2)
+	tblBrickDesign.Appearance.CollisionShape = Enum.PartType.Block
+	tblBrickDesign.Appearance.CollisionShapeMode = "Auto"
+	tblBrickDesign.Appearance.LookShape = ""
+	return tblBrickDesign
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function BuildSystems.readStudentBrickDesignModule(moduleBrickDesign, tblValidationMessages)
+	if not moduleBrickDesign:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
+		return nil
+	end
+
+	local boolSuccess, tblBrickDesign = pcall(require, moduleBrickDesign)
+	if not boolSuccess then
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleBrickDesign.Name, "코드 실행 오류가 있어 기본 벽돌로 대체했습니다. " .. tostring(tblBrickDesign))
+		return BuildSystems.createFallbackBrickDesign(moduleBrickDesign.Name)
+	end
+
+	if type(tblBrickDesign) ~= "table" then
+		StudentConfig.addValidationMessage(tblValidationMessages, moduleBrickDesign.Name, "마지막 줄에서 table을 return해야 해서 기본 벽돌로 대체했습니다.")
+		return BuildSystems.createFallbackBrickDesign(moduleBrickDesign.Name)
+	end
+
+	return tblBrickDesign
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function read_brick_design_look_shape(tblBrickDesign)
+	if type(tblBrickDesign) ~= "table" then return nil end
+
+	local tblAppearance = type(tblBrickDesign.Appearance) == "table" and tblBrickDesign.Appearance or nil
+	local valueLookShape = tblAppearance and (tblAppearance.LookShape or tblAppearance.Look)
+	if valueLookShape == nil then
+		valueLookShape = tblBrickDesign.LookShape or tblBrickDesign.Look
+	end
+
+	if type(valueLookShape) == "number" then
+		return tostring(valueLookShape)
+	end
+
+	if type(valueLookShape) == "string" and valueLookShape ~= "" then
+		return valueLookShape
+	end
+
+	return nil
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function append_unique_brick_look_shape(tblLookShapes, mapLookShapes, tblBrickDesign)
+	local strLookShape = read_brick_design_look_shape(tblBrickDesign)
+	if not strLookShape or mapLookShapes[strLookShape] then return end
+
+	mapLookShapes[strLookShape] = true
+	table.insert(tblLookShapes, strLookShape)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function BuildSystems.installStudentBrickDropSystem(svcReplicatedStorage)
+	if not svcReplicatedStorage then
+		return false
+	end
+
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eventDropCarriedBlock = EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.DROP_CARRIED_BLOCK, svcReplicatedStorage)
+	if not EngineEnsure.markRuntimeInstalled(eventDropCarriedBlock, STUDENT_BRICK_DROP_RUNTIME_ATTRIBUTE) then
+		return false
+	end
+
+	eventDropCarriedBlock.OnServerEvent:Connect(function(playerPlayer)
+		CoreBlock.dropCarriedBlock(playerPlayer)
+	end)
+	return true
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function BuildSystems.clearStudentBrickParts(fldBattlefield)
+	local eLogical = CoreEnums.eEngineLogicalType
+	for _, instanceChild in ipairs(fldBattlefield:GetChildren()) do
+		if CoreEnums.hasEngineLogicalNamePrefix(instanceChild.Name, eLogical.STACK_BRICK_PREFIX) then
+			instanceChild:Destroy()
+		end
+	end
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function BuildSystems.createStudentBrickPart(fldBattlefield, tblResolvedDesign, intDesignIndex, intBrickIndex)
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttr = CoreEnums.eEngineAttributeKey
+	local vectorSize = tblResolvedDesign.ProjectileSize
+	local vectorBase = tblStudentBrickSpawnOrigins[((intDesignIndex - 1) % #tblStudentBrickSpawnOrigins) + 1]
+	local vectorJitter = ThrowingStone.createFlatSpawnJitter(tblResolvedDesign.VariantId, intBrickIndex, tblResolvedDesign.SpawnRadius)
+	local vectorPosition = Vector3.new(
+		vectorBase.X + vectorJitter.X,
+		vectorSize.Y * 0.5 + 0.08,
+		vectorBase.Z + vectorJitter.Z
+	) + tblResolvedDesign.SpawnOffset
+	local cframeBrick = CFrame.new(vectorPosition) * CFrame.Angles(0, math.rad((intBrickIndex % 4) * 8), 0)
+
+	local partBrick = CoreBlock.create(fldBattlefield, cframeBrick, {
+		DisplayName = tblResolvedDesign.DisplayName,
+		Size = vectorSize,
+		Material = tblResolvedDesign.ProjectileMaterial,
+		BrickColor = tblResolvedDesign.ProjectileBrickColor,
+		Shape = tblResolvedDesign.ProjectileShape,
+		LookShape = tblResolvedDesign.LookShape,
+		CanMine = true,
+		CanTakeDamage = true,
+		MaxHealth = 140,
+		ResourceYield = 10,
+		ResourceType = tblResolvedDesign.RealMaterial,
+		Anchored = tblResolvedDesign.WorldAnchored,
+		CanCollide = tblResolvedDesign.WorldCanCollide,
+		CanTouch = true,
+		CanQuery = true,
+		Massless = tblResolvedDesign.WorldMassless,
+	})
+
+	partBrick.Name = eLogical.STACK_BRICK_PREFIX .. tblResolvedDesign.VariantId .. "_" .. intBrickIndex
+	partBrick:SetAttribute("CollisionShapeMode", tblResolvedDesign.CollisionShapeMode)
+	partBrick:SetAttribute("CollisionShapeModeResolved", tblResolvedDesign.CollisionShapeModeResolved)
+	partBrick:SetAttribute("RealMaterial", tblResolvedDesign.RealMaterial)
+	partBrick:SetAttribute("MassKg", StudentConfig.calculateEquipmentMassKg(
+		vectorSize,
+		ThrowingStone.getThrowingStoneMaterialProfile(tblResolvedDesign.ProjectileMaterial).Density
+	))
+	partBrick:SetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME, tblResolvedDesign.DisplayName)
+
+	pcall(function()
+		partBrick:SetNetworkOwner(nil)
+	end)
+	return partBrick
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function BuildSystems.installStudentBrickDesigns(svcWorkspace, svcReplicatedStorage, fldStudentBrickDesigns)
+	local tblOutpostWorld = EngineEnsure.waitForOutpostBattleWorld(svcWorkspace)
+	local fldBattlefield = tblOutpostWorld.fldBattlefield
+	local tblModules = {}
+	local tblValidationMessages = {}
+
+	BuildSystems.installStudentBrickDropSystem(svcReplicatedStorage)
+	BuildSystems.clearStudentBrickParts(fldBattlefield)
+
+	if fldStudentBrickDesigns then
+		for _, instanceChild in ipairs(fldStudentBrickDesigns:GetChildren()) do
+			if instanceChild:IsA(CoreEnums.eEnginePhysicalType.MODULE_SCRIPT) then
+				table.insert(tblModules, instanceChild)
+			end
+		end
+	end
+
+	table.sort(tblModules, function(moduleLeft, moduleRight)
+		return moduleLeft.Name < moduleRight.Name
+	end)
+
+	local tblBrickDesignEntries = {}
+	local tblLookShapes = {}
+	local mapLookShapes = {}
+	if #tblModules == 0 then
+		StudentConfig.addValidationMessage(tblValidationMessages, "StudentBrickDesigns", "학생 ModuleScript가 없어 기본 벽돌을 설치했습니다.")
+		local tblFallbackBrickDesign = BuildSystems.createFallbackBrickDesign("StudentBrickDesigns")
+		table.insert(tblBrickDesignEntries, {
+			SourceName = "StudentBrickDesigns",
+			Config = tblFallbackBrickDesign,
+		})
+		append_unique_brick_look_shape(tblLookShapes, mapLookShapes, tblFallbackBrickDesign)
+	else
+		for _, moduleBrickDesign in ipairs(tblModules) do
+			local tblBrickDesign = BuildSystems.readStudentBrickDesignModule(moduleBrickDesign, tblValidationMessages)
+
+			if tblBrickDesign then
+				table.insert(tblBrickDesignEntries, {
+					SourceName = moduleBrickDesign.Name,
+					Config = tblBrickDesign,
+				})
+				append_unique_brick_look_shape(tblLookShapes, mapLookShapes, tblBrickDesign)
+			end
+		end
+	end
+
+	Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, "StudentBrickDesigns")
+	local intInstalledCount = 0
+	for intDesignIndex, tblBrickDesignEntry in ipairs(tblBrickDesignEntries) do
+		local tblResolvedDesign = ThrowingStone.resolveThrowingStoneDesign(tblBrickDesignEntry.Config, tblValidationMessages, tblBrickDesignEntry.SourceName)
+		for intBrickIndex = 1, tblResolvedDesign.SpawnCount do
+			BuildSystems.createStudentBrickPart(fldBattlefield, tblResolvedDesign, intDesignIndex, intBrickIndex)
+			intInstalledCount += 1
+		end
+	end
+
+	for _, strMessage in ipairs(tblValidationMessages) do
+		warn("학생 벽돌 설정 검사: " .. strMessage)
+	end
+
+	return intInstalledCount
+end
+
 
 -- --------------------------------------------------------------------------------
 -- [Role 1] 학생 엄폐물 디자인 설치 (2일차 실습)
@@ -38,7 +280,7 @@ function BuildSystems.installStudentCoverDesign(svcWorkspace, tblConfig)
 			local size = Vector3.new(math.max(3, 8 - level), 2, 2)
 			-- 기존의 중첩 좌표 배치 규칙 보존 (Y축 level 오프셋)
 			local blockPos = vectorOrigin + Vector3.new(0, level, 0)
-			
+
 			local partCover = CoreBlock.create(modelCover, blockPos, {
 				Size = size,
 				Material = enumMaterial,
@@ -100,11 +342,11 @@ function BuildSystems.installResourceWallSystem(svcWorkspace, svcPlayers, tblCon
 
 		for index = 1, intBlockCount do
 			local blockPos = partWallSpawn.Position + Vector3.new(
-				(index - (intBlockCount + 1) / 2) * vectorBlockSize.X, 
-				vectorBlockSize.Y / 2, 
+				(index - (intBlockCount + 1) / 2) * vectorBlockSize.X,
+				vectorBlockSize.Y / 2,
 				intNextRow * 3
 			)
-			
+
 			-- 단단하고 피해 시 물리 파편이 드롭되는 CoreBlock으로 방벽 생성
 			local partWallBlock = CoreBlock.create(fldBuildArea, blockPos, {
 				Size = vectorBlockSize,
@@ -133,4 +375,4 @@ end
 
 -- --------------------------------------------------------------------------------
 
-return BuildSystems
+return BuildSystems

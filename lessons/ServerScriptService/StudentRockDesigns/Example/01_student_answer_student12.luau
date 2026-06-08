@@ -11,6 +11,7 @@ local appearance = {}
 appearance.Material = Enum.Material.Mud
 appearance.Size = Vector3.new(64, 56, 64) * CM
 appearance.CollisionShape = Enum.PartType.Ball
+appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "14100949560"
 
 rock.DisplayName = "진흙 둔탁돌"
