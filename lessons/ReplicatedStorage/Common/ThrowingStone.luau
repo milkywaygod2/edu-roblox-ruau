@@ -545,7 +545,7 @@ function ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, fldStude
 	end)
 
 	if #tblModules == 0 then
-		StudentConfig.addValidationMessage(tblValidationMessages, "StudentRockDesigns", "학생 ModuleScript가 없어 전장 기본 돌을 설치했습니다.")
+		StudentConfig.addValidationMessage(tblValidationMessages, "StudentRockDesigns01", "학생 ModuleScript가 없어 전장 기본 돌을 설치했습니다.")
 		ThrowingStone.installThrowingStonePickups(svcWorkspace, ThrowingStone.resolveThrowingStoneDesign(ThrowingStone.createFallbackRockDesign("전장"), tblValidationMessages, "전장"))
 		StudentConfig.showStudentRockValidationBoard(svcWorkspace, tblValidationMessages)
 		return 1
@@ -565,7 +565,7 @@ function ThrowingStone.installStudentThrowingStoneDesigns(svcWorkspace, fldStude
 		end
 	end
 
-	Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, "StudentRockDesigns")
+	Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, "StudentRockDesigns01")
 	for _, tblRockDesignEntry in ipairs(tblRockDesignEntries) do
 		ThrowingStone.installThrowingStonePickups(
 			svcWorkspace,

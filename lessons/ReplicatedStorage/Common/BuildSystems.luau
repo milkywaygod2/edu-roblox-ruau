@@ -209,10 +209,10 @@ function BuildSystems.installStudentBrickDesigns(svcWorkspace, svcReplicatedStor
 	local tblLookShapes = {}
 	local mapLookShapes = {}
 	if #tblModules == 0 then
-		StudentConfig.addValidationMessage(tblValidationMessages, "StudentBrickDesigns", "학생 ModuleScript가 없어 기본 벽돌을 설치했습니다.")
-		local tblFallbackBrickDesign = BuildSystems.createFallbackBrickDesign("StudentBrickDesigns")
+		StudentConfig.addValidationMessage(tblValidationMessages, "StudentBrickDesigns02", "학생 ModuleScript가 없어 기본 벽돌을 설치했습니다.")
+		local tblFallbackBrickDesign = BuildSystems.createFallbackBrickDesign("StudentBrickDesigns02")
 		table.insert(tblBrickDesignEntries, {
-			SourceName = "StudentBrickDesigns",
+			SourceName = "StudentBrickDesigns02",
 			Config = tblFallbackBrickDesign,
 		})
 		append_unique_brick_look_shape(tblLookShapes, mapLookShapes, tblFallbackBrickDesign)
@@ -230,7 +230,7 @@ function BuildSystems.installStudentBrickDesigns(svcWorkspace, svcReplicatedStor
 		end
 	end
 
-	Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, "StudentBrickDesigns")
+	Appearance.preloadRockLookTemplates(tblLookShapes, tblValidationMessages, "StudentBrickDesigns02")
 	local intInstalledCount = 0
 	for intDesignIndex, tblBrickDesignEntry in ipairs(tblBrickDesignEntries) do
 		local tblResolvedDesign = ThrowingStone.resolveThrowingStoneDesign(tblBrickDesignEntry.Config, tblValidationMessages, tblBrickDesignEntry.SourceName)
