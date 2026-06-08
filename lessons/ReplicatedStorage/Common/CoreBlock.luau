@@ -13,9 +13,15 @@ local RESOURCE_PIECE_VALUE = 5 -- 자원 한 조각당 가치
 local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds" -- 스파크 피드백 텍스처
 local BLOCK_PICKUP_BASE_DISTANCE = 12
 local BLOCK_PICKUP_DISTANCE_MAX = 80
+local BLOCK_PLACE_MAX_DISTANCE = 45
+local BLOCK_PLACE_SURFACE_CLEARANCE = 0.04
+local BLOCK_PLACE_SUPPORT_RAY_HEIGHT = 12
+local BLOCK_PLACE_SUPPORT_RAY_DISTANCE = 80
+local BLOCK_PLACE_MIN_SUPPORT_NORMAL_Y = 0.35
 
 -- Attribute는 function을 저장할 수 없으므로, 블록별 대미지 핸들러는 모듈 내 weak-key 테이블로 보관한다.
 local mapBlockDamageHandlers = setmetatable({}, { __mode = "k" })
+local createBlockRaycastParams = nil
 
 -- --------------------------------------------------------------------------------
 -- [Helper] 큰 블록도 중심점에 바짝 붙지 않고 집을 수 있게 상호작용 거리를 보정
@@ -27,6 +33,167 @@ local function calculateBlockInteractionDistance(partBlock, numberBaseDistance)
 
 	return math.min(numberBaseDistance + partBlock.Size.Magnitude * 0.5, BLOCK_PICKUP_DISTANCE_MAX)
 end
+
+-- --------------------------------------------------------------------------------
+
+
+local function removeBlockClickDetector(partBlock)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local clickDetector = partBlock and partBlock:FindFirstChildOfClass(ePhysical.CLICK_DETECTOR)
+	if clickDetector then
+		clickDetector:Destroy()
+	end
+end
+
+-- --------------------------------------------------------------------------------
+
+
+local function resolveBlockWorldParent()
+	local eLogical = CoreEnums.eEngineLogicalType
+	local fldOutpostWorld = workspace:FindFirstChild(eLogical.OUTPOST_BATTLE_WORLD)
+	local fldBattlefield = fldOutpostWorld and fldOutpostWorld:FindFirstChild(eLogical.BATTLEFIELD)
+	return fldBattlefield or workspace
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function createPlacementRotation(root, vectorRayDirection)
+	local vectorForward = root.CFrame.LookVector
+	if typeof(vectorRayDirection) == "Vector3" and vectorRayDirection.Magnitude > 0.01 then
+		vectorForward = vectorRayDirection.Unit
+	end
+
+	local vectorFlatForward = Vector3.new(vectorForward.X, 0, vectorForward.Z)
+	if vectorFlatForward.Magnitude <= 0.01 then
+		vectorFlatForward = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z)
+	end
+	if vectorFlatForward.Magnitude <= 0.01 then
+		vectorFlatForward = Vector3.new(0, 0, -1)
+	end
+
+	return CFrame.lookAt(Vector3.new(0, 0, 0), vectorFlatForward.Unit)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function raycastBlockPlacementSupport(character, partBlock, vectorTargetPosition)
+	local raycastParams = createBlockRaycastParams(character, partBlock)
+	local vectorOrigin = Vector3.new(
+		vectorTargetPosition.X,
+		vectorTargetPosition.Y + BLOCK_PLACE_SUPPORT_RAY_HEIGHT,
+		vectorTargetPosition.Z
+	)
+	return workspace:Raycast(
+		vectorOrigin,
+		Vector3.new(0, -BLOCK_PLACE_SUPPORT_RAY_DISTANCE, 0),
+		raycastParams
+	)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function resolveBlockPlacementSupport(character, partBlock, raycastResult, vectorFallbackPosition)
+	local vectorTargetPosition = raycastResult and raycastResult.Position or vectorFallbackPosition
+	if not vectorTargetPosition then
+		return nil
+	end
+
+	if raycastResult and raycastResult.Normal.Y >= BLOCK_PLACE_MIN_SUPPORT_NORMAL_Y then
+		return raycastResult, vectorTargetPosition
+	end
+
+	local raycastSupport = raycastBlockPlacementSupport(character, partBlock, vectorTargetPosition)
+	if raycastSupport and raycastSupport.Normal.Y >= BLOCK_PLACE_MIN_SUPPORT_NORMAL_Y then
+		return raycastSupport, vectorTargetPosition
+	end
+
+	return nil, vectorTargetPosition
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function createPlacementCFrame(vectorPosition, cframeRotation)
+	return CFrame.lookAt(vectorPosition, vectorPosition + cframeRotation.LookVector, cframeRotation.UpVector)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function createBlockRaycastParams(character, partBlock)
+	local raycastParams = RaycastParams.new()
+	local tblFilterDescendants = { character }
+	if partBlock then
+		table.insert(tblFilterDescendants, partBlock)
+	end
+
+	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+	raycastParams.FilterDescendantsInstances = tblFilterDescendants
+	raycastParams.IgnoreWater = true
+	return raycastParams
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function raycastBlockPlacementSurface(character, root, partBlock, vectorRayOrigin, vectorRayDirection)
+	local vectorOrigin = root.Position + Vector3.new(0, 2, 0)
+	local vectorDirection = root.CFrame.LookVector * BLOCK_PLACE_MAX_DISTANCE + Vector3.new(0, -8, 0)
+
+	if typeof(vectorRayOrigin) == "Vector3" and typeof(vectorRayDirection) == "Vector3" and vectorRayDirection.Magnitude > 0.01 then
+		if (vectorRayOrigin - root.Position).Magnitude <= 90 then
+			vectorOrigin = vectorRayOrigin
+		end
+		vectorDirection = vectorRayDirection.Unit * BLOCK_PLACE_MAX_DISTANCE
+	end
+
+	local raycastParams = createBlockRaycastParams(character, partBlock)
+	local raycastResult = workspace:Raycast(vectorOrigin, vectorDirection, raycastParams)
+	if raycastResult then
+		return raycastResult
+	end
+
+	local vectorFallbackStart = root.Position + root.CFrame.LookVector * 5 + Vector3.new(0, 8, 0)
+	return workspace:Raycast(vectorFallbackStart, Vector3.new(0, -40, 0), raycastParams)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function calculatePlacedBlockCFrame(character, root, partBlock, vectorRayOrigin, vectorRayDirection)
+	local cframeRotation = createPlacementRotation(root, vectorRayDirection)
+	local raycastResult = raycastBlockPlacementSurface(character, root, partBlock, vectorRayOrigin, vectorRayDirection)
+	local vectorFallbackPosition = root.Position + root.CFrame.LookVector * 5
+	local raycastSupport, vectorTargetPosition = resolveBlockPlacementSupport(
+		character,
+		partBlock,
+		raycastResult,
+		vectorFallbackPosition
+	)
+
+	if raycastSupport then
+		local vectorPosition = Vector3.new(
+			vectorTargetPosition.X,
+			raycastSupport.Position.Y + partBlock.Size.Y * 0.5 + BLOCK_PLACE_SURFACE_CLEARANCE,
+			vectorTargetPosition.Z
+		)
+		return createPlacementCFrame(vectorPosition, cframeRotation)
+	end
+
+	vectorFallbackPosition = Vector3.new(vectorFallbackPosition.X, root.Position.Y - 2 + partBlock.Size.Y * 0.5, vectorFallbackPosition.Z)
+	return createPlacementCFrame(vectorFallbackPosition, cframeRotation)
+end
+
 
 -- --------------------------------------------------------------------------------
 
@@ -289,11 +456,13 @@ function CoreBlock.create(instanceParent, cframeOrPosition, tblConfig)
 			4,
 			BLOCK_PICKUP_DISTANCE_MAX
 		)
-		local clickDetector = EngineEnsure.ensureClickDetector(partBlock, numberInteractionDistance)
+		removeBlockClickDetector(partBlock)
 
 		local proximityPrompt = Instance.new(ePhysical.PROXIMITY_PROMPT)
 		proximityPrompt.ObjectText = strDisplayName
 		proximityPrompt.ActionText = "등에 메기"
+		proximityPrompt.KeyboardKeyCode = Enum.KeyCode.E
+		proximityPrompt.ClickablePrompt = false
 		proximityPrompt.HoldDuration = 0.5
 		proximityPrompt.MaxActivationDistance = numberInteractionDistance
 		proximityPrompt.Parent = partBlock
@@ -312,7 +481,6 @@ function CoreBlock.create(instanceParent, cframeOrPosition, tblConfig)
 			end
 		end
 
-		clickDetector.MouseClick:Connect(performCarry)
 		proximityPrompt.Triggered:Connect(performCarry)
 	end
 
@@ -342,8 +510,7 @@ function CoreBlock.carryBlock(player, partBlock)
 	-- 상호작용 프롬프트 일시 정지
 	local prompt = partBlock:FindFirstChildOfClass(ePhysical.PROXIMITY_PROMPT)
 	if prompt then prompt.Enabled = false end
-	local click = partBlock:FindFirstChildOfClass(ePhysical.CLICK_DETECTOR)
-	if click then click.Enabled = false end
+	removeBlockClickDetector(partBlock)
 
 	-- 원형 크기 기록 및 짊어지기용 축소
 	cacheBlockWorldPhysicalState(partBlock)
@@ -360,12 +527,6 @@ function CoreBlock.carryBlock(player, partBlock)
 	partBlock:SetAttribute(eAttr.BLOCK_IS_CARRIED, true)
 	partBlock.Parent = folder
 
-	-- Weld 연결
-	local weld = Instance.new(ePhysical.WELD_CONSTRAINT)
-	weld.Part0 = torso
-	weld.Part1 = partBlock
-	weld.Parent = partBlock
-
 	-- 가로 적재(Stacking) 좌표 연출
 	local blockHeight = partBlock.Size.Y + 0.1
 	local offsetZ = 0.9 -- 등 바로 뒤
@@ -373,14 +534,20 @@ function CoreBlock.carryBlock(player, partBlock)
 
 	partBlock.CFrame = torso.CFrame * CFrame.new(0, offsetY, offsetZ) * CFrame.Angles(0, math.rad(90), 0)
 
+	-- Weld 연결
+	local weld = Instance.new(ePhysical.WELD_CONSTRAINT)
+	weld.Part0 = torso
+	weld.Part1 = partBlock
+	weld.Parent = partBlock
+
 	playBlockEffect(torso, partBlock.BrickColor.Name)
 	return true
 end
 
 -- --------------------------------------------------------------------------------
--- [Core 3] 등에 메고 있는 벽돌 하나를 플레이어 앞쪽에 드롭 (창고 적재용)
+-- [Core 3] 등에 메고 있는 벽돌 하나를 조준 위치에 배치
 -- --------------------------------------------------------------------------------
-function CoreBlock.dropCarriedBlock(player)
+function CoreBlock.dropCarriedBlock(player, vectorRayOrigin, vectorRayDirection)
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
 	local eAttr = CoreEnums.eEngineAttributeKey
@@ -407,11 +574,16 @@ function CoreBlock.dropCarriedBlock(player)
 	partBlock.Size = originalSize
 	restoreBlockWorldPhysicalState(partBlock)
 	partBlock:SetAttribute(eAttr.BLOCK_IS_CARRIED, false)
-	partBlock.Parent = workspace
+	partBlock.Parent = resolveBlockWorldParent()
 
-	-- 플레이어 전방 3.5스터드 앞에 물리 드랍
-	partBlock.CFrame = root.CFrame * CFrame.new(0, 0.5, -3.5)
-	partBlock.AssemblyLinearVelocity = root.CFrame.LookVector * 10 + Vector3.new(0, 8, 0)
+	partBlock.CFrame = calculatePlacedBlockCFrame(character, root, partBlock, vectorRayOrigin, vectorRayDirection)
+	partBlock.AssemblyLinearVelocity = Vector3.new(0, -2, 0)
+	partBlock.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+	pcall(function()
+		partBlock:SetNetworkOwner(nil)
+	end)
+
 	local strDisplayName = partBlock:GetAttribute(eAttr.FIELD_ITEM_DISPLAY_NAME) or eLogical.CORE_BLOCK
 	local strLookShape = partBlock:GetAttribute(eAttr.FIELD_ITEM_LOOK_SHAPE)
 	if type(strLookShape) == "string" and strLookShape ~= "" then
@@ -424,11 +596,16 @@ function CoreBlock.dropCarriedBlock(player)
 	if prompt then
 		prompt.Enabled = true
 		prompt.ObjectText = strDisplayName
+		prompt.ActionText = "등에 메기"
+		prompt.KeyboardKeyCode = Enum.KeyCode.E
+		prompt.ClickablePrompt = false
 		prompt.MaxActivationDistance = numberInteractionDistance
 	else
 		prompt = Instance.new(ePhysical.PROXIMITY_PROMPT)
 		prompt.ObjectText = strDisplayName
 		prompt.ActionText = "등에 메기"
+		prompt.KeyboardKeyCode = Enum.KeyCode.E
+		prompt.ClickablePrompt = false
 		prompt.HoldDuration = 0.5
 		prompt.MaxActivationDistance = numberInteractionDistance
 		prompt.Parent = partBlock
@@ -437,16 +614,7 @@ function CoreBlock.dropCarriedBlock(player)
 		end)
 	end
 
-	local click = partBlock:FindFirstChildOfClass(ePhysical.CLICK_DETECTOR)
-	if click then
-		click.Enabled = true
-		click.MaxActivationDistance = numberInteractionDistance
-	else
-		click = EngineEnsure.ensureClickDetector(partBlock, numberInteractionDistance)
-		click.MouseClick:Connect(function(interactor)
-			CoreBlock.carryBlock(interactor, partBlock)
-		end)
-	end
+	removeBlockClickDetector(partBlock)
 
 	playBlockEffect(partBlock, partBlock.BrickColor.Name)
 	return partBlock

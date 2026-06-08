@@ -278,8 +278,8 @@ function CurriculumSetup.cleanupCurriculumArtifactsAfterActiveLessonDay(svcWorks
 		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.COVER_STUDENT_PREFIX)
 		CurriculumSetup.removeChildrenByNamePrefix(fldBattlefield, eLogical.STACK_BRICK_PREFIX)
 		CurriculumSetup.removeDescendantsByNamePrefix(svcWorkspace, eLogical.STACK_BRICK_PREFIX)
+		CurriculumSetup.removeCurriculumFieldItemArtifacts(svcWorkspace, svcPlayers, fldItemSpawnArea, eLogical.STACK_BRICK)
 		CurriculumSetup.removeChildrenByNamePrefix(fldObjectiveArea, eLogical.OUTPOST_GUARD_PREFIX)
-		CurriculumSetup.removeNamedChild(svcReplicatedStorage, eLogical.DROP_CARRIED_BLOCK)
 	end
 
 	if not CurriculumSetup.isCurriculumLessonDayEnabled(intActiveLessonDay, 3) then
@@ -706,10 +706,7 @@ function CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage, intA
 	local ePhysical = CoreEnums.eEnginePhysicalType
 	local eLogical = CoreEnums.eEngineLogicalType
 	EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.SPECIALIZATION_SELECT, svcReplicatedStorage)
-
-	if intActiveLessonDay == nil or intActiveLessonDay >= 2 then
-		EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.DROP_CARRIED_BLOCK, svcReplicatedStorage)
-	end
+	EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.DROP_CARRIED_BLOCK, svcReplicatedStorage)
 
 	if intActiveLessonDay == nil or intActiveLessonDay >= 11 then
 		EngineEnsure.ensureNamedInstance(ePhysical.REMOTE_EVENT, eLogical.CAST_MAGIC, svcReplicatedStorage)
@@ -949,6 +946,7 @@ function CurriculumSetup.setupCurriculumWorld(gameRoot, valueConfig)
 	EngineEnsure.disableDefaultWorkspaceSpawnLocation(svcWorkspace)
 	EngineEnsure.removeDefaultWorkspaceBaseplate(svcWorkspace)
 	CurriculumSetup.ensureCurriculumRemoteEvents(svcReplicatedStorage, intActiveLessonDay)
+	BuildSystems.installStudentBrickDropSystem(svcReplicatedStorage)
 	CurriculumSetup.ensureCurriculumTeams(svcTeams)
 	CurriculumSetup.ensureCurriculumCoreTargets(tblOutpostWorld.fldObjectiveArea)
 	CurriculumSetup.ensureCurriculumPracticeTargets(tblOutpostWorld.fldObjectiveArea, intActiveLessonDay)

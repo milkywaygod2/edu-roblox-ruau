@@ -9,7 +9,7 @@ local brick = {}
 local appearance = {}
 
 appearance.Material = Enum.Material.Brick
-appearance.Size = Vector3.new(120, 60, 60) * CM -- 센티미터 단위 입력
+appearance.Size = Vector3.new(60, 24, 24) * CM -- 센티미터 단위 입력
 appearance.CollisionShape = Enum.PartType.Block
 appearance.CollisionShapeMode = "Auto"
 appearance.LookShape = "" -- 1일차 돌멩이와 동일하게 외형 모델 템플릿 이름 또는 에셋 ID를 넣을 수 있습니다.
@@ -18,7 +18,7 @@ appearance.LookShape = "" -- 1일차 돌멩이와 동일하게 외형 모델 템
 -- 아래 값들은 Common 뒷단이 읽을 수 있지만, 2일차 수업 기본 흐름에서는 숨겨둔 옵션입니다.
 -- 필요할 때 주석(-- )을 지우고 값을 바꾸면 적용됩니다.
 -- appearance.CollisionShapeMode = "LookBounds" -- "Auto", "Shape", "LookBounds", "LookMesh"
--- appearance.CollisionSize = Vector3.new(120, 60, 60) * CM -- Size를 생략했을 때 충돌/물리 크기 전용으로 사용
+-- appearance.CollisionSize = Vector3.new(60, 24, 24) * CM -- Size를 생략했을 때 충돌/물리 크기 전용으로 사용
 -- appearance.Shape = Enum.PartType.Block -- CollisionShape의 예전 이름입니다. CollisionShape가 있으면 무시됩니다.
 -- appearance.Look = "BrickLook" -- LookShape의 예전 이름입니다. LookShape가 있으면 무시됩니다.
 

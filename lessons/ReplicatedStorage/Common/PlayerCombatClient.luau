@@ -2,6 +2,7 @@
 local PlayerCombatClient = {}
 
 local CoreEnums = require(script.Parent.CoreEnums)
+local FieldPlacementRules = require(script.Parent.FieldPlacementRules)
 local StudentConfig = require(script.Parent.StudentConfig)
 
 local boolPlayerCombatClientControlsInstalled = false
@@ -22,6 +23,22 @@ local CAMERA_MIN_PITCH = math.rad(-55)
 local CAMERA_MAX_PITCH = math.rad(30)
 local CAMERA_AIM_DISTANCE = 500
 local RESPAWN_COUNTDOWN_SECONDS = 5
+local FIELD_PICKUP_PROMPT_WIDTH = 280
+local FIELD_PICKUP_PROMPT_HEIGHT = 44
+local FIELD_PICKUP_PROMPT_BOTTOM_OFFSET = 107
+local FIELD_PICKUP_PROMPT_RIGHT_OFFSET = 25
+local BRICK_PLACE_MAX_DISTANCE = 45
+local BRICK_PLACE_SURFACE_CLEARANCE = 0.04
+local BRICK_PLACE_SUPPORT_RAY_HEIGHT = 12
+local BRICK_PLACE_SUPPORT_RAY_DISTANCE = 80
+local BRICK_PLACE_MIN_SUPPORT_NORMAL_Y = 0.35
+local BRICK_PLACE_OVERLAP_SCALE_XZ = 0.92
+local BRICK_PLACE_OVERLAP_SCALE_Y = 0.88
+local BRICK_PLACE_OVERLAP_MIN_SIZE = 0.1
+local BRICK_PLACE_PREVIEW_VALID_COLOR = Color3.fromRGB(90, 210, 140)
+local BRICK_PLACE_PREVIEW_VALID_OUTLINE_COLOR = Color3.fromRGB(220, 255, 230)
+local BRICK_PLACE_PREVIEW_BLOCKED_COLOR = Color3.fromRGB(235, 75, 75)
+local BRICK_PLACE_PREVIEW_BLOCKED_OUTLINE_COLOR = Color3.fromRGB(255, 205, 205)
 
 -- --------------------------------------------------------------------------------
 
@@ -40,6 +57,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local svcReplicatedStorage = game:GetService(eService.REPLICATED_STORAGE)
 	local svcRunService = game:GetService(eService.RUN_SERVICE)
 	local svcUserInputService = game:GetService(eService.USER_INPUT_SERVICE)
+	local svcProximityPromptService = game:GetService(eService.PROXIMITY_PROMPT_SERVICE)
 	local svcWorkspace = game:GetService(eService.WORKSPACE)
 
 	local playerLocal = svcPlayers.LocalPlayer
@@ -72,6 +90,10 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	local set_default_aim_control_enabled = nil
 	local connectionHumanoidDied = nil
 	local intRespawnCountdownToken = 0
+	local boolBuildPlacementPreviewRequested = false
+	local boolBuildPlacementPreviewBlocked = false
+	local intBuildPlacementRotationQuarterTurns = 0
+	local promptActiveFieldPickup = nil
 
 	local eventSpecializationSelect = svcReplicatedStorage:WaitForChild(eLogical.SPECIALIZATION_SELECT, 5)
 	if eventSpecializationSelect and not playerLocal:GetAttribute("Specialization") then
@@ -369,6 +391,129 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	labelWeaponStats.Text = "데미지: 10 | 재질: 없음\n무게: - | 콜리전: -"
 	labelWeaponStats.Parent = frameWeaponHud
 
+	local frameFieldPickupPrompt = Instance.new(ePhysical.FRAME)
+	frameFieldPickupPrompt.Name = "FieldPickupPromptHud"
+	frameFieldPickupPrompt.AnchorPoint = Vector2.new(1, 1)
+	frameFieldPickupPrompt.Size = UDim2.fromOffset(FIELD_PICKUP_PROMPT_WIDTH, FIELD_PICKUP_PROMPT_HEIGHT)
+	frameFieldPickupPrompt.Position = UDim2.new(1, -FIELD_PICKUP_PROMPT_RIGHT_OFFSET, 1, -FIELD_PICKUP_PROMPT_BOTTOM_OFFSET)
+	frameFieldPickupPrompt.BackgroundColor3 = Color3.fromRGB(14, 17, 22)
+	frameFieldPickupPrompt.BackgroundTransparency = 0.16
+	frameFieldPickupPrompt.BorderSizePixel = 0
+	frameFieldPickupPrompt.Visible = false
+	frameFieldPickupPrompt.Parent = guiHud
+
+	local cornerFieldPickupPrompt = Instance.new("UICorner")
+	cornerFieldPickupPrompt.CornerRadius = UDim.new(0, 8)
+	cornerFieldPickupPrompt.Parent = frameFieldPickupPrompt
+
+	local strokeFieldPickupPrompt = Instance.new("UIStroke")
+	strokeFieldPickupPrompt.Color = Color3.fromRGB(92, 112, 132)
+	strokeFieldPickupPrompt.Thickness = 2
+	strokeFieldPickupPrompt.Transparency = 0.15
+	strokeFieldPickupPrompt.Parent = frameFieldPickupPrompt
+
+	local labelFieldPickupKey = Instance.new(ePhysical.TEXT_LABEL)
+	labelFieldPickupKey.Name = "FieldPickupKey"
+	labelFieldPickupKey.Position = UDim2.fromOffset(10, 8)
+	labelFieldPickupKey.Size = UDim2.fromOffset(34, 28)
+	labelFieldPickupKey.BackgroundColor3 = Color3.fromRGB(225, 230, 238)
+	labelFieldPickupKey.BackgroundTransparency = 0.05
+	labelFieldPickupKey.BorderSizePixel = 0
+	labelFieldPickupKey.TextColor3 = Color3.fromRGB(16, 19, 24)
+	labelFieldPickupKey.TextSize = 15
+	labelFieldPickupKey.Font = Enum.Font.GothamBold
+	labelFieldPickupKey.Text = "E"
+	labelFieldPickupKey.Parent = frameFieldPickupPrompt
+
+	local cornerFieldPickupKey = Instance.new("UICorner")
+	cornerFieldPickupKey.CornerRadius = UDim.new(0, 6)
+	cornerFieldPickupKey.Parent = labelFieldPickupKey
+
+	local labelFieldPickupName = Instance.new(ePhysical.TEXT_LABEL)
+	labelFieldPickupName.Name = "FieldPickupName"
+	labelFieldPickupName.Position = UDim2.fromOffset(54, 6)
+	labelFieldPickupName.Size = UDim2.fromOffset(220, 17)
+	labelFieldPickupName.BackgroundTransparency = 1
+	labelFieldPickupName.TextColor3 = Color3.fromRGB(245, 245, 245)
+	labelFieldPickupName.TextSize = 12
+	labelFieldPickupName.Font = Enum.Font.GothamBold
+	labelFieldPickupName.TextXAlignment = Enum.TextXAlignment.Left
+	labelFieldPickupName.TextTruncate = Enum.TextTruncate.AtEnd
+	labelFieldPickupName.Text = "전장 아이템"
+	labelFieldPickupName.Parent = frameFieldPickupPrompt
+
+	local labelFieldPickupAction = Instance.new(ePhysical.TEXT_LABEL)
+	labelFieldPickupAction.Name = "FieldPickupAction"
+	labelFieldPickupAction.Position = UDim2.fromOffset(54, 23)
+	labelFieldPickupAction.Size = UDim2.fromOffset(220, 14)
+	labelFieldPickupAction.BackgroundTransparency = 1
+	labelFieldPickupAction.TextColor3 = Color3.fromRGB(175, 190, 205)
+	labelFieldPickupAction.TextSize = 10
+	labelFieldPickupAction.Font = Enum.Font.GothamMedium
+	labelFieldPickupAction.TextXAlignment = Enum.TextXAlignment.Left
+	labelFieldPickupAction.TextTruncate = Enum.TextTruncate.AtEnd
+	labelFieldPickupAction.Text = "줍기"
+	labelFieldPickupAction.Parent = frameFieldPickupPrompt
+
+	local frameBrickGuide = Instance.new(ePhysical.FRAME)
+	frameBrickGuide.Name = "BrickBuildGuide"
+	frameBrickGuide.AnchorPoint = Vector2.new(0.5, 1)
+	frameBrickGuide.Size = UDim2.fromOffset(540, 38)
+	frameBrickGuide.Position = UDim2.new(0.5, 0, 1, -94)
+	frameBrickGuide.BackgroundColor3 = Color3.fromRGB(10, 12, 16)
+	frameBrickGuide.BackgroundTransparency = 0.18
+	frameBrickGuide.BorderSizePixel = 0
+	frameBrickGuide.Visible = false
+	frameBrickGuide.Parent = guiHud
+
+	local cornerBrickGuide = Instance.new("UICorner")
+	cornerBrickGuide.CornerRadius = UDim.new(0, 8)
+	cornerBrickGuide.Parent = frameBrickGuide
+
+	local strokeBrickGuide = Instance.new("UIStroke")
+	strokeBrickGuide.Color = Color3.fromRGB(95, 110, 125)
+	strokeBrickGuide.Thickness = 2
+	strokeBrickGuide.Transparency = 0.2
+	strokeBrickGuide.Parent = frameBrickGuide
+
+	local labelBrickGuide = Instance.new(ePhysical.TEXT_LABEL)
+	labelBrickGuide.Name = "BrickBuildGuideText"
+	labelBrickGuide.Size = UDim2.new(1, -20, 1, 0)
+	labelBrickGuide.Position = UDim2.fromOffset(10, 0)
+	labelBrickGuide.BackgroundTransparency = 1
+	labelBrickGuide.TextColor3 = Color3.fromRGB(245, 245, 245)
+	labelBrickGuide.TextSize = 13
+	labelBrickGuide.TextScaled = true
+	labelBrickGuide.Font = Enum.Font.GothamBold
+	labelBrickGuide.TextXAlignment = Enum.TextXAlignment.Center
+	labelBrickGuide.Text = ""
+	labelBrickGuide.Parent = frameBrickGuide
+
+	local constraintBrickGuideText = Instance.new("UITextSizeConstraint")
+	constraintBrickGuideText.MinTextSize = 9
+	constraintBrickGuideText.MaxTextSize = 13
+	constraintBrickGuideText.Parent = labelBrickGuide
+
+	local partBrickPlacementPreview = Instance.new(ePhysical.PART)
+	partBrickPlacementPreview.Name = "BrickPlacementPreview"
+	partBrickPlacementPreview.Anchored = true
+	partBrickPlacementPreview.CanCollide = false
+	partBrickPlacementPreview.CanTouch = false
+	partBrickPlacementPreview.CanQuery = false
+	partBrickPlacementPreview.CastShadow = false
+	partBrickPlacementPreview.Material = Enum.Material.Neon
+	partBrickPlacementPreview.Color = BRICK_PLACE_PREVIEW_VALID_COLOR
+	partBrickPlacementPreview.Transparency = 0.62
+	partBrickPlacementPreview.Parent = nil
+
+	local selectionBrickPlacementPreview = Instance.new("SelectionBox")
+	selectionBrickPlacementPreview.Name = "BrickPlacementPreviewOutline"
+	selectionBrickPlacementPreview.Adornee = partBrickPlacementPreview
+	selectionBrickPlacementPreview.Color3 = BRICK_PLACE_PREVIEW_VALID_OUTLINE_COLOR
+	selectionBrickPlacementPreview.LineThickness = 0.05
+	selectionBrickPlacementPreview.SurfaceTransparency = 1
+	selectionBrickPlacementPreview.Parent = partBrickPlacementPreview
+
 	local guiRespawnCountdown = Instance.new(ePhysical.SCREEN_GUI)
 	guiRespawnCountdown.Name = "PlayerRespawnCountdownGui"
 	guiRespawnCountdown.ResetOnSpawn = false
@@ -471,7 +616,66 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		if not toolTarget:IsA(ePhysical.TOOL) then return false end
 
 		return toolTarget:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) == eLogical.THROWING_STONE
+			or toolTarget:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) == eLogical.STACK_BRICK
 			or toolTarget.Name:sub(1, #eLogical.THROWING_STONE) == eLogical.THROWING_STONE
+	end
+
+	local function find_field_item_tool_from_prompt(promptPickup)
+		local instanceCurrent = promptPickup and promptPickup.Parent
+		while instanceCurrent do
+			if instanceCurrent:IsA(ePhysical.TOOL) and instanceCurrent:GetAttribute(eAttrKey.FIELD_ITEM_TYPE) then
+				return instanceCurrent
+			end
+
+			instanceCurrent = instanceCurrent.Parent
+		end
+
+		return nil
+	end
+
+	local function get_field_pickup_prompt_key_text(promptPickup, enumInputType)
+		local enumKeyCode = promptPickup and promptPickup.KeyboardKeyCode
+		if enumInputType == Enum.ProximityPromptInputType.Gamepad and promptPickup then
+			enumKeyCode = promptPickup.GamepadKeyCode
+		end
+
+		if enumKeyCode and enumKeyCode ~= Enum.KeyCode.Unknown then
+			return enumKeyCode.Name
+		end
+
+		return "E"
+	end
+
+	local function show_field_pickup_prompt(promptPickup, enumInputType)
+		local toolPickup = find_field_item_tool_from_prompt(promptPickup)
+		if not toolPickup then
+			return
+		end
+
+		local strObjectText = promptPickup.ObjectText
+		if type(strObjectText) ~= "string" or strObjectText == "" then
+			strObjectText = toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_DISPLAY_NAME) or toolPickup.Name
+		end
+
+		local strActionText = promptPickup.ActionText
+		if type(strActionText) ~= "string" or strActionText == "" then
+			strActionText = "줍기"
+		end
+
+		promptActiveFieldPickup = promptPickup
+		labelFieldPickupKey.Text = get_field_pickup_prompt_key_text(promptPickup, enumInputType)
+		labelFieldPickupName.Text = strObjectText
+		labelFieldPickupAction.Text = strActionText
+		frameFieldPickupPrompt.Visible = true
+	end
+
+	local function hide_field_pickup_prompt(promptPickup)
+		if promptPickup and promptPickup ~= promptActiveFieldPickup then
+			return
+		end
+
+		promptActiveFieldPickup = nil
+		frameFieldPickupPrompt.Visible = false
 	end
 
 	local function set_crosshair_enabled(boolEnabled)
@@ -572,6 +776,270 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end
 
 		return vectorOrigin + vectorDirection
+	end
+
+	local function get_camera_aim_ray()
+		local cameraCurrent = svcWorkspace.CurrentCamera
+		if cameraCurrent then
+			return cameraCurrent.CFrame.Position, cameraCurrent.CFrame.LookVector
+		end
+
+		local unitRayMouse = mousePlayer.UnitRay
+		return unitRayMouse.Origin, unitRayMouse.Direction
+	end
+
+	local function get_character_root()
+		local modelCharacter = playerLocal.Character
+		return modelCharacter and modelCharacter:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
+	end
+
+	local function get_equipped_placeable_tool()
+		local modelCharacter = playerLocal.Character
+		if not modelCharacter then
+			return nil
+		end
+
+		for _, instanceChild in ipairs(modelCharacter:GetChildren()) do
+			if instanceChild:IsA(ePhysical.TOOL) and is_throwing_stone(instanceChild) then
+				return instanceChild
+			end
+		end
+
+		return nil
+	end
+
+	local function create_brick_placement_rotation(partHumanoidRoot, vectorRayDirection)
+		local vectorForward = partHumanoidRoot.CFrame.LookVector
+		if typeof(vectorRayDirection) == "Vector3" and vectorRayDirection.Magnitude > 0.01 then
+			vectorForward = vectorRayDirection.Unit
+		end
+
+		local vectorFlatForward = Vector3.new(vectorForward.X, 0, vectorForward.Z)
+		if vectorFlatForward.Magnitude <= 0.01 then
+			vectorFlatForward = Vector3.new(partHumanoidRoot.CFrame.LookVector.X, 0, partHumanoidRoot.CFrame.LookVector.Z)
+		end
+		if vectorFlatForward.Magnitude <= 0.01 then
+			vectorFlatForward = Vector3.new(0, 0, -1)
+		end
+
+		return CFrame.lookAt(Vector3.new(0, 0, 0), vectorFlatForward.Unit)
+	end
+
+	local function create_brick_placement_cframe(vectorPosition, cframeRotation)
+		return CFrame.lookAt(vectorPosition, vectorPosition + cframeRotation.LookVector, cframeRotation.UpVector)
+	end
+
+	local function create_brick_preview_raycast_params(toolPlaceable)
+		local tblRaycastFilter = { partBrickPlacementPreview }
+		if playerLocal.Character then
+			table.insert(tblRaycastFilter, playerLocal.Character)
+		end
+		if toolPlaceable then
+			table.insert(tblRaycastFilter, toolPlaceable)
+		end
+
+		local raycastParams = RaycastParams.new()
+		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+		raycastParams.FilterDescendantsInstances = tblRaycastFilter
+		raycastParams.IgnoreWater = true
+		return raycastParams
+	end
+
+	local function create_brick_preview_overlap_params(toolPlaceable)
+		local tblOverlapFilter = { partBrickPlacementPreview }
+		if playerLocal.Character then
+			table.insert(tblOverlapFilter, playerLocal.Character)
+		end
+		if toolPlaceable then
+			table.insert(tblOverlapFilter, toolPlaceable)
+		end
+
+		local overlapParams = OverlapParams.new()
+		overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+		overlapParams.FilterDescendantsInstances = tblOverlapFilter
+		return overlapParams
+	end
+
+	local function create_brick_preview_overlap_size(vectorPreviewSize)
+		return Vector3.new(
+			math.max(BRICK_PLACE_OVERLAP_MIN_SIZE, vectorPreviewSize.X * BRICK_PLACE_OVERLAP_SCALE_XZ),
+			math.max(BRICK_PLACE_OVERLAP_MIN_SIZE, vectorPreviewSize.Y * BRICK_PLACE_OVERLAP_SCALE_Y),
+			math.max(BRICK_PLACE_OVERLAP_MIN_SIZE, vectorPreviewSize.Z * BRICK_PLACE_OVERLAP_SCALE_XZ)
+		)
+	end
+
+	local function is_brick_preview_overlap_part(partCandidate, toolPlaceable)
+		if not partCandidate or not partCandidate:IsA(ePhysical.BASE_PART) then
+			return false
+		end
+		if not partCandidate.CanCollide then
+			return false
+		end
+		if partCandidate == partBrickPlacementPreview or partCandidate:IsDescendantOf(partBrickPlacementPreview) then
+			return false
+		end
+		if playerLocal.Character and partCandidate:IsDescendantOf(playerLocal.Character) then
+			return false
+		end
+		if toolPlaceable and partCandidate:IsDescendantOf(toolPlaceable) then
+			return false
+		end
+
+		return true
+	end
+
+	local function is_brick_preview_blocked(cframePreview, vectorPreviewSize, toolPlaceable)
+		local overlapParams = create_brick_preview_overlap_params(toolPlaceable)
+		local vectorOverlapSize = create_brick_preview_overlap_size(vectorPreviewSize)
+		local tblOverlapParts = svcWorkspace:GetPartBoundsInBox(cframePreview, vectorOverlapSize, overlapParams)
+
+		for _, partCandidate in ipairs(tblOverlapParts) do
+			if is_brick_preview_overlap_part(partCandidate, toolPlaceable) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function set_brick_preview_blocked(boolBlocked)
+		boolBuildPlacementPreviewBlocked = boolBlocked == true
+		if boolBuildPlacementPreviewBlocked then
+			partBrickPlacementPreview.Color = BRICK_PLACE_PREVIEW_BLOCKED_COLOR
+			selectionBrickPlacementPreview.Color3 = BRICK_PLACE_PREVIEW_BLOCKED_OUTLINE_COLOR
+		else
+			partBrickPlacementPreview.Color = BRICK_PLACE_PREVIEW_VALID_COLOR
+			selectionBrickPlacementPreview.Color3 = BRICK_PLACE_PREVIEW_VALID_OUTLINE_COLOR
+		end
+	end
+
+	local function raycast_brick_preview_surface(partHumanoidRoot, toolPlaceable, vectorRayOrigin, vectorRayDirection)
+		local vectorOrigin = partHumanoidRoot.Position + Vector3.new(0, 2, 0)
+		local vectorDirection = partHumanoidRoot.CFrame.LookVector * BRICK_PLACE_MAX_DISTANCE + Vector3.new(0, -8, 0)
+
+		if typeof(vectorRayOrigin) == "Vector3" and typeof(vectorRayDirection) == "Vector3" and vectorRayDirection.Magnitude > 0.01 then
+			if (vectorRayOrigin - partHumanoidRoot.Position).Magnitude <= 90 then
+				vectorOrigin = vectorRayOrigin
+			end
+			vectorDirection = vectorRayDirection.Unit * BRICK_PLACE_MAX_DISTANCE
+		end
+
+		local raycastParams = create_brick_preview_raycast_params(toolPlaceable)
+		local raycastResult = svcWorkspace:Raycast(vectorOrigin, vectorDirection, raycastParams)
+		if raycastResult then
+			return raycastResult
+		end
+
+		local vectorFallbackStart = partHumanoidRoot.Position + partHumanoidRoot.CFrame.LookVector * 5 + Vector3.new(0, 8, 0)
+		return svcWorkspace:Raycast(vectorFallbackStart, Vector3.new(0, -40, 0), raycastParams)
+	end
+
+	local function raycast_brick_preview_support(toolPlaceable, vectorTargetPosition)
+		local raycastParams = create_brick_preview_raycast_params(toolPlaceable)
+		local vectorOrigin = Vector3.new(
+			vectorTargetPosition.X,
+			vectorTargetPosition.Y + BRICK_PLACE_SUPPORT_RAY_HEIGHT,
+			vectorTargetPosition.Z
+		)
+		return svcWorkspace:Raycast(
+			vectorOrigin,
+			Vector3.new(0, -BRICK_PLACE_SUPPORT_RAY_DISTANCE, 0),
+			raycastParams
+		)
+	end
+
+	local function resolve_brick_preview_support(toolPlaceable, raycastResult, vectorFallbackPosition)
+		local vectorTargetPosition = raycastResult and raycastResult.Position or vectorFallbackPosition
+		if not vectorTargetPosition then
+			return nil
+		end
+
+		if raycastResult and raycastResult.Normal.Y >= BRICK_PLACE_MIN_SUPPORT_NORMAL_Y then
+			return raycastResult, vectorTargetPosition
+		end
+
+		local raycastSupport = raycast_brick_preview_support(toolPlaceable, vectorTargetPosition)
+		if raycastSupport and raycastSupport.Normal.Y >= BRICK_PLACE_MIN_SUPPORT_NORMAL_Y then
+			return raycastSupport, vectorTargetPosition
+		end
+
+		return nil, vectorTargetPosition
+	end
+
+	local function get_placeable_tool_preview_size(toolPlaceable)
+		local partHandle = toolPlaceable and toolPlaceable:FindFirstChild(eLogical.RESERVED_HANDLE)
+		if not partHandle or not partHandle:IsA(ePhysical.BASE_PART) then
+			return nil
+		end
+
+		return partHandle.Size
+	end
+
+	local function get_build_placement_endpoint_snap()
+		return svcUserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+			or svcUserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+	end
+
+	local function set_brick_preview_visible(boolVisible)
+		if boolVisible then
+			if not partBrickPlacementPreview.Parent then
+				partBrickPlacementPreview.Parent = svcWorkspace
+			end
+		else
+			partBrickPlacementPreview.Parent = nil
+			set_brick_preview_blocked(false)
+		end
+	end
+
+	local function reset_build_placement_preview()
+		boolBuildPlacementPreviewRequested = false
+		intBuildPlacementRotationQuarterTurns = 0
+		set_brick_preview_visible(false)
+	end
+
+	local function update_brick_placement_preview()
+		if not boolBuildPlacementPreviewRequested then
+			set_brick_preview_visible(false)
+			return
+		end
+
+		local modelCharacter = playerLocal.Character
+		local partHumanoidRoot = get_character_root()
+		local toolPlaceable = get_equipped_placeable_tool()
+		local partHandle = toolPlaceable and toolPlaceable:FindFirstChild(eLogical.RESERVED_HANDLE)
+		if not modelCharacter or not partHumanoidRoot or not partHandle or not partHandle:IsA(ePhysical.BASE_PART) then
+			reset_build_placement_preview()
+			return
+		end
+
+		local vectorRayOrigin, vectorRayDirection = get_camera_aim_ray()
+		local cframePreview = FieldPlacementRules.calculatePlacementCFrame(
+			modelCharacter,
+			toolPlaceable,
+			partHumanoidRoot,
+			partHandle,
+			vectorRayOrigin,
+			vectorRayDirection,
+			{
+				RotationQuarterTurns = intBuildPlacementRotationQuarterTurns,
+				EndpointSnap = get_build_placement_endpoint_snap(),
+				ExtraIgnore = partBrickPlacementPreview,
+			}
+		)
+		partBrickPlacementPreview.Size = partHandle.Size
+		partBrickPlacementPreview.CFrame = cframePreview
+		set_brick_preview_blocked(FieldPlacementRules.isPlacementBlocked(modelCharacter, toolPlaceable, cframePreview, partHandle.Size, partBrickPlacementPreview))
+		set_brick_preview_visible(true)
+	end
+
+	local function fire_carried_block_place()
+		local eventDropCarriedBlock = svcReplicatedStorage:FindFirstChild(eLogical.DROP_CARRIED_BLOCK)
+		if not eventDropCarriedBlock then
+			return
+		end
+
+		local vectorRayOrigin, vectorRayDirection = get_camera_aim_ray()
+		eventDropCarriedBlock:FireServer(vectorRayOrigin, vectorRayDirection, intBuildPlacementRotationQuarterTurns, get_build_placement_endpoint_snap())
 	end
 
 	local function update_follow_camera()
@@ -964,6 +1432,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 				toolActiveThrowingStone = nil
 				set_throw_charge_visible(false)
 			end
+			reset_build_placement_preview()
 		end)
 
 		toolThrowingStone.AncestryChanged:Connect(function()
@@ -971,6 +1440,9 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			if toolActiveThrowingStone == toolThrowingStone and modelCharacter and not toolThrowingStone:IsDescendantOf(modelCharacter) then
 				toolActiveThrowingStone = nil
 				set_throw_charge_visible(false)
+			end
+			if modelCharacter and not toolThrowingStone:IsDescendantOf(modelCharacter) then
+				reset_build_placement_preview()
 			end
 		end)
 	end
@@ -1021,6 +1493,14 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end)
 	end
 
+	svcProximityPromptService.PromptShown:Connect(function(promptPickup, enumInputType)
+		show_field_pickup_prompt(promptPickup, enumInputType)
+	end)
+
+	svcProximityPromptService.PromptHidden:Connect(function(promptPickup)
+		hide_field_pickup_prompt(promptPickup)
+	end)
+
 	mousePlayer.Button1Down:Connect(function()
 		if not toolActiveThrowingStone then
 			request_fist_attack()
@@ -1045,11 +1525,39 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 	svcUserInputService.InputBegan:Connect(function(inputBegan, boolGameProcessed)
 		if boolGameProcessed then return end
 		if inputBegan.UserInputType ~= Enum.UserInputType.Keyboard then return end
-		if inputBegan.KeyCode ~= Enum.KeyCode.Q then return end
 
-		local eventDropCarriedBlock = svcReplicatedStorage:FindFirstChild(eLogical.DROP_CARRIED_BLOCK)
-		if eventDropCarriedBlock then
-			eventDropCarriedBlock:FireServer()
+		if inputBegan.KeyCode == Enum.KeyCode.W
+			or inputBegan.KeyCode == Enum.KeyCode.A
+			or inputBegan.KeyCode == Enum.KeyCode.S
+			or inputBegan.KeyCode == Enum.KeyCode.D then
+			reset_build_placement_preview()
+			return
+		end
+
+		if inputBegan.KeyCode == Enum.KeyCode.R and boolBuildPlacementPreviewRequested then
+			intBuildPlacementRotationQuarterTurns = (intBuildPlacementRotationQuarterTurns + 1) % 4
+			update_brick_placement_preview()
+			return
+		end
+
+		if inputBegan.KeyCode == Enum.KeyCode.Q then
+			if not get_equipped_placeable_tool() then
+				reset_build_placement_preview()
+				return
+			end
+
+			if boolBuildPlacementPreviewRequested then
+				update_brick_placement_preview()
+				if not boolBuildPlacementPreviewRequested or boolBuildPlacementPreviewBlocked then
+					return
+				end
+
+				fire_carried_block_place()
+				reset_build_placement_preview()
+			else
+				intBuildPlacementRotationQuarterTurns = 0
+				boolBuildPlacementPreviewRequested = true
+			end
 		end
 	end)
 
@@ -1123,6 +1631,20 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 			labelWeaponStats.Text = "데미지: 10 | 재질: 없음\n무게: - | 콜리전: -"
 		end
 
+		local toolPlaceable = get_equipped_placeable_tool()
+		frameBrickGuide.Visible = toolPlaceable ~= nil
+		if toolPlaceable then
+			if boolBuildPlacementPreviewRequested then
+				local strSnapMode = get_build_placement_endpoint_snap() and "끝점" or "지그재그"
+				if boolBuildPlacementPreviewBlocked then
+					labelBrickGuide.Text = "겹침: 놓을 수 없음 | R: 회전 | Shift: 끝점 | W/A/S/D: 취소"
+				else
+					labelBrickGuide.Text = string.format("Q: 배치 | R: 회전(%d) | Shift: %s | W/A/S/D: 취소", intBuildPlacementRotationQuarterTurns, strSnapMode)
+				end
+			else
+				labelBrickGuide.Text = "Q: 놓을 위치 보기"
+			end
+		end
 	end
 
 	local function stop_respawn_countdown()
@@ -1161,6 +1683,8 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 		connectionHumanoidDied = humanoidPlayer.Died:Connect(function()
 			toolActiveThrowingStone = nil
+			reset_build_placement_preview()
+			hide_field_pickup_prompt()
 			set_throw_charge_visible(false)
 			reset_fist_action_visuals()
 			set_default_aim_control_enabled(false)
@@ -1178,6 +1702,7 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 		end
 
 		frameChargeFill.Size = UDim2.fromScale(get_charge(), 1)
+		update_brick_placement_preview()
 
 		local numberNow = os.clock()
 		if numberNow - numberLastUiUpdateTime > 0.08 then
@@ -1200,6 +1725,8 @@ function PlayerCombatClient.installPlayerCombatClientControls()
 
 	playerLocal.CharacterAdded:Connect(function(modelCharacter)
 		toolActiveThrowingStone = nil
+		reset_build_placement_preview()
+		hide_field_pickup_prompt()
 		set_throw_charge_visible(false)
 		reset_fist_action_visuals()
 		set_default_aim_control_enabled(false)

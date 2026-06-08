@@ -4,6 +4,7 @@ local FieldItem = {}
 local Appearance = require(script.Parent.Appearance)
 local EngineEnsure = require(script.Parent.EngineEnsure)
 local CoreEnums = require(script.Parent.CoreEnums)
+local FieldPlacementRules = require(script.Parent.FieldPlacementRules)
 local StudentConfig = require(script.Parent.StudentConfig)
 
 local FIELD_ITEM_OUTSIDE_CHECK_SECONDS = 0.25
@@ -12,6 +13,17 @@ local FIELD_ITEM_SPAWN_RADIUS_MAX = 24
 local FIELD_ITEM_PICKUP_PROMPT_BASE_DISTANCE = 10
 local FIELD_ITEM_PICKUP_CLICK_BASE_DISTANCE = 18
 local FIELD_ITEM_PICKUP_INTERACTION_DISTANCE_MAX = 80
+local FIELD_ITEM_PICKUP_STANDARD_MASS_LIMIT_KG = 50
+local FIELD_ITEM_PICKUP_STRENGTH_MASS_LIMIT_KG = 70
+local FIELD_ITEM_PICKUP_ABSOLUTE_MASS_LIMIT_KG = 70
+local FIELD_ITEM_PLACE_MAX_DISTANCE = 45
+local FIELD_ITEM_PLACE_SURFACE_CLEARANCE = 0.04
+local FIELD_ITEM_PLACE_SUPPORT_RAY_HEIGHT = 12
+local FIELD_ITEM_PLACE_SUPPORT_RAY_DISTANCE = 80
+local FIELD_ITEM_PLACE_MIN_SUPPORT_NORMAL_Y = 0.35
+local FIELD_ITEM_PLACE_OVERLAP_SCALE_XZ = 0.92
+local FIELD_ITEM_PLACE_OVERLAP_SCALE_Y = 0.88
+local FIELD_ITEM_PLACE_OVERLAP_MIN_SIZE = 0.1
 local randomFieldItemRespawn = Random.new()
 
 -- --------------------------------------------------------------------------------
@@ -83,6 +95,9 @@ function FieldItem.ensureFieldToolPickupPrompt(partHandle, strDisplayName)
 	promptPickup.HoldDuration = 0
 	promptPickup.MaxActivationDistance = FieldItem.calculateFieldToolPickupDistance(partHandle, FIELD_ITEM_PICKUP_PROMPT_BASE_DISTANCE)
 	promptPickup.RequiresLineOfSight = false
+	promptPickup.KeyboardKeyCode = Enum.KeyCode.E
+	promptPickup.ClickablePrompt = false
+	promptPickup.Style = Enum.ProximityPromptStyle.Custom
 	promptPickup.Enabled = true
 	return promptPickup
 end
@@ -170,6 +185,311 @@ function FieldItem.applyFieldToolWorldState(toolPickup, partHandle, vectorHomePo
 	FieldItem.applyFieldToolVisualState(toolPickup, partHandle)
 	FieldItem.refreshFieldToolPickupInteractionDistance(partHandle)
 	FieldItem.setFieldToolPromptEnabled(partHandle, true)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function resolve_field_tool_world_parent()
+	local eLogical = CoreEnums.eEngineLogicalType
+	local fldOutpostWorld = workspace:FindFirstChild(eLogical.OUTPOST_BATTLE_WORLD)
+	local fldItemSpawnArea = fldOutpostWorld and fldOutpostWorld:FindFirstChild(eLogical.ITEM_SPAWN_AREA)
+	return fldItemSpawnArea or workspace
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function create_field_tool_placement_rotation(partHumanoidRoot, vectorRayDirection)
+	local vectorForward = partHumanoidRoot.CFrame.LookVector
+	if typeof(vectorRayDirection) == "Vector3" and vectorRayDirection.Magnitude > 0.01 then
+		vectorForward = vectorRayDirection.Unit
+	end
+
+	local vectorFlatForward = Vector3.new(vectorForward.X, 0, vectorForward.Z)
+	if vectorFlatForward.Magnitude <= 0.01 then
+		vectorFlatForward = Vector3.new(partHumanoidRoot.CFrame.LookVector.X, 0, partHumanoidRoot.CFrame.LookVector.Z)
+	end
+	if vectorFlatForward.Magnitude <= 0.01 then
+		vectorFlatForward = Vector3.new(0, 0, -1)
+	end
+
+	return CFrame.lookAt(Vector3.new(0, 0, 0), vectorFlatForward.Unit)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function create_field_tool_placement_cframe(vectorPosition, cframeRotation)
+	return CFrame.lookAt(vectorPosition, vectorPosition + cframeRotation.LookVector, cframeRotation.UpVector)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function create_field_tool_placement_raycast_params(modelCharacter, toolPickup)
+	local tblFilterDescendants = {}
+	if modelCharacter then
+		table.insert(tblFilterDescendants, modelCharacter)
+	end
+	if toolPickup then
+		table.insert(tblFilterDescendants, toolPickup)
+	end
+
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+	raycastParams.FilterDescendantsInstances = tblFilterDescendants
+	raycastParams.IgnoreWater = true
+	return raycastParams
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function create_field_tool_placement_overlap_params(modelCharacter, toolPickup)
+	local tblFilterDescendants = {}
+	if modelCharacter then
+		table.insert(tblFilterDescendants, modelCharacter)
+	end
+	if toolPickup then
+		table.insert(tblFilterDescendants, toolPickup)
+	end
+
+	local overlapParams = OverlapParams.new()
+	overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+	overlapParams.FilterDescendantsInstances = tblFilterDescendants
+	return overlapParams
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function create_field_tool_placement_overlap_size(vectorPlacementSize)
+	return Vector3.new(
+		math.max(FIELD_ITEM_PLACE_OVERLAP_MIN_SIZE, vectorPlacementSize.X * FIELD_ITEM_PLACE_OVERLAP_SCALE_XZ),
+		math.max(FIELD_ITEM_PLACE_OVERLAP_MIN_SIZE, vectorPlacementSize.Y * FIELD_ITEM_PLACE_OVERLAP_SCALE_Y),
+		math.max(FIELD_ITEM_PLACE_OVERLAP_MIN_SIZE, vectorPlacementSize.Z * FIELD_ITEM_PLACE_OVERLAP_SCALE_XZ)
+	)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function is_field_tool_placement_overlap_part(partCandidate, modelCharacter, toolPickup)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	if not partCandidate or not partCandidate:IsA(ePhysical.BASE_PART) then
+		return false
+	end
+	if not partCandidate.CanCollide then
+		return false
+	end
+	if modelCharacter and partCandidate:IsDescendantOf(modelCharacter) then
+		return false
+	end
+	if toolPickup and partCandidate:IsDescendantOf(toolPickup) then
+		return false
+	end
+
+	return true
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function is_field_tool_placement_blocked(modelCharacter, toolPickup, cframePlacement, vectorPlacementSize)
+	local overlapParams = create_field_tool_placement_overlap_params(modelCharacter, toolPickup)
+	local vectorOverlapSize = create_field_tool_placement_overlap_size(vectorPlacementSize)
+	local tblOverlapParts = workspace:GetPartBoundsInBox(cframePlacement, vectorOverlapSize, overlapParams)
+
+	for _, partCandidate in ipairs(tblOverlapParts) do
+		if is_field_tool_placement_overlap_part(partCandidate, modelCharacter, toolPickup) then
+			return true
+		end
+	end
+
+	return false
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function raycast_field_tool_placement_surface(modelCharacter, toolPickup, partHumanoidRoot, vectorRayOrigin, vectorRayDirection)
+	local vectorOrigin = partHumanoidRoot.Position + Vector3.new(0, 2, 0)
+	local vectorDirection = partHumanoidRoot.CFrame.LookVector * FIELD_ITEM_PLACE_MAX_DISTANCE + Vector3.new(0, -8, 0)
+
+	if typeof(vectorRayOrigin) == "Vector3" and typeof(vectorRayDirection) == "Vector3" and vectorRayDirection.Magnitude > 0.01 then
+		if (vectorRayOrigin - partHumanoidRoot.Position).Magnitude <= 90 then
+			vectorOrigin = vectorRayOrigin
+		end
+		vectorDirection = vectorRayDirection.Unit * FIELD_ITEM_PLACE_MAX_DISTANCE
+	end
+
+	local raycastParams = create_field_tool_placement_raycast_params(modelCharacter, toolPickup)
+	local raycastResult = workspace:Raycast(vectorOrigin, vectorDirection, raycastParams)
+	if raycastResult then
+		return raycastResult
+	end
+
+	local vectorFallbackStart = partHumanoidRoot.Position + partHumanoidRoot.CFrame.LookVector * 5 + Vector3.new(0, 8, 0)
+	return workspace:Raycast(vectorFallbackStart, Vector3.new(0, -40, 0), raycastParams)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function raycast_field_tool_placement_support(modelCharacter, toolPickup, vectorTargetPosition)
+	local raycastParams = create_field_tool_placement_raycast_params(modelCharacter, toolPickup)
+	local vectorOrigin = Vector3.new(
+		vectorTargetPosition.X,
+		vectorTargetPosition.Y + FIELD_ITEM_PLACE_SUPPORT_RAY_HEIGHT,
+		vectorTargetPosition.Z
+	)
+
+	return workspace:Raycast(
+		vectorOrigin,
+		Vector3.new(0, -FIELD_ITEM_PLACE_SUPPORT_RAY_DISTANCE, 0),
+		raycastParams
+	)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function resolve_field_tool_placement_support(modelCharacter, toolPickup, raycastResult, vectorFallbackPosition)
+	local vectorTargetPosition = raycastResult and raycastResult.Position or vectorFallbackPosition
+	if not vectorTargetPosition then
+		return nil
+	end
+
+	if raycastResult and raycastResult.Normal.Y >= FIELD_ITEM_PLACE_MIN_SUPPORT_NORMAL_Y then
+		return raycastResult, vectorTargetPosition
+	end
+
+	local raycastSupport = raycast_field_tool_placement_support(modelCharacter, toolPickup, vectorTargetPosition)
+	if raycastSupport and raycastSupport.Normal.Y >= FIELD_ITEM_PLACE_MIN_SUPPORT_NORMAL_Y then
+		return raycastSupport, vectorTargetPosition
+	end
+
+	return nil, vectorTargetPosition
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+local function calculate_field_tool_placement_cframe(modelCharacter, toolPickup, partHumanoidRoot, partHandle, vectorRayOrigin, vectorRayDirection)
+	local cframeRotation = create_field_tool_placement_rotation(partHumanoidRoot, vectorRayDirection)
+	local raycastResult = raycast_field_tool_placement_surface(modelCharacter, toolPickup, partHumanoidRoot, vectorRayOrigin, vectorRayDirection)
+	local vectorFallbackPosition = partHumanoidRoot.Position + partHumanoidRoot.CFrame.LookVector * 5
+	local raycastSupport, vectorTargetPosition = resolve_field_tool_placement_support(modelCharacter, toolPickup, raycastResult, vectorFallbackPosition)
+
+	if raycastSupport then
+		local vectorPosition = Vector3.new(
+			vectorTargetPosition.X,
+			raycastSupport.Position.Y + partHandle.Size.Y * 0.5 + FIELD_ITEM_PLACE_SURFACE_CLEARANCE,
+			vectorTargetPosition.Z
+		)
+		return create_field_tool_placement_cframe(vectorPosition, cframeRotation)
+	end
+
+	vectorFallbackPosition = Vector3.new(vectorFallbackPosition.X, partHumanoidRoot.Position.Y - 2 + partHandle.Size.Y * 0.5, vectorFallbackPosition.Z)
+	return create_field_tool_placement_cframe(vectorFallbackPosition, cframeRotation)
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function FieldItem.isBuildPlaceableFieldTool(toolPickup)
+	if not toolPickup or not toolPickup:IsA(CoreEnums.eEnginePhysicalType.TOOL) then
+		return false
+	end
+
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
+	local strFieldItemType = toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_TYPE)
+	return strFieldItemType == eLogical.THROWING_STONE
+		or strFieldItemType == eLogical.STACK_BRICK
+end
+
+
+-- --------------------------------------------------------------------------------
+
+
+function FieldItem.placeEquippedBuildTool(playerPlayer, vectorRayOrigin, vectorRayDirection, intRotationQuarterTurns, boolEndpointSnap)
+	local ePhysical = CoreEnums.eEnginePhysicalType
+	local eLogical = CoreEnums.eEngineLogicalType
+	local eAttrKey = CoreEnums.eEngineAttributeKey
+	local modelCharacter = playerPlayer and playerPlayer.Character
+	if not modelCharacter then return nil end
+
+	local partHumanoidRoot = modelCharacter:FindFirstChild(eLogical.RESERVED_HUMANOID_ROOT_PART)
+	if not partHumanoidRoot then return nil end
+
+	local toolPickup = nil
+	for _, instanceChild in ipairs(modelCharacter:GetChildren()) do
+		if instanceChild:IsA(ePhysical.TOOL) and FieldItem.isBuildPlaceableFieldTool(instanceChild) then
+			toolPickup = instanceChild
+			break
+		end
+	end
+	if not toolPickup then return nil end
+
+	local partHandle = toolPickup:FindFirstChild(eLogical.RESERVED_HANDLE)
+	if not partHandle or not partHandle:IsA(ePhysical.BASE_PART) then return nil end
+
+	local cframePlacement = FieldPlacementRules.calculatePlacementCFrame(
+		modelCharacter,
+		toolPickup,
+		partHumanoidRoot,
+		partHandle,
+		vectorRayOrigin,
+		vectorRayDirection,
+		{
+			RotationQuarterTurns = intRotationQuarterTurns,
+			EndpointSnap = boolEndpointSnap,
+		}
+	)
+	if FieldPlacementRules.isPlacementBlocked(modelCharacter, toolPickup, cframePlacement, partHandle.Size) then
+		return nil
+	end
+
+	local humanoidPlayer = modelCharacter:FindFirstChildOfClass(ePhysical.HUMANOID)
+	if humanoidPlayer then
+		humanoidPlayer:UnequipTools()
+	end
+
+	local fldItemSpawnArea = resolve_field_tool_world_parent()
+	local strHomeName = toolPickup:GetAttribute(eAttrKey.FIELD_ITEM_HOME_NAME)
+	if type(strHomeName) == "string" then
+		toolPickup.Name = strHomeName
+	end
+
+	toolPickup.Parent = fldItemSpawnArea
+	toolPickup:SetAttribute(eAttrKey.BLOCK_IS_PROJECTILE, false)
+	toolPickup:SetAttribute(eAttrKey.FIELD_ITEM_HOME_POSITION, cframePlacement.Position)
+	FieldItem.applyFieldToolBasePartState(partHandle, false, false, true, true, false)
+	FieldItem.applyFieldToolVisualState(toolPickup, partHandle)
+	partHandle.CFrame = cframePlacement
+	partHandle.AssemblyLinearVelocity = Vector3.new(0, -2, 0)
+	partHandle.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+	pcall(function()
+		partHandle:SetNetworkOwner(nil)
+	end)
+	FieldItem.refreshFieldToolPickupInteractionDistance(partHandle)
+	FieldItem.setFieldToolPromptEnabled(partHandle, true)
+	return toolPickup
 end
 
 
@@ -517,14 +837,16 @@ function FieldItem.installFieldToolPickupInArea(fldItemSpawnArea, strToolName, s
 			local massKg = StudentConfig.calculateEquipmentMassKg(size, density)
 
 			local strSpec = player:GetAttribute("Specialization") or "None"
-			local maxCarryLimit = 70 -- 힘 특화도 넘을 수 없는 절대 한계
+			local maxCarryLimit = FIELD_ITEM_PICKUP_ABSOLUTE_MASS_LIMIT_KG
+			local maxPickupLimit = (strSpec == "Strength")
+				and FIELD_ITEM_PICKUP_STRENGTH_MASS_LIMIT_KG
+				or FIELD_ITEM_PICKUP_STANDARD_MASS_LIMIT_KG
 
 			if massKg > maxCarryLimit then
 				-- 아예 들 수 없는 초고중량 (주머니 넣기 불가능)
 				return
 			end
 
-			local maxPickupLimit = (strSpec == "Strength") and 70 or 50
 			if massKg > maxPickupLimit then
 				-- 힘 특화 유저가 아니라서 획득 불가
 				return
